@@ -44,6 +44,24 @@ area654_aea <- spTransform(area654, cropsCRS)
 shapefile(area654_aea, file.path(ssurgoDir, 'ca_mapunits', 'fresno_only', 'area654_aea.shp'))
 
 #read in component (comp) data
+list.files(file.path(ssurgoDir, 'component_data'))
+restrictions <- read.csv(file.path(ssurgoDir, 'component_data', 'ca_restrictions.csv'), stringsAsFactors = FALSE, na.strings = c("", " "))
+head(restrictions)
+dim(restrictions) #some cokeys have more than one restrictive layer
+length(unique(restrictions$cokey))
+restrictions_Fresno <- restrictions[restrictions$cokey %in% comp_data_Fresno$cokey, ]
+restrictions$mukey <- comp_data$mukey[match(restrictions$cokey, comp_data$cokey)]
+#make this just from Fresno dataset
+reskinds_by_cokey <- data.frame(cokey = as.numeric(row.names(tapply(restrictions_Fresno$reskind, restrictions_Fresno$cokey,  function(x) unique(x)))), reskinds = as.character(tapply(restrictions_Fresno$reskind, restrictions_Fresno$cokey, function(x) if(all(is.na(x))) {NA} else if (length(unique(x[!is.na(x)]))==1) {unique(x[!is.na(x)])} else{paste(unique(x[!is.na(x)])[order(unique(x[!is.na(x)]))], collapse = '-')})), stringsAsFactors = FALSE) #function(x) unique(x)))) #function(x) if(all(is.na(x))) {NA} else if (length(unique(x[!is.na(x)]))==1) {unique(x[!is.na(x)])} else{paste(unique(x[!is.na(x)])[order(unique(x[!is.na(x)]))], collapse = '-')})
+dim(reskinds_by_cokey) #768 cokeys with restrictions
+length(unique(reskinds_by_cokey$cokey))
+lapply(reskinds_by_cokey, class)
+unique(reskinds_by_cokey$reskinds) #17 different reskind combos for Fresno
+reskinds_by_cokey$mukey <- comp_data_Fresno$mukey[match(reskinds_by_cokey$cokey, comp_data_Fresno$cokey)]
+dim(reskinds_by_cokey)
+length(unique(reskinds_by_cokey$mukey)) #475 mukeys
+reskinds_by_cokey$comp_pct <- comp_data_Fresno$comppct_r[match(reskinds_by_cokey$cokey, comp_data_Fresno$cokey)]
+
 comp_data <- read.csv(file.path(ssurgoDir, 'component_data', 'ca_component_data.csv'), stringsAsFactors = FALSE, na.strings = c('', ' ')) #treat blanks or a space as a NA
 colnames(comp_data)
 dim(comp_data) #91193
@@ -95,6 +113,7 @@ area(fresno_area_aea) / 10000 * 2.47105 #3,303,267 acres
 
 #add some variable to this subset of map units
 fresno_mu_aea <- spTransform(mu_shp_fresno, crs(crops))
+length(unique(fresno_mu_aea$mukey)) #812 mukeys
 fresno_mu_aea$area_ac <- area(fresno_mu_aea) / 10000 * 2.47105 #acres calc
 sum(fresno_mu_aea$area_ac) #3303267 matches above
 fresno_mu_aea$majcomps_no <- as.numeric(majcomps_no_by_mukey[match(fresno_mu_aea$mukey, row.names(majcomps_no_by_mukey))])
@@ -107,6 +126,35 @@ taxorders_area <- data.frame(taxorders=row.names(tapply(fresno_mu_aea$area_ac, f
 taxorders_area <- taxorders_area[order(taxorders_area$acres, decreasing=TRUE), ]
 write.csv(taxorders_area, file.path(summaryDir, 'taxorders_area.csv'), row.names=FALSE)
 fresno_mu_aea$domcomp_pct <- as.numeric(domcomp_pct_by_mukey[match(fresno_mu_aea$mukey, row.names(majcomps_no_by_mukey))])
+
+#this calc ok now I think - 5/6/19
+summary(as.factor(tapply(reskinds_by_cokey$cokey, reskinds_by_cokey$mukey, function(x) length(x))))
+
+#no longer coercing mukey to numeric
+reskinds_by_mukey <- data.frame(mukey = row.names(tapply(reskinds_by_cokey$cokey, reskinds_by_cokey$mukey, function(x) unique(x))), reskinds = as.character(tapply(reskinds_by_cokey$reskind, reskinds_by_cokey$mukey, function(x) if(all(is.na(x))) {NA} else if (length(unique(x[!is.na(x)]))==1) {unique(x[!is.na(x)])} else{paste(unique(x[!is.na(x)])[order(unique(x[!is.na(x)]))], collapse = '-')})), stringsAsFactors = FALSE)
+unique(reskinds_by_mukey$reskinds)
+
+#what about rock outcrop
+compnames_by_mukey <- data.frame(mukey=row.names(tapply(comp_data_Fresno$compname, comp_data_Fresno$mukey, function(x) unique(x))), compnames = as.character(tapply(comp_data_Fresno$compname, comp_data_Fresno$mukey, function(x) if(all(is.na(x))) {NA} else if (length(unique(x[!is.na(x)]))==1) {unique(x[!is.na(x)])} else{paste(unique(x[!is.na(x)])[order(unique(x[!is.na(x)]))], collapse = '-')})), stringsAsFactors = FALSE)
+fresno_mu_aea$Rock_OC <- ifelse(grepl('Rock outcrop', compnames_by_mukey$compnames[match(fresno_mu_aea$mukey, compnames_by_mukey$mukey)]), 'Yes', 'No')
+summary(as.factor(fresno_mu_aea$Rock_OC)) #1953 have rock outcrop
+fresno_mu_aea$Lithic <- ifelse(grepl('\\bL|lithic\\b', reskinds_by_mukey$reskinds[match(fresno_mu_aea$mukey, reskinds_by_mukey$mukey)]) | fresno_mu_aea$Rock_OC=='Yes', 'Yes', 'No') #5748 was 'yes' after accounting for mukeys with more than one cokey with restrictions and those with rock outrcrop but no components with a subsoil lithic contact
+summary(as.factor(fresno_mu_aea$Lithic))
+
+#what about rock outcrop? this below needs to be refined to account for percentage of rock outcrop also
+fresno_lithic_comppct <- data.frame(mukey=row.names(tapply(comp_data_Fresno$comppct_r[comp_data_Fresno$cokey %in% reskinds_by_cokey$cokey[grepl('\\bL|lithic\\b', reskinds_by_cokey$reskinds)]], comp_data_Fresno$mukey[comp_data_Fresno$cokey %in% reskinds_by_cokey$cokey[grepl('\\bL|lithic\\b', reskinds_by_cokey$reskinds)]], sum)), compct_sum = as.numeric(tapply(comp_data_Fresno$comppct_r[comp_data_Fresno$cokey %in% reskinds_by_cokey$cokey[grepl('\\bL|lithic\\b', reskinds_by_cokey$reskinds)]], comp_data_Fresno$mukey[comp_data_Fresno$cokey %in% reskinds_by_cokey$cokey[grepl('\\bL|lithic\\b', reskinds_by_cokey$reskinds)]], sum)), stringsAsFactors = FALSE)
+fresno_mu_aea$Lthc_pct <- 0
+fresno_mu_aea$Lthc_pct[fresno_mu_aea$Lithic=='Yes'] <- fresno_lithic_comppct$compct_sum[match(fresno_mu_aea$mukey[fresno_mu_aea$Lithic=='Yes'], fresno_lithic_comppct$mukey)]
+summary(fresno_mu_aea$Lthc_pct)
+
+
+fresno_mu_aea$Lthc_cm <- NA
+#what about mukeys with more than one major component?
+fresno_mu_aea$Lthc_cm[fresno_mu_aea$Lithic=='Yes'] <- restrictions_Fresno$resdept_r[restrictions_Fresno$reskind=="Lithic bedrock"][match(fresno_mu_aea$mukey[fresno_mu_aea$Lithic=='Yes'], restrictions_Fresno$mukey[restrictions_Fresno$reskind=="Lithic bedrock"])]
+
+
+sum(grepl('\\bL|lithic\\b', reskinds_by_cokey$reskinds)) #21806; was only 11147 when just lowercase search supplied
+#write to file
 shapefile(fresno_mu_aea, file.path(ssurgoDir, 'ca_mapunits/fresno_only/ca651_653_654mu_aea.shp'), overwrite=TRUE)
 
 #check it!
