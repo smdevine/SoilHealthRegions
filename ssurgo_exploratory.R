@@ -103,10 +103,10 @@ fresno_area_aea <- spTransform(fresno_area, cropsCRS)
 # shapefile(area654_aea, file.path(ssurgoDir, 'ca_mapunits', 'fresno_only', 'area654_aea.shp'))
 
 #read in MLRA shapefile
-mlra_shp <- shapefile(file.path(ssurgoDir, 'mlra', 'mlra_a_ca.shp')) #59 features
-plot(mlra_shp)
-as.data.frame(mlra_shp)
-mlra_aea_shp <- spTransform(mlra_shp, cropsCRS)
+# mlra_shp <- shapefile(file.path(ssurgoDir, 'mlra', 'mlra_a_ca.shp')) #59 features
+# plot(mlra_shp)
+# as.data.frame(mlra_shp)
+# mlra_aea_shp <- spTransform(mlra_shp, cropsCRS)
 # shapefile(mlra_aea_shp, file.path(ssurgoDir, 'mlra', 'mlra_ca_aea.shp'))
 mlra_aea_shp <- shapefile(file.path(ssurgoDir, 'mlra', 'mlra_ca_aea.shp'))
 fresno_mlra_aea <- crop(mlra_aea_shp, fresno_area_aea)
@@ -254,13 +254,16 @@ horizon_data_Fresno <- horizon_data[horizon_data$cokey %in% comp_data_Fresno$cok
 # dim(horizon_data_Fresno) #3993 horizons
 # unique(horizon_data_Fresno$hzname)
 horizon_data_Fresno$majcompflag <- comp_data_Fresno$majcompflag[match(horizon_data_Fresno$cokey, comp_data_Fresno$cokey)]
-table(horizon_data_Fresno$majcompflag) #493 minor component have horizon data
-horizon_data_Fresno[horizon_data_Fresno$majcompflag=='No ', ]
+horizon_data_Fresno$mukey <- comp_data_Fresno$mukey[match(horizon_data_Fresno$cokey, comp_data_Fresno$cokey)]
+length(unique(horizon_data_Fresno$mukey)) #798 mukeys with horizon data
+# table(horizon_data_Fresno$majcompflag) #493 minor component have horizon data
+# horizon_data_Fresno[horizon_data_Fresno$majcompflag=='No ', ]
 
-#convert to Soil Profile collection class with no minor comps
+#convert to Soil Profile collection class with no minor comps per filtering above
 horizons_Fresno_majcomps <- horizon_data_Fresno[horizon_data_Fresno$majcompflag=='Yes', ]
 # dim(horizons_Fresno_majcomps) #3500 horizons
-# length(unique(horizons_Fresno_majcomps$cokey)) #1028 profiles (e.g. unique cokeys)
+length(unique(horizons_Fresno_majcomps$cokey)) #1028 profiles (e.g. unique cokeys)
+length(unique(horizons_Fresno_majcomps$mukey)) #793 after getting rid of minor components
 
 #upgrade data.frame to a SoilProfileCollection object
 #see https://r-forge.r-project.org/scm/viewvc.php/*checkout*/docs/aqp/aqp-intro.html?root=aqp
@@ -276,8 +279,6 @@ print(horizons_Fresno_majcomps)
 # apply custom functions and save results as a site-level attribute
 # horizons_Fresno_majcomps$clay_wtd.mean_profile <- profileApply(horizons_Fresno_majcomps, FUN=wtd.mean, y='claytotal_r')
 # horizons_Fresno_majcomps$kgOrg.m2_profile <- profileApply(horizons_Fresno_majcomps, FUN = kgOrgC_sum)
-print(horizons_Fresno_majcomps)
-hist(horizons_Fresno_majcomps$kgOrg.m2_profile)
 
 #slice into 1-cm increments to deepest extent as one approach
 # sliced_horizons_Fresno <- slice(horizons_Fresno_majcomps, 0:222 ~ .)
@@ -316,13 +317,17 @@ horizon_to_comp <- function(horizon_SPC, depth, comp_df, vars_of_interest = c('c
   s <- s[,c('mukey', 'cokey', 'compname', 'comppct', columnames)]
   s
 }
+#100 cm dataset
 comp_Fresno_100cm <- horizon_to_comp(horizon_SPC = horizons_Fresno_majcomps, depth = 100, comp_df = comp_data_Fresno)
 head(comp_Fresno_100cm)
+
+#30 cm dataset
 comp_Fresno_30cm <- horizon_to_comp(horizon_SPC = horizons_Fresno_majcomps, depth = 30, comp_df = comp_data_Fresno)
 head(comp_Fresno_30cm)
 dim(comp_Fresno_30cm)
 lapply(comp_Fresno_30cm[ ,2:ncol(comp_Fresno_30cm)], summary)
 lapply(comp_Fresno_30cm[,2:ncol(comp_Fresno_30cm)], function(x) unique(comp_Fresno_30cm$compname[is.na(x)]))
+
 comp_Fresno_10cm <- horizon_to_comp(horizon_SPC = horizons_Fresno_majcomps, depth = 10, comp_df = comp_data_Fresno)
 head(comp_Fresno_10cm)
 hist(log(comp_Fresno_10cm$lep_10cm))
@@ -331,32 +336,32 @@ hist(log(comp_Fresno_10cm$om_10cm))
 #read in ecoregions
 list.files(ecoDir)
 eco_L3 <- shapefile(file.path(ecoDir, 'ca_eco_l3.shp'))
-plot(eco_L3)
+# plot(eco_L3)
 eco_L3_wgs84 <- spTransform(eco_L3, crs(fresno_area))
 eco_L3_Fresno <- crop(eco_L3_wgs84, fresno_area)
-plot(eco_L3_Fresno)
-eco_L3_Fresno$US_L3NAME
+# plot(eco_L3_Fresno)
+# eco_L3_Fresno$US_L3NAME
 
 eco_L4 <- shapefile(file.path(ecoDir, 'ca_eco_l4.shp'))
 eco_L4_wgs84 <- spTransform(eco_L4, crs(fresno_area))
 eco_L4_Fresno <- crop(eco_L4_wgs84, fresno_area)
-plot(eco_L4_Fresno)
-unique(eco_L4_Fresno$US_L4NAME)
+# plot(eco_L4_Fresno)
+# unique(eco_L4_Fresno$US_L4NAME)
 
 #read in crops
 list.files(cropsDir)
-crops <- shapefile(file.path(cropsDir, 'i15_Crop_Mapping_2014_Final_LandIQonAtlas.shp'))
+# crops <- shapefile(file.path(cropsDir, 'i15_Crop_Mapping_2014_Final_LandIQonAtlas.shp'))
 
 #add some variable to this subset of map units
 length(unique(fresno_mu_aea$mukey)) #812 mukeys
 fresno_mu_aea$area_ac <- area(fresno_mu_aea) / 10000 * 2.47105 #acres calc
-sum(fresno_mu_aea$area_ac) #3303267 matches above
+# sum(fresno_mu_aea$area_ac) #3303267 matches above
 fresno_mu_aea$majcomps_no <- majcomps_no_by_mukey$majcomp_no[match(fresno_mu_aea$mukey, majcomps_no_by_mukey$mukey)]
-round(tapply(fresno_mu_aea$area_ac, fresno_mu_aea$majcomps_no, sum), 0)
+# round(tapply(fresno_mu_aea$area_ac, fresno_mu_aea$majcomps_no, sum), 0)
 #0       1        2        3 
 #1742 2,223,661  668,190  409,675  (67.5% of survey area has 1 major component per map unit, 20.0% has 2 major components, 12.4% has 3 major components)
 fresno_mu_aea$taxorders <- majcomp_taxorders_by_mukey$taxorders[match(fresno_mu_aea$mukey, majcomp_taxorders_by_mukey$mukey)]
-unique(fresno_mu_aea$taxorders)
+# unique(fresno_mu_aea$taxorders)
 # taxorders_area <- data.frame(taxorders=row.names(tapply(fresno_mu_aea$area_ac, fresno_mu_aea$taxorders, sum)), acres=as.numeric(tapply(fresno_mu_aea$area_ac, fresno_mu_aea$taxorders, sum)), stringsAsFactors = FALSE)
 # sum(taxorders_area$acres) #3259727 less than above because NA class is dropped (see next 2 calcs)
 # sum(fresno_mu_aea$area_ac) - sum(taxorders_area$acres) #43540
@@ -378,131 +383,157 @@ fresno_mu_aea$association <- ifelse(grepl('association', fresno_mu_aea$muname), 
 #add Storie index range and mean (relative to major components only)
 fresno_mu_aea$storiemn <- storie_mean_by_mukey$storiemn[match(fresno_mu_aea$mukey, storie_mean_by_mukey$mukey)]
 fresno_mu_aea$storierng <- storie_rng_by_mukey$storierng[match(fresno_mu_aea$mukey, storie_rng_by_mukey$mukey)]
-summary(fresno_mu_aea$storierng)
-#all compnames by mukey 
-#sum(grepl('-', unique(comp_data_Fresno$compname)))
+# summary(fresno_mu_aea$storierng)
+# all compnames by mukey 
+# sum(grepl('-', unique(comp_data_Fresno$compname)))
 #this counts rock outcrop when it's a minor component
 fresno_mu_aea$Rock_OC <- ifelse(grepl('Rock outcrop', compnames_by_mukey$compnames[match(fresno_mu_aea$mukey, compnames_by_mukey$mukey)]), 'Yes', 'No')
-summary(as.factor(fresno_mu_aea$Rock_OC)) #1953 polygons have rock outcrop
+# summary(as.factor(fresno_mu_aea$Rock_OC)) #1953 polygons have rock outcrop
 
 #not including rock OC in this one
 unique(reskinds_by_mukey$reskinds)
 fresno_mu_aea$Lithic <- ifelse(grepl('Lithic bedrock', reskinds_by_mukey$reskinds[match(fresno_mu_aea$mukey, reskinds_by_mukey$mukey)]), 'Yes', 'No') #632 were 'yes' after accounting for mukeys with more than one cokey with restrictions | fresno_mu_aea$Rock_OC=='Yes' add to conditional
-summary(as.factor(fresno_mu_aea$Lithic)) #632 have lithic
+# summary(as.factor(fresno_mu_aea$Lithic)) #632 have lithic
 
 fresno_mu_aea$Paralithic <- ifelse(grepl('Paralithic bedrock', reskinds_by_mukey$reskinds[match(fresno_mu_aea$mukey, reskinds_by_mukey$mukey)]), 'Yes', 'No')
-summary(as.factor(fresno_mu_aea$Paralithic)) #5283 have paralithic
+# summary(as.factor(fresno_mu_aea$Paralithic)) #5283 have paralithic
 
 fresno_mu_aea$Duripan <- ifelse(grepl('Duripan', reskinds_by_mukey$reskinds[match(fresno_mu_aea$mukey, reskinds_by_mukey$mukey)]), 'Yes', 'No')
-table(fresno_mu_aea$Duripan)
+# table(fresno_mu_aea$Duripan)
 
 fresno_mu_aea$ATC <- ifelse(grepl('Abrupt textural change', reskinds_by_mukey$reskinds[match(fresno_mu_aea$mukey, reskinds_by_mukey$mukey)]), 'Yes', 'No') #ATC=abrupt textural change
-table(fresno_mu_aea$ATC)
+# table(fresno_mu_aea$ATC)
 
 fresno_mu_aea$Natric <- ifelse(grepl('Natric', reskinds_by_mukey$reskinds[match(fresno_mu_aea$mukey, reskinds_by_mukey$mukey)]), 'Yes', 'No')
-table(fresno_mu_aea$Natric)
+# table(fresno_mu_aea$Natric)
 
 #not including rock OC in this definition
 #however some rock OC components are listed as a lithic bedrock restrictive horizon so this is a complicating factor--removed above?
 fresno_lithic_comppct <- data.frame(mukey=row.names(tapply(comp_data_Fresno$comppct_r[comp_data_Fresno$cokey %in% reskinds_by_cokey$cokey[grepl('Lithic', reskinds_by_cokey$reskinds)] & comp_data_Fresno$compname != 'Rock outcrop'], comp_data_Fresno$mukey[comp_data_Fresno$cokey %in% reskinds_by_cokey$cokey[grepl('Lithic', reskinds_by_cokey$reskinds)] & comp_data_Fresno$compname != 'Rock outcrop'], sum)), compct_sum = as.numeric(tapply(comp_data_Fresno$comppct_r[comp_data_Fresno$cokey %in% reskinds_by_cokey$cokey[grepl('Lithic', reskinds_by_cokey$reskinds)] & comp_data_Fresno$compname != 'Rock outcrop'], comp_data_Fresno$mukey[comp_data_Fresno$cokey %in% reskinds_by_cokey$cokey[grepl('Lithic', reskinds_by_cokey$reskinds)] & comp_data_Fresno$compname != 'Rock outcrop'], sum)), stringsAsFactors = FALSE)
-head(fresno_lithic_comppct)
-summary(fresno_lithic_comppct$compct_sum)
+# head(fresno_lithic_comppct)
+# summary(fresno_lithic_comppct$compct_sum)
 #Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
 #20.00   30.00   60.00   56.88   85.00   85.00 
-sum(fresno_lithic_comppct$compct_sum==85) #27 are 85
-fresno_lithic_comppct[fresno_lithic_comppct$compct_sum==85,]
-comp_data_Fresno[comp_data_Fresno$mukey==463379,]
-reskinds_by_cokey[reskinds_by_cokey$mukey==463379,]
-rock_OC_cokeys <- comp_data_Fresno$cokey[comp_data_Fresno$compname=='Rock outcrop']
-length(rock_OC_cokeys)
-sum(rock_OC_cokeys %in% reskinds_by_cokey$cokey) #rock outcrop cokeys have been removed from reskind table
-sum(comp_data_Fresno$majcompflag[comp_data_Fresno$cokey %in% rock_OC_cokeys]=='Yes') #68 are major components so not related to that
-reskinds_by_cokey[reskinds_by_cokey$cokey %in% rock_OC_cokeys, ]
-comp_data_Fresno[comp_data_Fresno$cokey==16607858,]
+# sum(fresno_lithic_comppct$compct_sum==85) #27 are 85
+# fresno_lithic_comppct[fresno_lithic_comppct$compct_sum==85,]
+# comp_data_Fresno[comp_data_Fresno$mukey==463379,]
+# reskinds_by_cokey[reskinds_by_cokey$mukey==463379,]
+# rock_OC_cokeys <- comp_data_Fresno$cokey[comp_data_Fresno$compname=='Rock outcrop']
+# length(rock_OC_cokeys)
+# sum(rock_OC_cokeys %in% reskinds_by_cokey$cokey) #rock outcrop cokeys have been removed from reskind table
+# sum(comp_data_Fresno$majcompflag[comp_data_Fresno$cokey %in% rock_OC_cokeys]=='Yes') #68 are major components so not related to that
+# reskinds_by_cokey[reskinds_by_cokey$cokey %in% rock_OC_cokeys, ]
+# comp_data_Fresno[comp_data_Fresno$cokey==16607858,]
 
 #rock outcrop component pct
 sum(grepl('Rock outcrop', compnames_by_mukey$compnames)) #143 here
 sum(grepl('Rock outcrop', majcompnames_by_mukey$majcompnames)) #68 here
-# fresno_rockOC_comppctv2 <- reskind_comppct(reskind = 'Rock outcrop', comp_df = comp_data_Fresno, reskind)
 fresno_rockOC_comppct <- data.frame(mukey=row.names(tapply(comp_data_Fresno$comppct_r[comp_data_Fresno$compname=='Rock outcrop'], comp_data_Fresno$mukey[comp_data_Fresno$compname=='Rock outcrop'], function(x) sum(x, na.rm = TRUE))), compct_sum = as.numeric(tapply(comp_data_Fresno$comppct_r[comp_data_Fresno$compname=='Rock outcrop'], comp_data_Fresno$mukey[comp_data_Fresno$compname=='Rock outcrop'], function(x) sum(x, na.rm = TRUE))), stringsAsFactors = FALSE)
-dim(fresno_rockOC_comppct)
-head(fresno_rockOC_comppct)
-comp_data_Fresno[comp_data_Fresno$mukey==463312, ]
-summary(fresno_rockOC_comppct$compct_sum)
+# dim(fresno_rockOC_comppct)
+# head(fresno_rockOC_comppct)
+# comp_data_Fresno[comp_data_Fresno$mukey==463312, ]
+# summary(fresno_rockOC_comppct$compct_sum)
 
 #paralithic component pct
 fresno_paralithic_comppct <- reskind_comppct(reskind = 'Paralithic', comp_df = comp_data_Fresno, reskind_df = reskinds_by_cokey)
-summary(fresno_paralithic_comppct$compct_sum)
-sum(fresno_paralithic_comppct$compct_sum==100)
-fresno_paralithic_comppct$mukey[fresno_paralithic_comppct$compct_sum==100]
-comp_data_Fresno[comp_data_Fresno$mukey==463500,]
-restrictions_Fresno[restrictions_Fresno$cokey %in% c(16608021, 16608022), ] #16608021 is "Rock land"
+# summary(fresno_paralithic_comppct$compct_sum)
+# sum(fresno_paralithic_comppct$compct_sum==100)
+# fresno_paralithic_comppct$mukey[fresno_paralithic_comppct$compct_sum==100]
+# comp_data_Fresno[comp_data_Fresno$mukey==463500,]
+# restrictions_Fresno[restrictions_Fresno$cokey %in% c(16608021, 16608022), ] #16608021 is "Rock land"
 
 #duripan component pct
 fresno_duripan_comppct <- reskind_comppct(reskind = 'Duripan', comp_df = comp_data_Fresno, reskind_df = reskinds_by_cokey)
-dim(fresno_duripan_comppct)
-summary(fresno_duripan_comppct$compct_sum)
+# dim(fresno_duripan_comppct)
+# summary(fresno_duripan_comppct$compct_sum)
 #check it
-head(fresno_duripan_comppct, 20)
-comp_data_Fresno[comp_data_Fresno$mukey==463412,] #has 70% Duripan
-restrictions_Fresno[restrictions_Fresno$cokey %in% comp_data_Fresno$cokey[comp_data_Fresno$mukey==463412],]
+# head(fresno_duripan_comppct, 20)
+# comp_data_Fresno[comp_data_Fresno$mukey==463412,] #has 70% Duripan
+# restrictions_Fresno[restrictions_Fresno$cokey %in% comp_data_Fresno$cokey[comp_data_Fresno$mukey==463412],]
 #-or-
-reskinds_by_cokey[reskinds_by_cokey$cokey %in% comp_data_Fresno$cokey[comp_data_Fresno$mukey==463412],]
+# reskinds_by_cokey[reskinds_by_cokey$cokey %in% comp_data_Fresno$cokey[comp_data_Fresno$mukey==463412],]
 #check one more
-fresno_duripan_comppct$compct_sum[fresno_duripan_comppct$mukey==464442] #has 90% Duripan
-comp_data_Fresno[comp_data_Fresno$mukey==464442,] 
-reskinds_by_cokey[reskinds_by_cokey$cokey %in% comp_data_Fresno$cokey[comp_data_Fresno$mukey==464442],]
+# fresno_duripan_comppct$compct_sum[fresno_duripan_comppct$mukey==464442] #has 90% Duripan
+# comp_data_Fresno[comp_data_Fresno$mukey==464442,] 
+# reskinds_by_cokey[reskinds_by_cokey$cokey %in% comp_data_Fresno$cokey[comp_data_Fresno$mukey==464442],]
 
 #abrupt textural contrast (ATC) comppct
 fresno_ATC_comppct <- reskind_comppct(reskind = 'Abrupt textural change', comp_df = comp_data_Fresno, reskind_df = reskinds_by_cokey)
-dim(fresno_ATC_comppct)
-summary(fresno_ATC_comppct$compct_sum)
+# dim(fresno_ATC_comppct)
+# summary(fresno_ATC_comppct$compct_sum)
 
 #natric comppct
 fresno_Natric_comppct <- reskind_comppct(reskind = 'Natric', comp_df = comp_data_Fresno, reskind_df = reskinds_by_cokey)
-dim(fresno_Natric_comppct)
-summary(fresno_Natric_comppct$compct_sum)
+# dim(fresno_Natric_comppct)
+# summary(fresno_Natric_comppct$compct_sum)
 
 #add reskind comppct to mapunit
-sum(fresno_mu_aea$Lithic=='Yes')
-sum(fresno_mu_aea$Rock_OC=='Yes')
-sum(fresno_mu_aea$Paralithic=='Yes')
-sum(fresno_mu_aea$Duripan=='Yes')
-sum(fresno_mu_aea$ATC=='Yes')
-sum(fresno_mu_aea$Natric=='Yes')
-length(fresno_lithic_comppct$compct_sum[match(fresno_mu_aea$mukey[fresno_mu_aea$Lithic=='Yes'], fresno_lithic_comppct$mukey)]) #632
-length(fresno_rockOC_comppct$compct_sum[match(fresno_mu_aea$mukey[fresno_mu_aea$Rock_OC=='Yes'], fresno_rockOC_comppct$mukey)]) #1953
+# sum(fresno_mu_aea$Lithic=='Yes')
+# sum(fresno_mu_aea$Rock_OC=='Yes')
+# sum(fresno_mu_aea$Paralithic=='Yes')
+# sum(fresno_mu_aea$Duripan=='Yes')
+# sum(fresno_mu_aea$ATC=='Yes')
+# sum(fresno_mu_aea$Natric=='Yes')
+# length(fresno_lithic_comppct$compct_sum[match(fresno_mu_aea$mukey[fresno_mu_aea$Lithic=='Yes'], fresno_lithic_comppct$mukey)]) #632
+# length(fresno_rockOC_comppct$compct_sum[match(fresno_mu_aea$mukey[fresno_mu_aea$Rock_OC=='Yes'], fresno_rockOC_comppct$mukey)]) #1953
 
 fresno_mu_aea$Lthc_pct <- 0
 fresno_mu_aea$Lthc_pct[fresno_mu_aea$Lithic=='Yes'] <- fresno_lithic_comppct$compct_sum[match(fresno_mu_aea$mukey[fresno_mu_aea$Lithic=='Yes'], fresno_lithic_comppct$mukey)]
-summary(fresno_mu_aea$Lthc_pct)
+# summary(fresno_mu_aea$Lthc_pct)
 fresno_mu_aea$RckOC_pct <- 0
 fresno_mu_aea$RckOC_pct[fresno_mu_aea$Rock_OC=='Yes'] <- fresno_rockOC_comppct$compct_sum[match(fresno_mu_aea$mukey[fresno_mu_aea$Rock_OC=='Yes'], fresno_rockOC_comppct$mukey)]
-summary(fresno_mu_aea$RckOC_pct)
-summary(rowSums(as.data.frame(fresno_mu_aea[c('Lthc_pct', 'RckOC_pct')])))
+# summary(fresno_mu_aea$RckOC_pct)
+# summary(rowSums(as.data.frame(fresno_mu_aea[c('Lthc_pct', 'RckOC_pct')])))
 fresno_mu_aea$Plthc_pct <- 0
 fresno_mu_aea$Plthc_pct[fresno_mu_aea$Paralithic=='Yes'] <- fresno_paralithic_comppct$compct_sum[match(fresno_mu_aea$mukey[fresno_mu_aea$Paralithic=='Yes'], fresno_paralithic_comppct$mukey)]
-summary(fresno_mu_aea$Plthc_pct)
-as.data.frame(fresno_mu_aea)[fresno_mu_aea$mukey==463500,]
+# summary(fresno_mu_aea$Plthc_pct)
+# as.data.frame(fresno_mu_aea)[fresno_mu_aea$mukey==463500,]
 fresno_mu_aea$Drpan_pct <- 0
 fresno_mu_aea$Drpan_pct[fresno_mu_aea$Duripan=='Yes'] <- fresno_duripan_comppct$compct_sum[match(fresno_mu_aea$mukey[fresno_mu_aea$Duripan=='Yes'], fresno_duripan_comppct$mukey)]
-summary(fresno_mu_aea$Drpan_pct)
-as.data.frame(fresno_mu_aea)[fresno_mu_aea$mukey==464442,]
+# summary(fresno_mu_aea$Drpan_pct)
+# as.data.frame(fresno_mu_aea)[fresno_mu_aea$mukey==464442,]
 fresno_mu_aea$ATC_pct <- 0
 fresno_mu_aea$ATC_pct[fresno_mu_aea$ATC=='Yes'] <- fresno_ATC_comppct$compct_sum[match(fresno_mu_aea$mukey[fresno_mu_aea$ATC=='Yes'], fresno_ATC_comppct$mukey)]
-summary(fresno_mu_aea$ATC_pct)
+# summary(fresno_mu_aea$ATC_pct)
 fresno_mu_aea$Natric_pct <- 0
 fresno_mu_aea$Natric_pct[fresno_mu_aea$Natric=='Yes'] <- fresno_Natric_comppct$compct_sum[match(fresno_mu_aea$mukey[fresno_mu_aea$Natric=='Yes'], fresno_Natric_comppct$mukey)]
-summary(fresno_mu_aea$Natric_pct)
+# summary(fresno_mu_aea$Natric_pct)
 
 #now add horizon aggregated data
+#from previous comp level aggregation work
+compsums <- as.data.frame(tapply(df$comppct_r[!is.na(df[[varname]])], df$unique_model_code[!is.na(df[[varname]])], sum)) #this sums up component percentages (that have data) by unique_model_code
+colnames(compsums) <- 'compsums'
+compsums$unique_model_code <- as.integer(rownames(compsums))
+results <- cbind(df[!is.na(df[[varname]]), c(varname_doy, 'comppct_r')], compsums[match(df$unique_model_code[!is.na(df[[varname]])], compsums$unique_model_code), ]) #this eliminates rows with varname as NA and then adds the total component percentage calculated above
+var.final <- tapply(results[[varname_doy]]*(results$comppct_r/results$compsums), results$unique_model_code, sum)
 
+colnames(comp_Fresno_10cm)[5:ncol(comp_Fresno_10cm)]
+MUaggregate <- function(df1, varname) {
+  sapply(split(x=df1, f=df1$mukey), FUN=function(x) {if(sum(!is.na(x[[varname]]))==0) {NA} 
+    else{sum(x$comppct[!is.na(x[[varname]])] * x[[varname]][!is.na(x[[varname]])] / sum(x$comppct[!is.na(x[[varname]])]))}
+  })
+}
+MUAggregate_wrapper <- function(df1, varnames) {
+  x <- sapply(varnames, FUN=MUaggregate, df1=df1)
+  #as.data.frame(cbind(mukey=row.names(x), x))
+}
+Fresno_10cm_muagg <- MUAggregate_wrapper(df1=comp_Fresno_10cm, varnames = colnames(comp_Fresno_10cm)[5:ncol(comp_Fresno_10cm)])
+Fresno_30cm_muagg <- MUAggregate_wrapper(df1=comp_Fresno_30cm, varnames = colnames(comp_Fresno_30cm)[5:ncol(comp_Fresno_30cm)])
+Fresno_100cm_muagg <- MUAggregate_wrapper(df1=comp_Fresno_100cm, varnames = colnames(comp_Fresno_100cm)[5:ncol(comp_Fresno_100cm)])
+
+fresno_mu_aea <- merge(fresno_mu_aea, Fresno_10cm_muagg, by='mukey')
+fresno_mu_aea <- merge(fresno_mu_aea, Fresno_30cm_muagg, by='mukey')
+fresno_mu_aea <- merge(fresno_mu_aea, Fresno_100cm_muagg, by='mukey')
+
+#write to file
+shapefile(fresno_mu_aea, file.path(ssurgoDir, 'ca_mapunits/fresno_only/ca651_653_654mu_aea.shp'), overwrite=TRUE)
+
+#lapply(split(x=comp_Fresno_10cm, f=comp_Fresno_10cm$mukey), FUN=function(x) {if(sum(!is.na(x$clay))==0) {NA} else{sum(x$comppct[!is.na(x$clay)] * x$clay[!is.na(x$clay)] / sum(x$comppct[!is.na(x$clay)]))}}))
 #this needs help
 fresno_mu_aea$Lthc_cm[fresno_mu_aea$Lithic=='Yes'] <- restrictions_Fresno$resdept_r[restrictions_Fresno$reskind=="Lithic bedrock"][match(fresno_mu_aea$mukey[fresno_mu_aea$Lithic=='Yes'], restrictions_Fresno$mukey[restrictions_Fresno$reskind=="Lithic bedrock"])]
 summary(fresno_mu_aea$Lthc_cm)
 
-#write to file
-shapefile(fresno_mu_aea, file.path(ssurgoDir, 'ca_mapunits/fresno_only/ca651_653_654mu_aea.shp'), overwrite=TRUE)
+
 
 #check it!
 fresno_mu_aea[fresno_mu_aea$mukey==467090, ]
