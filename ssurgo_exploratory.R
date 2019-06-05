@@ -63,7 +63,22 @@ awc_sum <- function(x, rm.NAs=TRUE) {
   thick <- x$hzdepb_r - x$hzdept_r
   sum(thick * x$awc_r, na.rm = rm.NAs)
 }
-
+textural.class.calc <- function(sand, silt, clay, QC_param=1) {
+  ifelse(is.na(sand) | is.na(silt) | is.na(clay), NA,
+    ifelse(sand + silt + clay > (100 + QC_param) | sand + silt + clay < (100 - QC_param), paste('proportions do not sum to 100+-', QC_param), 
+      ifelse(silt + 1.5 * clay < 15, 'sand',
+        ifelse(silt + 1.5 * clay >= 15 & silt + 2 * clay < 30, 'loamy sand',
+          ifelse((clay >= 7 & clay < 20 & sand > 52 & silt + 2 * clay >= 30) | (clay < 7 & silt < 50 & silt + 2 * clay >= 30), 'sandy loam',
+            ifelse(clay >= 7 & clay < 27 & silt >=28 & silt < 50 & sand <= 52, 'loam',
+              ifelse((silt >= 50 & clay >= 12 & clay < 27) | (silt >=50 & silt < 80 & clay < 12), 'silt loam',
+                ifelse(silt >= 80 & clay < 12, 'silt',
+                  ifelse(clay >= 20 & clay < 35 & silt < 28 & sand > 45, 'sandy clay loam',
+                    ifelse(clay >= 27 & clay < 40 & sand > 20 & sand <= 45, 'clay loam',
+                      ifelse(clay >= 27 & clay < 40 & sand <= 20, 'silty clay loam',
+                        ifelse(clay >= 35 & sand > 45, 'sandy clay',
+                          ifelse(clay >= 40 & silt >= 40, 'silty clay',
+                            ifelse(clay >= 40 & sand <= 45 & silt < 40, 'clay','undefined textural class'))))))))))))))
+}
 #read in map unit (mu) tabular data
 mu_data <- read.csv(file.path(ssurgoDir, 'ca_mapunit_data.csv'), stringsAsFactors = FALSE)
 #dim(mu_data) #18865 map units across CA
@@ -71,10 +86,12 @@ mu_data_Fresno <- mu_data[mu_data$areasymbol %in% c('ca651', 'ca653', 'ca654'),]
 #dim(mu_data_Fresno) #812 map units
 #sum(grepl('association', mu_data_Fresno$muname)) #40 associations
 #sum(grepl('complex', mu_data_Fresno$muname)) #49 complexes
+mu_data_Salinas <- mu_data[mu_data$areasymbol == 'ca053',]
+dim(mu_data_Salinas) #221 map units
 
 #read in map unit spatial data
 list.files(file.path(ssurgoDir, 'ca_mapunits'))
-#mu_shp <- shapefile(file.path(ssurgoDir, 'ca_mapunits', 'ca_mapunits.shp'))
+# mu_shp <- shapefile(file.path(ssurgoDir, 'ca_mapunits', 'ca_mapunits.shp'))
 #unique(mu_shp$areasymbol)
 #mu_shp_fresno <- mu_shp[mu_shp$areasymbol %in% c('ca651', 'ca653', 'ca654'), ]
 #length(unique(mu_shp_fresno$mukey)) #812 is the trick
@@ -83,10 +100,19 @@ list.files(file.path(ssurgoDir, 'ca_mapunits'))
 #shapefile(fresno_area, file.path(ssurgoDir, 'ca_mapunits', 'fresno_mu_area.shp'))
 #plot(fresno_area)
 #plot(mu_shp_fresno)
+# mu_shp_salinas <- mu_shp[mu_shp$areasymbol=='ca053',]
+# plot(mu_shp_salinas)
+# shapefile(mu_shp_salinas, file.path(ssurgoDir, 'ca_mapunits', 'salinas_only', 'salinas_mapunits.shp'))
 fresno_area <- shapefile(file.path(ssurgoDir, 'ca_mapunits', 'fresno_only', 'fresno_mu_area.shp'))
 mu_shp_fresno <- shapefile(file.path(ssurgoDir, 'ca_mapunits', 'fresno_only', 'fresno_mapunits.shp'))
 fresno_mu_aea <- spTransform(mu_shp_fresno, cropsCRS)
 fresno_area_aea <- spTransform(fresno_area, cropsCRS)
+mu_shp_salinas <- shapefile(file.path(ssurgoDir, 'ca_mapunits', 'salinas_only', 'salinas_mapunits.shp'))
+salinas_mu_aea <- spTransform(mu_shp_salinas, cropsCRS)
+# salinas_area <- aggregate(salinas_mu_aea)
+# shapefile(salinas_area, file.path(ssurgoDir, 'ca_mapunits', 'salinas_only', 'salinas_mu_area.shp'))
+salinas_area_aea <- shapefile(file.path(ssurgoDir, 'ca_mapunits', 'salinas_only', 'salinas_mu_area.shp'))
+
 # shapefile(fresno_area_aea, file.path(ssurgoDir, 'ca_mapunits/fresno_only/ca651_653_654_aea.shp'))
 # area(fresno_area_aea) / 10000 * 2.47105 #3,303,267 acres
 # area651 <- mu_shp_fresno[mu_shp_fresno$areasymbol=='ca651',]
@@ -109,8 +135,25 @@ fresno_area_aea <- spTransform(fresno_area, cropsCRS)
 # mlra_aea_shp <- spTransform(mlra_shp, cropsCRS)
 # shapefile(mlra_aea_shp, file.path(ssurgoDir, 'mlra', 'mlra_ca_aea.shp'))
 mlra_aea_shp <- shapefile(file.path(ssurgoDir, 'mlra', 'mlra_ca_aea.shp'))
+unique(mlra_aea_shp$MLRA_NAME)
+# plot(mlra_aea_shp)
 fresno_mlra_aea <- crop(mlra_aea_shp, fresno_area_aea)
 # plot(fresno_mlra_aea)
+CV_fresno_mlra_aea <- fresno_mlra_aea[fresno_mlra_aea$MLRA_NAME=='Sacramento and San Joaquin Valleys', ]
+plot(CV_fresno_mlra_aea)
+area(CV_fresno_mlra_aea) / 10000 * 2.47105 #2102879 ac
+salinas_mlra_aea <- crop(mlra_aea_shp, salinas_area_aea)
+plot(salinas_mlra_aea)
+salinas_mlra_aea <- salinas_mlra_aea[salinas_mlra_aea$MLRA_NAME=='Central California Coastal Valleys',]
+plot(salinas_mlra_aea)
+
+#crop map unit shapfiles to mlra valley extents
+names(fresno_mu_aea)
+names(salinas_mu_aea)
+fresno_mu_aea <- crop(fresno_mu_aea, CV_fresno_mlra_aea)
+plot(fresno_mu_aea)
+sum(area(fresno_mu_aea)) / 10000 * 2.47105 #2102879 ac
+
 
 #read in component (comp) data
 list.files(file.path(ssurgoDir, 'component_data'))
@@ -377,6 +420,7 @@ fresno_mu_aea$majcomp_pct <- majcomp_pct_by_mukey$majcomppct[match(fresno_mu_aea
 
 #add more naming information
 fresno_mu_aea$muname <- mu_data_Fresno$muname[match(fresno_mu_aea$mukey, mu_data_Fresno$mukey)]
+fresno_mu_aea$majcompnames <- majcompnames_by_mukey$majcompnames[match(fresno_mu_aea$mukey, majcompnames_by_mukey$mukey)]
 fresno_mu_aea$complex <- ifelse(grepl('complex', fresno_mu_aea$muname), 'Yes', 'No') #374 yes
 fresno_mu_aea$association <- ifelse(grepl('association', fresno_mu_aea$muname), 'Yes', 'No') #272 yes
 
@@ -386,7 +430,13 @@ fresno_mu_aea$storierng <- storie_rng_by_mukey$storierng[match(fresno_mu_aea$muk
 # summary(fresno_mu_aea$storierng)
 # all compnames by mukey 
 # sum(grepl('-', unique(comp_data_Fresno$compname)))
-#this counts rock outcrop when it's a minor component
+
+#add concatenated restrictive info
+fresno_mu_aea$restrict <- reskinds_by_mukey$reskinds[match(fresno_mu_aea$mukey, reskinds_by_mukey$mukey)]
+table(fresno_mu_aea$restrict)
+# sum(is.na(fresno_mu_aea$restrict))
+fresno_mu_aea$restrict[is.na(fresno_mu_aea$restrict)] <- 'None'
+
 fresno_mu_aea$Rock_OC <- ifelse(grepl('Rock outcrop', compnames_by_mukey$compnames[match(fresno_mu_aea$mukey, compnames_by_mukey$mukey)]), 'Yes', 'No')
 # summary(as.factor(fresno_mu_aea$Rock_OC)) #1953 polygons have rock outcrop
 
@@ -406,6 +456,15 @@ fresno_mu_aea$ATC <- ifelse(grepl('Abrupt textural change', reskinds_by_mukey$re
 
 fresno_mu_aea$Natric <- ifelse(grepl('Natric', reskinds_by_mukey$reskinds[match(fresno_mu_aea$mukey, reskinds_by_mukey$mukey)]), 'Yes', 'No')
 # table(fresno_mu_aea$Natric)
+
+fresno_mu_aea$Misc_Res <- ifelse(grepl('Densic material|Cemented horizon|Petrocalcic|Strongly contrasting textural stratification', reskinds_by_mukey$reskinds[match(fresno_mu_aea$mukey, reskinds_by_mukey$mukey)]), 'Yes', 'No')
+# table(fresno_mu_aea$Misc_Res)
+
+
+#add awc info
+fresno_mu_aea$aws050wta <- mu_data_Fresno$aws050wta[match(fresno_mu_aea$mukey, mu_data_Fresno$mukey)]
+fresno_mu_aea$aws100wta <- mu_data_Fresno$aws0100wta[match(fresno_mu_aea$mukey, mu_data_Fresno$mukey)]
+fresno_mu_aea$aws150wta <- mu_data_Fresno$aws0150wta[match(fresno_mu_aea$mukey, mu_data_Fresno$mukey)]
 
 #not including rock OC in this definition
 #however some rock OC components are listed as a lithic bedrock restrictive horizon so this is a complicating factor--removed above?
@@ -501,12 +560,7 @@ fresno_mu_aea$Natric_pct[fresno_mu_aea$Natric=='Yes'] <- fresno_Natric_comppct$c
 
 #now add horizon aggregated data
 #from previous comp level aggregation work
-compsums <- as.data.frame(tapply(df$comppct_r[!is.na(df[[varname]])], df$unique_model_code[!is.na(df[[varname]])], sum)) #this sums up component percentages (that have data) by unique_model_code
-colnames(compsums) <- 'compsums'
-compsums$unique_model_code <- as.integer(rownames(compsums))
-results <- cbind(df[!is.na(df[[varname]]), c(varname_doy, 'comppct_r')], compsums[match(df$unique_model_code[!is.na(df[[varname]])], compsums$unique_model_code), ]) #this eliminates rows with varname as NA and then adds the total component percentage calculated above
-var.final <- tapply(results[[varname_doy]]*(results$comppct_r/results$compsums), results$unique_model_code, sum)
-
+lapply(comp_Fresno_10cm, class)
 colnames(comp_Fresno_10cm)[5:ncol(comp_Fresno_10cm)]
 MUaggregate <- function(df1, varname) {
   sapply(split(x=df1, f=df1$mukey), FUN=function(x) {if(sum(!is.na(x[[varname]]))==0) {NA} 
@@ -515,18 +569,41 @@ MUaggregate <- function(df1, varname) {
 }
 MUAggregate_wrapper <- function(df1, varnames) {
   x <- sapply(varnames, FUN=MUaggregate, df1=df1)
-  #as.data.frame(cbind(mukey=row.names(x), x))
+  as.data.frame(cbind(mukey=as.integer(row.names(x)), x))
 }
 Fresno_10cm_muagg <- MUAggregate_wrapper(df1=comp_Fresno_10cm, varnames = colnames(comp_Fresno_10cm)[5:ncol(comp_Fresno_10cm)])
+head(Fresno_10cm_muagg)
+dim(Fresno_10cm_muagg)
+lapply(Fresno_10cm_muagg, class)
 Fresno_30cm_muagg <- MUAggregate_wrapper(df1=comp_Fresno_30cm, varnames = colnames(comp_Fresno_30cm)[5:ncol(comp_Fresno_30cm)])
 Fresno_100cm_muagg <- MUAggregate_wrapper(df1=comp_Fresno_100cm, varnames = colnames(comp_Fresno_100cm)[5:ncol(comp_Fresno_100cm)])
 
-fresno_mu_aea <- merge(fresno_mu_aea, Fresno_10cm_muagg, by='mukey')
-fresno_mu_aea <- merge(fresno_mu_aea, Fresno_30cm_muagg, by='mukey')
-fresno_mu_aea <- merge(fresno_mu_aea, Fresno_100cm_muagg, by='mukey')
+names(fresno_mu_aea)
+fresno_mu_aea_30cm <- merge(fresno_mu_aea, Fresno_30cm_muagg, by = 'mukey')
+fresno_mu_aea_100cm <- merge(fresno_mu_aea, Fresno_100cm_muagg, by = 'mukey')
+fresno_mu_aea_v2 <- merge(fresno_mu_aea, Fresno_10cm_muagg, by='mukey')
+fresno_mu_aea_v2 <- merge(fresno_mu_aea_v2, Fresno_30cm_muagg, by='mukey')
+fresno_mu_aea_v2 <- merge(fresno_mu_aea_v2, Fresno_100cm_muagg, by='mukey')
+lapply(as.data.frame(fresno_mu_aea), class)
+
+#write 30 cm to csv
+fresno_30cm <- as.data.frame(fresno_mu_aea_30cm)
+colnames(fresno_30cm)
+write.csv(fresno_30cm, file.path(summaryDir, 'fresno_30cm_test.csv'), row.names = FALSE)
+lapply(fresno_30cm, function(x) sum(is.na(x)))
+
+#write 100 cm to csv
+fresno_100cm <- as.data.frame(fresno_mu_aea_100cm)
+colnames(fresno_100cm)
+write.csv(fresno_100cm, file.path(summaryDir, 'fresno_100cm_test.csv'), row.names = FALSE)
+plot(fresno_100cm$aws100wta, fresno_100cm$awc_100cm)
+sum(fresno_100cm$awc_100cm  - fresno_100cm$aws100wta > 0.2, na.rm = TRUE) #
+fresno_100cm$muname[which(fresno_100cm$awc_100cm  - fresno_100cm$aws100wta > 0.2)]
+
 
 #write to file
-shapefile(fresno_mu_aea, file.path(ssurgoDir, 'ca_mapunits/fresno_only/ca651_653_654mu_aea.shp'), overwrite=TRUE)
+names(fresno_mu_aea_v2)
+shapefile(fresno_mu_aea_v2, file.path(ssurgoDir, 'ca_mapunits/fresno_only/ca651_653_654mu_aea.shp'), overwrite=TRUE)
 
 #lapply(split(x=comp_Fresno_10cm, f=comp_Fresno_10cm$mukey), FUN=function(x) {if(sum(!is.na(x$clay))==0) {NA} else{sum(x$comppct[!is.na(x$clay)] * x$clay[!is.na(x$clay)] / sum(x$comppct[!is.na(x$clay)]))}}))
 #this needs help
