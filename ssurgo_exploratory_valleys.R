@@ -1,7 +1,8 @@
 #To-do
+#caculate minimum reskind type [DONE]
 #check misc_res_by_cokey if applying to new datasets
 #check effect of excluding minor components on AWC calc
-#check how resdep is calculated in multi-component mukeys when some componenets have restrictions and some don't
+#check how resdep is calculated in multi-component mukeys when some components have restrictions and some don't
 library(raster)
 library(aqp)
 #demo(aqp)
@@ -681,7 +682,9 @@ valley_mu_aea$SCTS_dep <- assumed_depth
 valley_mu_aea$SCTS_dep[valley_mu_aea$SCTS=='Yes'] <- SCTS_by_mukey$resdept_r[match(valley_mu_aea$mukey[valley_mu_aea$SCTS=='Yes'], SCTS_by_mukey$mukey)]
 valley_mu_aea$MRes_dep <- assumed_depth
 valley_mu_aea$MRes_dep[valley_mu_aea$Misc_Res=='Yes'] <- misc_res_by_mukey$resdept_r[match(valley_mu_aea$mukey[valley_mu_aea$Misc_Res=='Yes'], misc_res_by_mukey$mukey)]
-
+#minimum of all reskind depths
+valley_mu_aea$MnRs_dep <- apply(as.data.frame(valley_mu_aea)[ ,c('Lthc_dep', 'Plth_dep', 'Drpn_dep', 'ATC_dep', 'Natr_dep', 'Salc_dep', 'SCTS_dep', 'MRes_dep')], 1, min)
+#
 #now add horizon aggregated data
 #from previous comp level aggregation work
 # lapply(comp_valley_10cm, class)
@@ -698,8 +701,8 @@ valley_mu_aea_10cm <- merge(valley_mu_aea, valley_10cm_muagg, by = 'mukey')
 valley_mu_aea_30cm <- merge(valley_mu_aea, valley_30cm_muagg, by = 'mukey')
 valley_mu_aea_100cm <- merge(valley_mu_aea, valley_100cm_muagg, by = 'mukey')
 
-#write 30cm to shapefile
-shapefile(valley_mu_aea_30cm, file.path(summaryDir, 'valley_30cm.shp'))
+#write 30cm to shapefile for cluster analysis
+shapefile(valley_mu_aea_30cm, file.path(summaryDir, 'valley_30cm.shp'), overwrite=TRUE)
 
 #write 10 cm to csv
 valley_10cm <- as.data.frame(valley_mu_aea_10cm)
