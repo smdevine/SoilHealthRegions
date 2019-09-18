@@ -3,6 +3,7 @@
 #(2) summarize classes for 4 and 5 
 #(3) log transform om and ksat
 #(4) identify outliers
+laptop <- TRUE
 library(raster)
 library(corrplot)
 library(cluster)
@@ -11,10 +12,17 @@ library(fpc)
 library(fmsb)
 library(extrafont)
 library(extrafontdb)
-font_import() #only needs to be done one time after updating and re-installing R and moving and updating packages
+#font_import() #only needs to be done one time after updating and re-installing R and moving and updating packages
 loadfonts(device = 'win')
-dataDir <- 'C:/Users/smdevine/Desktop/PostDoc/soil health/summaries/valley_trial'
-FiguresDir <- file.path('C:/Users/smdevine/Desktop/PostDoc/soil health/Figures/valley_trial')
+# 
+if (laptop) {
+  dataDir <- 'C:/Users/smdevine/Desktop/post doc/soil health/summaries/valley_trial'
+  FiguresDir <- 'C:/Users/smdevine/Desktop/post doc/soil health/Figures/valley_trial'
+} else { #on UCD desktop
+  dataDir <- 'C:/Users/smdevine/Desktop/PostDoc/soil health/summaries/valley_trial'
+  FiguresDir <- 'C:/Users/smdevine/Desktop/PostDoc/soil health/Figures/valley_trial'
+  
+}
 mar_settings <- c(4, 4.5, 1, 1)
 list.files(dataDir)
 valley_mu_aea_30cm <- shapefile(file.path(dataDir, 'valley_30cm.shp'))
@@ -58,12 +66,13 @@ log_transform <- function(x, df) {
 }
 var_list <- c('om_30cm', 'cec_30cm', 'ec_30cm', 'sar_30cm', 'lep_30cm', 'ksat_30cm')
 for (i in seq_along(var_list)) {
-  df_for_clustering <- log_transform(x=var_list[i], df = df_for_clustering)
+  df_for_clustering <- log_transform(x=var_list[i], df = df_for_clustering) #above variables are log transformed
 }
 mapply(function(x, y) hist(x, main=y), x=df_for_clustering, y=colnames(df_for_clustering))
 dim(df_for_clustering)
-df_for_clustering_scaled <- scale(df_for_clustering)
+df_for_clustering_scaled <- as.data.frame(scale(df_for_clustering))
 summary(df_for_clustering_scaled) #awkward
+colnames(df_for_clustering_scaled)
 mapply(function(x, y) hist(x, main=y), x=df_for_clustering_scaled, y=colnames(df_for_clustering_scaled))
 cluster_2 <- kmeans(na.omit(df_for_clustering_scaled), centers=2, iter.max = 200, nstart = 50)
 cluster_2
@@ -116,6 +125,7 @@ par(mar=c(0.1, 0.1, 0.1, 0.1))
 radarchart(cluster_fk_5[,c('clay_30cm', 'om_30cm', 'lep_30cm', 'ec_30cm', 'sar_30cm',  "MnRs_dep", 'ksat_30cm', 'awc_30cm')], vlabels=c('clay', 'OM', 'shrink-swell', 'Saline', 'Sodic',  "Depth to Res.", 'Ks', 'AWC'), maxmin = TRUE, plwd = 3)
 legend(x = -1.25, y = -0.25, legend = 1:5, col=1:5, lty=1:5, lwd = 3)
 dev.off()
+
 kmeans_test <- function(y, z) {sapply(1:y, function(x) {
     result <- kmeans(na.omit(z), centers = x, iter.max = 100, nstart = 25)
     round(100 * result$betweenss / result$totss, 1)})
