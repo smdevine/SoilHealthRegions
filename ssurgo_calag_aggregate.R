@@ -1,8 +1,10 @@
-#To-do
+#currently, only 0-30 cm aggregation done, but 0-10 and 0-100 cm are available if needed
+#TO-DOs
 #caculate minimum reskind type [DONE]
 #check misc_res_by_cokey if applying to new datasets
 #check effect of excluding minor components on AWC calc
 #check how resdep is calculated in multi-component mukeys when some components have restrictions and some don't
+#add tabulation of majcomps with data
 library(raster)
 library(aqp)
 library(extrafont)
@@ -11,7 +13,7 @@ library(extrafontdb)
 loadfonts()
 #demo(aqp)
 #demo(slope_effect_hz_thickness)
-laptop <- TRUE
+laptop <- FALSE
 if (laptop) {
   mainDir <- 'C:/Users/smdevine/Desktop/post doc'
 } else { #on UCD desktop
@@ -20,7 +22,7 @@ if (laptop) {
 ecoDir <- file.path(mainDir, 'soil health/ecoregions') #need to rename directory to postdoc to match laptop
 ssurgoDir <- file.path(mainDir, 'soil health/ssurgo_data')
 cropsDir <- file.path(mainDir, 'soil health/crops')
-summaryDir <- file.path(mainDir, 'soil health/summaries/valley_trial')
+summaryDir <- file.path(mainDir, 'soil health/summaries/valley_final')
 FiguresDir <- file.path(mainDir, 'soil health/Figures/ag_land')
 cropsCRS <- crs('+proj=aea +lat_1=34 +lat_2=40.5 +lat_0=0 +lon_0=-120 +x_0=0 +y_0=-4000000 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs')
 res_plots <- 150
@@ -129,9 +131,9 @@ MUAggregate_wrapper <- function(df1, varnames) {
   as.data.frame(cbind(mukey=as.integer(row.names(x)), x))
 }
 #read in CA shapefile
-CA_counties <- shapefile(file.path(CAcountiesDir, 'county_nrcs_a_ca.shp'))
-CA <- aggregate(CA_counties)
-CA_aea <- spTransform(CA, cropsCRS)
+# CA_counties <- shapefile(file.path(CAcountiesDir, 'county_nrcs_a_ca.shp'))
+# CA <- aggregate(CA_counties)
+# CA_aea <- spTransform(CA, cropsCRS)
 
 #read in map unit (mu) tabular data
 mu_data <- read.csv(file.path(ssurgoDir, 'ca_mapunit_data.csv'), stringsAsFactors = FALSE)
@@ -140,22 +142,20 @@ mu_data <- read.csv(file.path(ssurgoDir, 'ca_mapunit_data.csv'), stringsAsFactor
 # sum(grepl('complex', mu_data$muname)) #5526 complexes
 
 #read in map unit spatial data
-list.files(file.path(ssurgoDir, 'ca_mapunits'))
-mu_shp <- shapefile(file.path(ssurgoDir, 'ca_mapunits', 'ca_mapunits.shp'))
+# list.files(file.path(ssurgoDir, 'ca_mapunits'))
+# mu_shp <- shapefile(file.path(ssurgoDir, 'ca_mapunits', 'ca_mapunits.shp'))
 # unique(mu_shp$areasymbol)
 
 #read in MLRA shapefile
-mlra_shp <- shapefile(file.path(ssurgoDir, 'mlra', 'mlra_a_ca.shp')) #59 features
+# list.files(file.path(ssurgoDir, 'mlra'))
+# mlra_shp <- shapefile(file.path(ssurgoDir, 'mlra', 'mlra_a_ca.shp')) #59 features
 # plot(mlra_shp)
-valley_mlra_shp <- mlra_shp[mlra_shp$MLRA_NAME=='Sacramento and San Joaquin Valleys' | mlra_shp$MLRA_NAME=='Central California Coastal Valleys', ]
+# valley_mlra_shp <- mlra_shp[mlra_shp$MLRA_NAME=='Sacramento and San Joaquin Valleys' | mlra_shp$MLRA_NAME=='Central California Coastal Valleys', ]
 # mlra_aea_shp <- spTransform(mlra_shp, cropsCRS)
 # shapefile(mlra_aea_shp, file.path(ssurgoDir, 'mlra', 'mlra_ca_aea.shp'))
 # mlra_aea_shp <- shapefile(file.path(ssurgoDir, 'mlra', 'mlra_ca_aea.shp')) #Central California Coastal Valleys, Sacramento and San Joaquin Valleys, 
 # plot(mlra_aea_shp)
 # unique(mlra_aea_shp$MLRA_NAME)
-# aoi_aea_shp <- mlra_aea_shp[mlra_aea_shp$MLRA_NAME=='Sacramento and San Joaquin Valleys' | mlra_aea_shp$MLRA_NAME=='Central California Coastal Valleys' , ]
-# plot(aoi_aea_shp)
-# aoi_aea_shp <- aggregate(aoi_aea_shp)
 
 #plot area of interest via MLRA shapefile
 # tiff(file = file.path(FiguresDir, 'ca_mlra.tif'), pointsize = 10, family = 'Times New Roman', width = 4.5, height = 4.5, units = 'in', res = res_plots)
@@ -171,10 +171,13 @@ valley_mlra_shp <- mlra_shp[mlra_shp$MLRA_NAME=='Sacramento and San Joaquin Vall
 # dev.off()
 
 #crop map unit shapfiles to mlra valley extents
-valley_mu_shp <- crop(mu_shp, valley_mlra_shp)
-plot(valley_mu_shp, col='red', add=TRUE)
-sum(area(valley_mu_shp)) / 10000 * 2.47105 #2508000
-length(unique(valley_mu_shp$mukey)) #786 map-units
+# valley_mu_shp <- crop(mu_shp, valley_mlra_shp)
+# plot(valley_mu_shp)
+# sum(area(valley_mu_shp)) / 10000 * 2.47105 # 13,873,110 acres
+# length(unique(valley_mu_shp$mukey)) #5,043 map-unit kinds
+# shapefile(valley_mu_shp, file.path(ssurgoDir, 'ca_mapunits', 'valley_only', 'valley_mapunits.shp'))
+valley_mu_shp <- shapefile(file.path(ssurgoDir, 'ca_mapunits', 'valley_only', 'valley_mapunits.shp'))
+mu_data_valley <- mu_data[mu_data$mukey %in% valley_mu_shp$mukey, ]
 
 #read in component (comp) data
 #valley exploratory version replaces comp_data_Fresno with comp_data_valley
@@ -184,33 +187,33 @@ colnames(comp_data)
 # dim(comp_data) #91193
 # length(unique(comp_data$mukey)) #18,861 
 # length(unique(comp_data$cokey)) #91,193 unique cokeys
-comp_data_valley <- comp_data[comp_data$mukey %in% valley_mu_aea$mukey,]
+comp_data_valley <- comp_data[comp_data$mukey %in% valley_mu_shp$mukey,]
 if(sum(is.na(comp_data_valley$majcompflag)) > 0) {stop(print('there are NAs in majcomp column!'))}
 if(sum(is.na(comp_data_valley$comppct_r)) > 0) {stop(print('there are NAs in the comppct column!'))}
 sum(is.na(comp_data_valley$comppct_r))
-dim(comp_data_valley) #3685 rows
-length(unique(comp_data_valley$mukey)) #786 map units match above
-length(unique(comp_data_valley$cokey)) #3685 unique components
-unique(comp_data_valley$taxorder) #9 soil orders here
-length(unique(comp_data_valley$compname)) #291 unique component names
+comp_data_valley <- comp_data_valley[!is.na(comp_data_valley$comppct_r),]
+dim(comp_data_valley) #23493 rows
+length(unique(comp_data_valley$mukey)) #5043 map units match above
+length(unique(comp_data_valley$cokey)) #23493 unique components
+unique(comp_data_valley$taxorder) #9 soil orders here and NA
+length(unique(comp_data_valley$compname)) #1153 unique component names
 unique(comp_data_valley$taxgrtgroup)
 sum(!is.na(comp_data_valley$castorieindex))
 sum(!is.na(comp_data_valley$castorieindex) & comp_data_valley$majcompflag=='Yes')
 sum(!is.na(comp_data_valley$castorieindex) & comp_data_valley$majcompflag=='No ')
 comp_data_valley[comp_data_valley$majcompflag=='No ' & !is.na(comp_data_valley$castorieindex), ]
 summary(comp_data_valley$comppct_r[comp_data_valley$majcompflag=='Yes'])
-sum(comp_data_valley$comppct_r[comp_data_valley$majcompflag=='Yes'] < 15) #1 instance of <15% comppct_r flagged as majcomps
+sum(comp_data_valley$comppct_r[comp_data_valley$majcompflag=='Yes'] < 15) #10 instance of <15% comppct_r flagged as majcomps
 comp_data_valley[comp_data_valley$majcompflag=='Yes' & comp_data_valley$comppct_r < 15,]
-sum(comp_data_valley$comppct_r[comp_data_valley$majcompflag=='No '] >= 15) #1 not flagged as majcomp in these valleys with < 15%
+sum(comp_data_valley$comppct_r[comp_data_valley$majcompflag=='No '] >= 15) #110 not flagged as majcomp in these valleys with < 15%
 comp_data_valley[comp_data_valley$majcompflag=='No ' & comp_data_valley$comppct_r>=15, ]
-sum(comp_data_valley$majcompflag=='No ' & comp_data_valley$comppct_r>=15 & !is.na(comp_data_valley$castorieindex)) #hay tres
+sum(comp_data_valley$majcompflag=='No ' & comp_data_valley$comppct_r>=15 & !is.na(comp_data_valley$castorieindex)) #7
 
 #fix a few majcompflag errors
 comp_data_valley$majcompflag[comp_data_valley$majcompflag=='No ' & comp_data_valley$comppct_r>=15 & !is.na(comp_data_valley$castorieindex)] <- 'Yes'
 comp_data_valley$majcompflag[comp_data_valley$majcompflag=='Yes' & comp_data_valley$comppct_r < 15] <- 'No '
 
 restrictions <- read.csv(file.path(ssurgoDir, 'component_data', 'ca_restrictions.csv'), stringsAsFactors = FALSE, na.strings = c("", " "))
-#restrictions$mukey <- comp_data$mukey[match(restrictions$cokey, comp_data$cokey)]
 # head(restrictions)
 # dim(restrictions) #some cokeys have more than one restrictive layer
 # length(unique(restrictions$cokey))
@@ -218,7 +221,7 @@ restrictions_valley <- restrictions[restrictions$cokey %in% comp_data_valley$cok
 restrictions_valley$majcompflag <- comp_data_valley$majcompflag[match(restrictions_valley$cokey, comp_data_valley$cokey)]
 # unique(restrictions_valley$reskind)
 restrictions_valley$mukey <- comp_data_valley$mukey[match(restrictions_valley$cokey, comp_data_valley$cokey)]
-sum(duplicated(restrictions_valley$cokey))
+sum(duplicated(restrictions_valley$cokey)) #368
 restrictions_valley$comppct <- comp_data_valley$comppct_r[match(restrictions_valley$cokey, comp_data_valley$cokey)]
 
 #depths to majcomp restrictions by reskind type
@@ -230,25 +233,25 @@ head(lithic_by_cokey)
 # dim(lithic_by_cokey)
 # sum(duplicated(lithic_by_cokey$cokey))
 lithic_by_mukey <- MUAggregate_wrapper(df1 = lithic_by_cokey, varnames = c('resdept_r', 'resdepb_r'))
-lithic_by_mukey
+head(lithic_by_mukey)
 
 paralithic_by_cokey <- restrictions_valley[which(restrictions_valley$reskind=='Paralithic bedrock' & restrictions_valley$majcompflag=='Yes'), ]
 # dim(paralithic_by_cokey)
 # sum(duplicated(paralithic_by_cokey$cokey))
 paralithic_by_mukey <- MUAggregate_wrapper(df1 = paralithic_by_cokey, varnames = c('resdept_r', 'resdepb_r'))
-paralithic_by_mukey
+head(paralithic_by_mukey)
 
 duripan_by_cokey <- restrictions_valley[which(restrictions_valley$reskind=='Duripan' & restrictions_valley$majcompflag=='Yes'), ]
 # dim(duripan_by_cokey)
 # sum(duplicated(duripan_by_cokey$cokey))
 duripan_by_mukey <- MUAggregate_wrapper(df1 = duripan_by_cokey, varnames = c('resdept_r', 'resdepb_r'))
-duripan_by_mukey
+head(duripan_by_mukey)
 
 ATC_by_cokey <- restrictions_valley[which(restrictions_valley$reskind=='Abrupt textural change' & restrictions_valley$majcompflag=='Yes'), ]
 # dim(ATC_by_cokey)
 # sum(duplicated(ATC_by_cokey$cokey))
 ATC_by_mukey <- MUAggregate_wrapper(df1 = ATC_by_cokey, varnames = c('resdept_r', 'resdepb_r'))
-ATC_by_mukey
+head(ATC_by_mukey)
 
 natric_by_cokey <- restrictions_valley[which(restrictions_valley$reskind=='Natric' & restrictions_valley$majcompflag=='Yes'), ]
 # dim(natric_by_cokey)
@@ -260,24 +263,19 @@ salic_by_cokey <- restrictions_valley[which(restrictions_valley$reskind=='Salic'
 salic_by_mukey <- MUAggregate_wrapper(df1 = salic_by_cokey, varnames = c('resdept_r', 'resdepb_r'))
 salic_by_mukey
 
-# densic_by_cokey <- restrictions_valley[which(restrictions_valley$reskind=='Densic material' & restrictions_valley$majcompflag=='Yes'), ]
-# densic_by_mukey <- MUAggregate_wrapper(df1 = densic_by_cokey, varnames = c('resdept_r', 'resdepb_r'))
-# densic_by_mukey
-# 
-# cemented_by_cokey <- restrictions_valley[which(restrictions_valley$reskind=='Densic material' & restrictions_valley$majcompflag=='Yes'), ]
-
 SCTS_by_cokey <- restrictions_valley[which(restrictions_valley$reskind=='Strongly contrasting textural stratification' & restrictions_valley$majcompflag=='Yes'), ]
 SCTS_by_mukey <- MUAggregate_wrapper(df1 = SCTS_by_cokey, varnames = c('resdept_r', 'resdepb_r'))
 SCTS_by_mukey
 
+#now needs to be fixed so that if there's more than one restriction for a given cokey, the minimum is chosen before averaging with other cokeys
 misc_res_by_cokey <- restrictions_valley[which(restrictions_valley$reskind %in% c('Densic material', 'Cemented horizon', 'Petrocalcic') & restrictions_valley$majcompflag=='Yes'), ]
-# dim(misc_res_by_cokey) #16
-# sum(duplicated(misc_res_by_cokey$cokey))
-sum(duplicated(misc_res_by_cokey$mukey)) #only one will be averaged, but doesn't matter because they have same depth
+# dim(misc_res_by_cokey) #
+sum(duplicated(misc_res_by_cokey$cokey))
+sum(duplicated(misc_res_by_cokey$mukey)) #5 will be averaged
 misc_res_by_cokey[duplicated(misc_res_by_cokey$mukey),]
-restrictions_valley[restrictions_valley$mukey==467123,]
+restrictions_valley[restrictions_valley$mukey %in% misc_res_by_cokey$mukey[duplicated(misc_res_by_cokey$mukey)],] #467123 has different depths for cokey 16620622
 misc_res_by_mukey <- MUAggregate_wrapper(df1 = misc_res_by_cokey, varnames = c('resdept_r', 'resdepb_r'))
-misc_res_by_mukey
+misc_res_by_mukey[misc_res_by_mukey$mukey==461133, ]
 
 #parent material info
 parentmat <- read.csv(file.path(ssurgoDir, 'component_data', 'ca_parentmat.csv'), stringsAsFactors = FALSE, na.strings = c("", " "))
@@ -319,27 +317,27 @@ hillslope_pos_by_cokey <- data.frame(cokey = row.names(tapply(hillslope_pos_vall
 hillslope_pos_by_mukey <- data.frame(mukey = row.names(tapply(hillslope_pos_valley$hillslopeprof[hillslope_pos_valley$majcompflag=='Yes'], hillslope_pos_valley$mukey[hillslope_pos_valley$majcompflag=='Yes'], function(x) unique(x))), hillpos= as.character(tapply(hillslope_pos_valley$hillslopeprof[hillslope_pos_valley$majcompflag=='Yes'], hillslope_pos_valley$mukey[hillslope_pos_valley$majcompflag=='Yes'], concat_names)), stringsAsFactors = FALSE)
 unique(hillslope_pos_by_mukey$hillpos)
 table(hillslope_pos_by_mukey$hillpos)
-sum(is.na(hillslope_pos_by_mukey$hillpos)) #only 2 NA
+sum(is.na(hillslope_pos_by_mukey$hillpos)) #only 6 NA
 hillslope_pos_by_mukey$mukey[hillslope_pos_by_mukey$hillpos=='Footslope-Summit']
 hillslope_pos_valley[hillslope_pos_valley$mukey==464368,]
 comp_data_valley[comp_data_valley$mukey==464368, ]
 
 #valley only dataset
 reskinds_by_cokey <- data.frame(cokey = row.names(tapply(restrictions_valley$reskind[restrictions_valley$majcompflag=='Yes'], restrictions_valley$cokey[restrictions_valley$majcompflag=='Yes'],  function(x) unique(x))), reskinds = as.character(tapply(restrictions_valley$reskind[restrictions_valley$majcompflag=='Yes'], restrictions_valley$cokey[restrictions_valley$majcompflag=='Yes'], concat_names)), stringsAsFactors = FALSE) #function(x) unique(x)))) #function(x) if(all(is.na(x))) {NA} else if (length(unique(x[!is.na(x)]))==1) {unique(x[!is.na(x)])} else{paste(unique(x[!is.na(x)])[order(unique(x[!is.na(x)]))], collapse = '-')})
-# dim(reskinds_by_cokey) #488 majcomp cokeys with restrictions
+# dim(reskinds_by_cokey) #3139 majcomp cokeys with restrictions
 # length(unique(reskinds_by_cokey$cokey))
 # lapply(reskinds_by_cokey, class)
-# unique(reskinds_by_cokey$reskinds) #17 different reskind combos for valley
+# unique(reskinds_by_cokey$reskinds) #28 different reskind combos for valley
 reskinds_by_cokey$mukey <- comp_data_valley$mukey[match(reskinds_by_cokey$cokey, comp_data_valley$cokey)]
-# length(unique(reskinds_by_cokey$mukey)) #375 mukeys
+length(unique(reskinds_by_cokey$mukey)) #2411 mukeys
 reskinds_by_cokey$comp_pct <- comp_data_valley$comppct_r[match(reskinds_by_cokey$cokey, comp_data_valley$cokey)]
 reskinds_by_cokey$majcompflag <- comp_data_valley$majcompflag[match(reskinds_by_cokey$cokey, comp_data_valley$cokey)]
 #get rid of rock outcrop cokeys from this
 reskinds_by_cokey$compname <- comp_data_valley$compname[match(reskinds_by_cokey$cokey, comp_data_valley$cokey)]
-# sum(reskinds_by_cokey$compname=='Rock outcrop') #hay 30 de 488
+sum(reskinds_by_cokey$compname=='Rock outcrop') #hay 86
 reskinds_by_cokey <- reskinds_by_cokey[reskinds_by_cokey$compname != 'Rock outcrop', ]
-# summary(as.factor(reskinds_by_cokey$majcompflag)) #minor components were left out in the original creation of the table above
-# summary(as.factor(tapply(reskinds_by_cokey$cokey, reskinds_by_cokey$mukey, function(x) length(x)))) #up to 3, makes sense given that there are at most 3 major components in a map-unit for this AOI
+summary(as.factor(reskinds_by_cokey$majcompflag)) #minor components were left out in the original creation of the table above
+summary(as.factor(tapply(reskinds_by_cokey$cokey, reskinds_by_cokey$mukey, function(x) length(x)))) #up to 4 per mukey, makes sense given that there are at most 3 major components in a map-unit for this AOI
 #reskinds needs to be unconcatenated first before finding unique
 
 reskinds_by_mukey <- data.frame(mukey = row.names(tapply(reskinds_by_cokey$cokey, reskinds_by_cokey$mukey, function(x) unique(x))), reskinds = as.character(tapply(reskinds_by_cokey$reskind, reskinds_by_cokey$mukey, concat_names, decat=TRUE)), stringsAsFactors = FALSE)
@@ -347,45 +345,46 @@ reskinds_by_mukey <- data.frame(mukey = row.names(tapply(reskinds_by_cokey$cokey
 # table(reskinds_by_mukey$reskinds)
 
 majcomps_no_by_mukey <- data.frame(mukey=row.names(tapply(comp_data_valley$majcompflag, comp_data_valley$mukey, function(x) sum(x=='Yes'))), majcomp_no = as.numeric(tapply(comp_data_valley$majcompflag, comp_data_valley$mukey, function(x) sum(x=='Yes'))), stringsAsFactors = FALSE)
-# unique(majcomps_no_by_mukey$majcomp_no)
-# sum(majcomps_no_by_mukey$majcomp_no==0) #1
-# comp_data_valley[comp_data_valley$mukey==majcomps_no_by_mukey$mukey[majcomps_no_by_mukey$majcomp_no==0], ] #its the ole' town map unit
+unique(majcomps_no_by_mukey$majcomp_no)
+sum(majcomps_no_by_mukey$majcomp_no==0) #2
+comp_data_valley[comp_data_valley$mukey %in% majcomps_no_by_mukey$mukey[majcomps_no_by_mukey$majcomp_no==0], ] #its the ole' town map unit and Water
 
 majcompnames_by_mukey <- data.frame(mukey=row.names(tapply(comp_data_valley$compname[comp_data_valley$majcompflag=='Yes'], comp_data_valley$mukey[comp_data_valley$majcompflag=='Yes'], concat_names)), majcompnames=as.character(tapply(comp_data_valley$compname[comp_data_valley$majcompflag=='Yes'], comp_data_valley$mukey[comp_data_valley$majcompflag=='Yes'], concat_names)), stringsAsFactors = FALSE)
-# unique(majcompnames_by_mukey$majcompnames) #277 unique major component name combos
+length(unique(majcompnames_by_mukey$majcompnames)) #1293 unique major component name combos
 
 compnames_by_mukey <- data.frame(mukey=row.names(tapply(comp_data_valley$compname, comp_data_valley$mukey, function(x) unique(x))), compnames = as.character(tapply(comp_data_valley$compname, comp_data_valley$mukey, concat_names)), stringsAsFactors = FALSE)
-# unique(compnames_by_mukey$compnames) #470 different map-unit combos accounting for both major and minor components; decat=TRUE has no effect
-# dim(compnames_by_mukey) #but 786 mukeys
+length(unique(compnames_by_mukey$compnames)) #2960 different map-unit combos accounting for both major and minor components; decat=TRUE has no effect
+dim(compnames_by_mukey) #but 5043 mukeys
 
 majcokeys_by_mukey <- tapply(comp_data_valley$cokey[comp_data_valley$majcompflag=='Yes'], comp_data_valley$mukey[comp_data_valley$majcompflag=='Yes'], function(x) x)
 
 majcomp_taxorders_by_mukey <- data.frame(mukey=row.names(tapply(comp_data_valley$taxorder[comp_data_valley$majcompflag=='Yes'], comp_data_valley$mukey[comp_data_valley$majcompflag=='Yes'], concat_names)), taxorders=as.character(tapply(comp_data_valley$taxorder[comp_data_valley$majcompflag=='Yes'], comp_data_valley$mukey[comp_data_valley$majcompflag=='Yes'], concat_names)), stringsAsFactors = FALSE)
-# unique(majcomp_taxorders_by_mukey$taxorders)
+# unique(majcomp_taxorders_by_mukey$taxorders) #34 different
 
 domcomp_pct_by_mukey <- data.frame(mukey=row.names(tapply(comp_data_valley$comppct_r, comp_data_valley$mukey, function(x) max(x, na.rm=TRUE))), docomppct=as.numeric(tapply(comp_data_valley$comppct_r, comp_data_valley$mukey, function(x) max(x, na.rm=TRUE))), stringsAsFactors = FALSE)
-# summary(domcomp_pct_by_mukey$docomppct)
+summary(domcomp_pct_by_mukey$docomppct)
 
 majcomp_pct_by_mukey <- data.frame(mukey=row.names(tapply(comp_data_valley$comppct_r[comp_data_valley$majcompflag=='Yes'], comp_data_valley$mukey[comp_data_valley$majcompflag=='Yes'], function(x) sum(x))), majcomppct=as.numeric(tapply(comp_data_valley$comppct_r[comp_data_valley$majcompflag=='Yes'], comp_data_valley$mukey[comp_data_valley$majcompflag=='Yes'], function(x) sum(x))), stringsAsFactors = FALSE)
-# summary(majcomp_pct_by_mukey$majcomppct)
+summary(majcomp_pct_by_mukey$majcomppct)
 
 storie_rng_by_mukey <- data.frame(mukey=row.names(tapply(comp_data_valley$castorieindex[comp_data_valley$majcompflag=='Yes'], comp_data_valley$mukey[comp_data_valley$majcompflag=='Yes'], function(x) max_modified(x)- min_modified(x))), storierng=as.numeric(tapply(comp_data_valley$castorieindex[comp_data_valley$majcompflag=='Yes'], comp_data_valley$mukey[comp_data_valley$majcompflag=='Yes'], function(x) max_modified(x)- min_modified(x))), stringsAsFactors=FALSE)
-# hist(storie_rng_by_mukey$storierng)
+hist(storie_rng_by_mukey$storierng)
+summary(storie_rng_by_mukey$storierng)
 
 storie_mean_by_mukey <- data.frame(mukey=row.names(tapply(comp_data_valley$castorieindex[comp_data_valley$majcompflag=='Yes'], comp_data_valley$mukey[comp_data_valley$majcompflag=='Yes'], function(x) mean(x, na.rm=TRUE))), storiemn=as.numeric(tapply(comp_data_valley$castorieindex[comp_data_valley$majcompflag=='Yes'], comp_data_valley$mukey[comp_data_valley$majcompflag=='Yes'], function(x) mean(x, na.rm=TRUE))), stringsAsFactors=FALSE)
-# hist(storie_mean_by_mukey$storiemn)
-# sum(is.na(storie_mean_by_mukey$storiemn)) #23 are NA
+hist(storie_mean_by_mukey$storiemn)
+sum(is.na(storie_mean_by_mukey$storiemn)) #922 are NA
 
 #read in horizon data
 horizon_data <- read.csv(file.path(ssurgoDir, 'ca_horizon_data.csv'), stringsAsFactors = FALSE)
 horizon_data_valley <- horizon_data[horizon_data$cokey %in% comp_data_valley$cokey,]
-# dim(horizon_data_valley) #3083 horizons
+# dim(horizon_data_valley) #25685 horizons
 # unique(horizon_data_valley$hzname)
 horizon_data_valley$majcompflag <- comp_data_valley$majcompflag[match(horizon_data_valley$cokey, comp_data_valley$cokey)]
 horizon_data_valley$mukey <- comp_data_valley$mukey[match(horizon_data_valley$cokey, comp_data_valley$cokey)]
-# length(unique(horizon_data_valley$mukey)) #771 mukeys with horizon data
-# table(horizon_data_valley$majcompflag) #86 minor component have horizon data
-# horizon_data_valley[horizon_data_valley$majcompflag=='No ', ]
+length(unique(horizon_data_valley$mukey)) #4900 mukeys with horizon data
+table(horizon_data_valley$majcompflag) #4372 minor components have horizon data
+head(horizon_data_valley[horizon_data_valley$majcompflag=='No ', ], 100)
 
 #convert to Soil Profile collection class with no minor comps per filtering above
 horizons_valley_majcomps <- horizon_data_valley[horizon_data_valley$majcompflag=='Yes', ]
@@ -423,19 +422,32 @@ horizons_valley_majcomps$soil_depth <- profileApply(horizons_valley_majcomps, FU
 #test with slab
 # slab_results <- slab(horizons_valley_majcomps, fm = cokey ~ claytotal_r, slab.structure = c(0,10), slab.fun = mean) #+ silttotal_r + sandtotal_r + ksat_r + kwfact + ph1to1h2o_r + sar_r + caco3_r + gypsum_r + lep_r
 
+
+
 #100 cm dataset
-comp_valley_100cm <- horizon_to_comp(horizon_SPC = horizons_valley_majcomps, depth = 100, comp_df = comp_data_valley)
+#Error: bad horizonation in IDs:16387801, 16597708 when running 100 cm aggregation
+# comp_valley_100cm <- horizon_to_comp(horizon_SPC = horizons_valley_majcomps, depth = 100, comp_df = comp_data_valley)
 # head(comp_valley_100cm)
 
 #30 cm dataset
 comp_valley_30cm <- horizon_to_comp(horizon_SPC = horizons_valley_majcomps, depth = 30, comp_df = comp_data_valley)
-# head(comp_valley_30cm)
-# dim(comp_valley_30cm)
-# lapply(comp_valley_30cm[ ,2:ncol(comp_valley_30cm)], summary)
-# lapply(comp_valley_30cm[,2:ncol(comp_valley_30cm)], function(x) unique(comp_valley_30cm$compname[is.na(x)]))
-
+head(comp_valley_30cm)
+dim(comp_valley_30cm)
+lapply(comp_valley_30cm[ ,2:ncol(comp_valley_30cm)], summary)
+lapply(comp_valley_30cm[,2:ncol(comp_valley_30cm)], function(x) unique(comp_valley_30cm$compname[is.na(x)]))
+length(unique(comp_valley_30cm$mukey)) #4897
+length(unique(comp_data_valley$mukey)) #5043
+length(unique(comp_valley_30cm$compname)) #899
+length(unique(comp_data_valley$compname)) #1153
+unique(comp_valley_30cm$compname)
+#these variables are used for clustering later: c('MnRs_dep', 'clay_30cm', 'om_30cm', 'cec_30cm', 'bd_30cm', 'ec_30cm', 'pH_30cm', 'sar_30cm', 'lep_30cm', 'ksat_30cm', 'awc_30cm')
+sum(is.na(comp_valley_30cm$om_30cm)) #210 comps have NA
+comppct_by_mukey_om_data <- data.frame(mukey=row.names(tapply(comp_valley_30cm$comppct[!is.na(comp_valley_30cm$om_30cm)], comp_valley_30cm$mukey[!is.na(comp_valley_30cm$om_30cm)], sum)), comppct_tot=as.numeric(tapply(comp_valley_30cm$comppct[!is.na(comp_valley_30cm$om_30cm)], comp_valley_30cm$mukey[!is.na(comp_valley_30cm$om_30cm)], sum)), stringsAsFactors = FALSE)
+summary(comppct_by_mukey_om_data$comppct_tot)
+sum(comppct_by_mukey_om_data$comppct_tot < 70)
+       
 #10 cm dataset
-comp_valley_10cm <- horizon_to_comp(horizon_SPC = horizons_valley_majcomps, depth = 10, comp_df = comp_data_valley)
+# comp_valley_10cm <- horizon_to_comp(horizon_SPC = horizons_valley_majcomps, depth = 10, comp_df = comp_data_valley)
 # head(comp_valley_10cm)
 # hist(log(comp_valley_10cm$lep_10cm))
 # hist(log(comp_valley_10cm$om_10cm))
@@ -460,85 +472,100 @@ list.files(cropsDir)
 # crops <- shapefile(file.path(cropsDir, 'i15_Crop_Mapping_2014_Final_LandIQonAtlas.shp'))
 
 #add some variable to this subset of map units
-# length(unique(valley_mu_aea$mukey)) #786 mukeys
-valley_mu_aea$area_ac <- area(valley_mu_aea) / 10000 * 2.47105 #acres calc
-# sum(valley_mu_aea$area_ac) #2508000 matches above
-valley_mu_aea$mjcps_no <- majcomps_no_by_mukey$majcomp_no[match(valley_mu_aea$mukey, majcomps_no_by_mukey$mukey)]
-# round(tapply(valley_mu_aea$area_ac, valley_mu_aea$majcomps_no, sum), 0)
+# length(unique(valley_mu_shp$mukey)) #786 mukeys
+valley_mu_shp$area_ac <- area(valley_mu_shp) / 10000 * 2.47105 #acres calc
+# sum(valley_mu_shp$area_ac) #13873110 matches above
+valley_mu_shp$mjcps_no <- majcomps_no_by_mukey$majcomp_no[match(valley_mu_shp$mukey, majcomps_no_by_mukey$mukey)]
+# round(tapply(valley_mu_shp$area_ac, valley_mu_shp$majcomps_no, sum), 0)
 #  0       1       2       3 
 #1742 2,151,747  324,437  30,075  (85.8% of survey area has 1 major component per map unit, 12.9% has 2 major components, 1.2% has 3 major components)
-valley_mu_aea$txorders <- majcomp_taxorders_by_mukey$taxorders[match(valley_mu_aea$mukey, majcomp_taxorders_by_mukey$mukey)]
-# unique(valley_mu_aea$taxorders)
-# taxorders_area <- data.frame(taxorders=row.names(tapply(valley_mu_aea$area_ac, valley_mu_aea$taxorders, sum)), acres=as.numeric(tapply(valley_mu_aea$area_ac, valley_mu_aea$taxorders, sum)), stringsAsFactors = FALSE)
-# sum(taxorders_area$acres) #2,476,829 less than above because NA class is dropped (see next 2 calcs)
-# sum(valley_mu_aea$area_ac) - sum(taxorders_area$acres) #31170.52
-# sum(valley_mu_aea$area_ac[is.na(valley_mu_aea$taxorders)]) #31170.52
+valley_mu_shp$txorders <- majcomp_taxorders_by_mukey$taxorders[match(valley_mu_shp$mukey, majcomp_taxorders_by_mukey$mukey)]
+# unique(valley_mu_shp$taxorders)
+# taxorders_area <- data.frame(taxorders=row.names(tapply(valley_mu_shp$area_ac, valley_mu_shp$txorders, sum)), acres=as.numeric(tapply(valley_mu_shp$area_ac, valley_mu_shp$txorders, sum)), stringsAsFactors = FALSE)
+# sum(taxorders_area$acres) #13497820 (375,290 less than above because NA class is dropped (see next 2 calcs)
+# sum(valley_mu_shp$area_ac) - sum(taxorders_area$acres) #375290.2
+# sum(valley_mu_shp$area_ac[is.na(valley_mu_shp$txorders)]) #375290.2
 # taxorders_area[nrow(taxorders_area)+1, 'taxorders'] <- 'Undefined'
-# taxorders_area[nrow(taxorders_area), 'acres'] <- sum(valley_mu_aea$area_ac[is.na(valley_mu_aea$taxorders)])
+# taxorders_area[nrow(taxorders_area), 'acres'] <- sum(valley_mu_shp$area_ac[is.na(valley_mu_shp$txorders)])
 # taxorders_area <- taxorders_area[order(taxorders_area$acres, decreasing=TRUE), ]
 # taxorders_area
 # write.csv(taxorders_area, file.path(summaryDir, 'taxorders_area_valley.csv'), row.names=FALSE)
-valley_mu_aea$dmcmp_pct <- domcomp_pct_by_mukey$docomppct[match(valley_mu_aea$mukey, domcomp_pct_by_mukey$mukey)]
-valley_mu_aea$mjcmp_pct <- majcomp_pct_by_mukey$majcomppct[match(valley_mu_aea$mukey, majcomp_pct_by_mukey$mukey)]
-# summary(valley_mu_aea$domcomp_pct / valley_mu_aea$majcomp_pct)
+valley_mu_shp$dmcmp_pct <- domcomp_pct_by_mukey$docomppct[match(valley_mu_shp$mukey, domcomp_pct_by_mukey$mukey)]
+summary(valley_mu_shp$dmcmp_pct)
+valley_mu_shp$mjcmp_pct <- majcomp_pct_by_mukey$majcomppct[match(valley_mu_shp$mukey, majcomp_pct_by_mukey$mukey)]
+summary(valley_mu_shp$mjcmp_pct) #114 NAs
+summary(valley_mu_shp$domcomp_pct / valley_mu_shp$majcomp_pct)
+
+valley_mu_shp$compct_om <- comppct_by_mukey_om_data$comppct_tot[match(valley_mu_shp$mukey, comppct_by_mukey_om_data$mukey)]
+summary(valley_mu_shp$compct_om) #5910 NAs
+hist(valley_mu_shp$compct_om)
+sum(valley_mu_shp$area_ac[is.na(valley_mu_shp$compct_om)]) #so, 303,581 acres have no organic matter data
+sum(valley_mu_shp$area_ac[valley_mu_shp$compct_om < 70], na.rm = TRUE) #another 411,696 acres have some data but only for less than 70% of map unit
+sum(valley_mu_shp$area_ac[valley_mu_shp$compct_om < 80], na.rm = TRUE) #or, 856,650 acres have some data but only for less than 80% of map unit
+sum(valley_mu_shp$area_ac[valley_mu_shp$compct_om < 85], na.rm = TRUE) #1,930,013
+
 
 #add more naming information
-valley_mu_aea$muname <- mu_data_valley$muname[match(valley_mu_aea$mukey, mu_data_valley$mukey)]
-valley_mu_aea$mjcmpnms <- majcompnames_by_mukey$majcompnames[match(valley_mu_aea$mukey, majcompnames_by_mukey$mukey)]
-valley_mu_aea$complex <- ifelse(grepl('complex', valley_mu_aea$muname), 'Yes', 'No') #397 yes
-# table(valley_mu_aea$complex)
-valley_mu_aea$associan <- ifelse(grepl('association', valley_mu_aea$muname), 'Yes', 'No') #272 yes
-# table(valley_mu_aea$association) #66 yes
+valley_mu_shp$muname <- mu_data_valley$muname[match(valley_mu_shp$mukey, mu_data_valley$mukey)]
+unique(valley_mu_shp$muname[is.na(valley_mu_shp$compct_om)])
+unique(valley_mu_shp$muname[valley_mu_shp$compct_om < 70])
+
+valley_mu_shp$mjcmpnms <- majcompnames_by_mukey$majcompnames[match(valley_mu_shp$mukey, majcompnames_by_mukey$mukey)]
+valley_mu_shp$complex <- ifelse(grepl('complex', valley_mu_shp$muname), 'Yes', 'No')
+# table(valley_mu_shp$complex)
+valley_mu_shp$associan <- ifelse(grepl('association', valley_mu_shp$muname), 'Yes', 'No') #272 yes
+# table(valley_mu_shp$association)
 
 #add Storie index range and mean (relative to major components only)
-valley_mu_aea$storiemn <- storie_mean_by_mukey$storiemn[match(valley_mu_aea$mukey, storie_mean_by_mukey$mukey)]
-summary(valley_mu_aea$storiemn)
-valley_mu_aea$storiern <- storie_rng_by_mukey$storierng[match(valley_mu_aea$mukey, storie_rng_by_mukey$mukey)]
-# summary(valley_mu_aea$storierng)
+valley_mu_shp$storiemn <- storie_mean_by_mukey$storiemn[match(valley_mu_shp$mukey, storie_mean_by_mukey$mukey)]
+# summary(valley_mu_shp$storiemn)
+valley_mu_shp$storiern <- storie_rng_by_mukey$storierng[match(valley_mu_shp$mukey, storie_rng_by_mukey$mukey)]
+# summary(valley_mu_shp$storierng)
 
 #add concatenated restrictive info
-valley_mu_aea$restrict <- reskinds_by_mukey$reskinds[match(valley_mu_aea$mukey, reskinds_by_mukey$mukey)]
-# table(valley_mu_aea$restrict)
-# sum(is.na(valley_mu_aea$restrict))
-valley_mu_aea$restrict[is.na(valley_mu_aea$restrict)] <- 'None'
+valley_mu_shp$restrict <- reskinds_by_mukey$reskinds[match(valley_mu_shp$mukey, reskinds_by_mukey$mukey)]
+table(valley_mu_shp$restrict)
+sum(is.na(valley_mu_shp$restrict))
+valley_mu_shp$restrict[is.na(valley_mu_shp$restrict)] <- 'None'
+sum(valley_mu_shp$area_ac[valley_mu_shp$restrict=='None']) #8,978,326 map unit acres have no components with restrictions
 
-valley_mu_aea$Rock_OC <- ifelse(grepl('Rock outcrop', compnames_by_mukey$compnames[match(valley_mu_aea$mukey, compnames_by_mukey$mukey)]), 'Yes', 'No')
-# table(valley_mu_aea$Rock_OC) #556 polygons have rock outcrop
-# sum(valley_mu_aea$area_ac[valley_mu_aea$Rock_OC=='Yes']) #39250 acres
+valley_mu_shp$Rock_OC <- ifelse(grepl('Rock outcrop', compnames_by_mukey$compnames[match(valley_mu_shp$mukey, compnames_by_mukey$mukey)]), 'Yes', 'No')
+table(valley_mu_shp$Rock_OC)
+sum(valley_mu_shp$area_ac[valley_mu_shp$Rock_OC=='Yes']) #531301.6 acres have at least some presence of rock oc
 
 #not including rock OC in this one
 # unique(reskinds_by_mukey$reskinds)
-valley_mu_aea$Lithic <- ifelse(grepl('Lithic bedrock', reskinds_by_mukey$reskinds[match(valley_mu_aea$mukey, reskinds_by_mukey$mukey)]), 'Yes', 'No') #632 were 'yes' after accounting for mukeys with more than one cokey with restrictions | valley_mu_aea$Rock_OC=='Yes' add to conditional
-# table(valley_mu_aea$Lithic) #322 polygons have lithic
+valley_mu_shp$Lithic <- ifelse(grepl('Lithic bedrock', reskinds_by_mukey$reskinds[match(valley_mu_shp$mukey, reskinds_by_mukey$mukey)]), 'Yes', 'No') #632 were 'yes' after accounting for mukeys with more than one cokey with restrictions | valley_mu_shp$Rock_OC=='Yes' add to conditional
+table(valley_mu_shp$Lithic)
 
-valley_mu_aea$Paralith <- ifelse(grepl('Paralithic bedrock', reskinds_by_mukey$reskinds[match(valley_mu_aea$mukey, reskinds_by_mukey$mukey)]), 'Yes', 'No')
-# table(valley_mu_aea$Paralithic) #2461 polygons have paralithic
+valley_mu_shp$Paralith <- ifelse(grepl('Paralithic bedrock', reskinds_by_mukey$reskinds[match(valley_mu_shp$mukey, reskinds_by_mukey$mukey)]), 'Yes', 'No')
+table(valley_mu_shp$Paralith)
 
-valley_mu_aea$Duripan <- ifelse(grepl('Duripan', reskinds_by_mukey$reskinds[match(valley_mu_aea$mukey, reskinds_by_mukey$mukey)]), 'Yes', 'No')
-# table(valley_mu_aea$Duripan) #6417 polygons have paralithic
+valley_mu_shp$Duripan <- ifelse(grepl('Duripan', reskinds_by_mukey$reskinds[match(valley_mu_shp$mukey, reskinds_by_mukey$mukey)]), 'Yes', 'No')
+table(valley_mu_shp$Duripan)
 
-valley_mu_aea$ATC <- ifelse(grepl('Abrupt textural change', reskinds_by_mukey$reskinds[match(valley_mu_aea$mukey, reskinds_by_mukey$mukey)]), 'Yes', 'No') #ATC=abrupt textural change
-# table(valley_mu_aea$ATC) #2591 polygons have ATC
+valley_mu_shp$ATC <- ifelse(grepl('Abrupt textural change', reskinds_by_mukey$reskinds[match(valley_mu_shp$mukey, reskinds_by_mukey$mukey)]), 'Yes', 'No') #ATC=abrupt textural change
+table(valley_mu_shp$ATC)
 
-valley_mu_aea$Natric <- ifelse(grepl('Natric', reskinds_by_mukey$reskinds[match(valley_mu_aea$mukey, reskinds_by_mukey$mukey)]), 'Yes', 'No')
-# table(valley_mu_aea$Natric) #only 34 polygons have Natric
+valley_mu_shp$Natric <- ifelse(grepl('Natric', reskinds_by_mukey$reskinds[match(valley_mu_shp$mukey, reskinds_by_mukey$mukey)]), 'Yes', 'No')
+table(valley_mu_shp$Natric)
 
-valley_mu_aea$Salic <- ifelse(grepl('Salic', reskinds_by_mukey$reskinds[match(valley_mu_aea$mukey, reskinds_by_mukey$mukey)]), 'Yes', 'No')
-# table(valley_mu_aea$Salic) #only 4 polygons have Salic
+valley_mu_shp$Salic <- ifelse(grepl('Salic', reskinds_by_mukey$reskinds[match(valley_mu_shp$mukey, reskinds_by_mukey$mukey)]), 'Yes', 'No')
+table(valley_mu_shp$Salic)
 
-valley_mu_aea$SCTS <- ifelse(grepl('Strongly contrasting textural stratification', reskinds_by_mukey$reskinds[match(valley_mu_aea$mukey, reskinds_by_mukey$mukey)]), 'Yes', 'No')
-# table(valley_mu_aea$SCTS) #87 polygons have SCTS
+valley_mu_shp$SCTS <- ifelse(grepl('Strongly contrasting textural stratification', reskinds_by_mukey$reskinds[match(valley_mu_shp$mukey, reskinds_by_mukey$mukey)]), 'Yes', 'No')
+table(valley_mu_shp$SCTS) 
 
-valley_mu_aea$Misc_Res <- ifelse(grepl('Densic material|Cemented horizon|Petrocalcic', reskinds_by_mukey$reskinds[match(valley_mu_aea$mukey, reskinds_by_mukey$mukey)]), 'Yes', 'No')
-# table(valley_mu_aea$Misc_Res) #275 polygons have misc rooting restrictions
+valley_mu_shp$Misc_Res <- ifelse(grepl('Densic material|Cemented horizon|Petrocalcic', reskinds_by_mukey$reskinds[match(valley_mu_shp$mukey, reskinds_by_mukey$mukey)]), 'Yes', 'No')
+table(valley_mu_shp$Misc_Res)
 #another way to get a count
-# sum(table(valley_mu_aea$mukey[valley_mu_aea$mukey %in% misc_res_by_cokey$mukey])) #362 is correct
+sum(table(valley_mu_shp$mukey[valley_mu_shp$mukey %in% misc_res_by_cokey$mukey])) 
 
 
 #add awc info
-valley_mu_aea$aws050wta <- mu_data_valley$aws050wta[match(valley_mu_aea$mukey, mu_data_valley$mukey)]
-valley_mu_aea$aws100wta <- mu_data_valley$aws0100wta[match(valley_mu_aea$mukey, mu_data_valley$mukey)]
-valley_mu_aea$aws150wta <- mu_data_valley$aws0150wta[match(valley_mu_aea$mukey, mu_data_valley$mukey)]
+valley_mu_shp$aws050wta <- mu_data_valley$aws050wta[match(valley_mu_shp$mukey, mu_data_valley$mukey)]
+valley_mu_shp$aws100wta <- mu_data_valley$aws0100wta[match(valley_mu_shp$mukey, mu_data_valley$mukey)]
+valley_mu_shp$aws150wta <- mu_data_valley$aws0150wta[match(valley_mu_shp$mukey, mu_data_valley$mukey)]
 
 #not including rock OC in this definition
 #however some rock OC components are listed as a lithic bedrock restrictive horizon so this is a complicating factor--removed above?
@@ -609,122 +636,93 @@ valley_Misc_comppct <- reskind_comppct(reskind = 'Densic material|Cemented horiz
 valley_Misc_comppct
 
 #add reskind comppct to mapunit
-valley_mu_aea$Lthc_pct <- 0
-valley_mu_aea$Lthc_pct[valley_mu_aea$Lithic=='Yes'] <- valley_lithic_comppct$compct_sum[match(valley_mu_aea$mukey[valley_mu_aea$Lithic=='Yes'], valley_lithic_comppct$mukey)]
-# summary(valley_mu_aea$Lthc_pct)
-valley_mu_aea$RckOC_pct <- 0
-valley_mu_aea$RckOC_pct[valley_mu_aea$Rock_OC=='Yes'] <- valley_rockOC_comppct$compct_sum[match(valley_mu_aea$mukey[valley_mu_aea$Rock_OC=='Yes'], valley_rockOC_comppct$mukey)]
-# summary(valley_mu_aea$RckOC_pct)
-# summary(rowSums(as.data.frame(valley_mu_aea[c('Lthc_pct', 'RckOC_pct')])))
-valley_mu_aea$Plth_pct <- 0
-valley_mu_aea$Plth_pct[valley_mu_aea$Paralith=='Yes'] <- valley_paralithic_comppct$compct_sum[match(valley_mu_aea$mukey[valley_mu_aea$Paralith=='Yes'], valley_paralithic_comppct$mukey)]
-# summary(valley_mu_aea$Plth_pct)
-# as.data.frame(valley_mu_aea)[valley_mu_aea$mukey==463500,]
-valley_mu_aea$Drpn_pct <- 0
-valley_mu_aea$Drpn_pct[valley_mu_aea$Duripan=='Yes'] <- valley_duripan_comppct$compct_sum[match(valley_mu_aea$mukey[valley_mu_aea$Duripan=='Yes'], valley_duripan_comppct$mukey)]
-# summary(valley_mu_aea$Drpn_pct)
-# as.data.frame(valley_mu_aea)[valley_mu_aea$mukey==464442,]
-valley_mu_aea$ATC_pct <- 0
-valley_mu_aea$ATC_pct[valley_mu_aea$ATC=='Yes'] <- valley_ATC_comppct$compct_sum[match(valley_mu_aea$mukey[valley_mu_aea$ATC=='Yes'], valley_ATC_comppct$mukey)]
-# summary(valley_mu_aea$ATC_pct)
-valley_mu_aea$Natr_pct <- 0
-valley_mu_aea$Natr_pct[valley_mu_aea$Natric=='Yes'] <- valley_Natric_comppct$compct_sum[match(valley_mu_aea$mukey[valley_mu_aea$Natric=='Yes'], valley_Natric_comppct$mukey)]
-# summary(valley_mu_aea$Natr_pct)
-valley_mu_aea$Salc_pct <- 0
-valley_mu_aea$Salc_pct[valley_mu_aea$Salic=='Yes'] <- valley_Salic_comppct$compct_sum[match(valley_mu_aea$mukey[valley_mu_aea$Salic=='Yes'], valley_Salic_comppct$mukey)]
-valley_mu_aea$SCTS_pct <- 0
-valley_mu_aea$SCTS_pct[valley_mu_aea$SCTS=='Yes'] <- valley_SCTS_comppct$compct_sum[match(valley_mu_aea$mukey[valley_mu_aea$SCTS=='Yes'], valley_SCTS_comppct$mukey)]
-valley_mu_aea$MRes_pct <- 0
-valley_mu_aea$MRes_pct[valley_mu_aea$Misc_Res=='Yes'] <- valley_Misc_comppct$compct_sum[match(valley_mu_aea$mukey[valley_mu_aea$Misc_Res=='Yes'], valley_Misc_comppct$mukey)]
+valley_mu_shp$Lthc_pct <- 0
+valley_mu_shp$Lthc_pct[valley_mu_shp$Lithic=='Yes'] <- valley_lithic_comppct$compct_sum[match(valley_mu_shp$mukey[valley_mu_shp$Lithic=='Yes'], valley_lithic_comppct$mukey)]
+summary(valley_mu_shp$Lthc_pct)
+valley_mu_shp$RckOC_pct <- 0
+valley_mu_shp$RckOC_pct[valley_mu_shp$Rock_OC=='Yes'] <- valley_rockOC_comppct$compct_sum[match(valley_mu_shp$mukey[valley_mu_shp$Rock_OC=='Yes'], valley_rockOC_comppct$mukey)]
+summary(valley_mu_shp$RckOC_pct)
+summary(rowSums(as.data.frame(valley_mu_shp[c('Lthc_pct', 'RckOC_pct')])))
+valley_mu_shp$Plth_pct <- 0
+valley_mu_shp$Plth_pct[valley_mu_shp$Paralith=='Yes'] <- valley_paralithic_comppct$compct_sum[match(valley_mu_shp$mukey[valley_mu_shp$Paralith=='Yes'], valley_paralithic_comppct$mukey)]
+summary(valley_mu_shp$Plth_pct)
+valley_mu_shp$Drpn_pct <- 0
+valley_mu_shp$Drpn_pct[valley_mu_shp$Duripan=='Yes'] <- valley_duripan_comppct$compct_sum[match(valley_mu_shp$mukey[valley_mu_shp$Duripan=='Yes'], valley_duripan_comppct$mukey)]
+summary(valley_mu_shp$Drpn_pct)
+valley_mu_shp$ATC_pct <- 0
+valley_mu_shp$ATC_pct[valley_mu_shp$ATC=='Yes'] <- valley_ATC_comppct$compct_sum[match(valley_mu_shp$mukey[valley_mu_shp$ATC=='Yes'], valley_ATC_comppct$mukey)]
+summary(valley_mu_shp$ATC_pct)
+valley_mu_shp$Natr_pct <- 0
+valley_mu_shp$Natr_pct[valley_mu_shp$Natric=='Yes'] <- valley_Natric_comppct$compct_sum[match(valley_mu_shp$mukey[valley_mu_shp$Natric=='Yes'], valley_Natric_comppct$mukey)]
+summary(valley_mu_shp$Natr_pct)
+valley_mu_shp$Salc_pct <- 0
+valley_mu_shp$Salc_pct[valley_mu_shp$Salic=='Yes'] <- valley_Salic_comppct$compct_sum[match(valley_mu_shp$mukey[valley_mu_shp$Salic=='Yes'], valley_Salic_comppct$mukey)]
+valley_mu_shp$SCTS_pct <- 0
+valley_mu_shp$SCTS_pct[valley_mu_shp$SCTS=='Yes'] <- valley_SCTS_comppct$compct_sum[match(valley_mu_shp$mukey[valley_mu_shp$SCTS=='Yes'], valley_SCTS_comppct$mukey)]
+valley_mu_shp$MRes_pct <- 0
+valley_mu_shp$MRes_pct[valley_mu_shp$Misc_Res=='Yes'] <- valley_Misc_comppct$compct_sum[match(valley_mu_shp$mukey[valley_mu_shp$Misc_Res=='Yes'], valley_Misc_comppct$mukey)]
 
 #add restriction depth info
-valley_mu_aea$Depth_aqp <- horizons_valley_majcomps$soil_depth[match(valley_mu_aea$mukey, horizons_valley_majcomps$mukey)]
-valley_mu_aea$Lthc_dep <- assumed_depth
-valley_mu_aea$Lthc_dep[valley_mu_aea$Lithic=='Yes'] <- lithic_by_mukey$resdept_r[match(valley_mu_aea$mukey[valley_mu_aea$Lithic=='Yes'], lithic_by_mukey$mukey)]
-valley_mu_aea$Plth_dep <- assumed_depth
-valley_mu_aea$Plth_dep[valley_mu_aea$Paralith=='Yes'] <- paralithic_by_mukey$resdept_r[match(valley_mu_aea$mukey[valley_mu_aea$Paralith=='Yes'], paralithic_by_mukey$mukey)]
-valley_mu_aea$Drpn_dep <- assumed_depth
-valley_mu_aea$Drpn_dep[valley_mu_aea$Duripan=='Yes'] <- duripan_by_mukey$resdept_r[match(valley_mu_aea$mukey[valley_mu_aea$Duripan=='Yes'], duripan_by_mukey$mukey)]
-valley_mu_aea$ATC_dep <- assumed_depth
-valley_mu_aea$ATC_dep[valley_mu_aea$ATC=='Yes'] <- ATC_by_mukey$resdept_r[match(valley_mu_aea$mukey[valley_mu_aea$ATC=='Yes'], ATC_by_mukey$mukey)]
-valley_mu_aea$Natr_dep <- assumed_depth
-valley_mu_aea$Natr_dep[valley_mu_aea$Natric=='Yes'] <- natric_by_mukey$resdept_r[match(valley_mu_aea$mukey[valley_mu_aea$Natric=='Yes'], natric_by_mukey$mukey)]
-valley_mu_aea$Salc_dep <- assumed_depth
-valley_mu_aea$Salc_dep[valley_mu_aea$Salic=='Yes'] <- salic_by_mukey$resdept_r[match(valley_mu_aea$mukey[valley_mu_aea$Salic=='Yes'], salic_by_mukey$mukey)]
-valley_mu_aea$SCTS_dep <- assumed_depth
-valley_mu_aea$SCTS_dep[valley_mu_aea$SCTS=='Yes'] <- SCTS_by_mukey$resdept_r[match(valley_mu_aea$mukey[valley_mu_aea$SCTS=='Yes'], SCTS_by_mukey$mukey)]
-valley_mu_aea$MRes_dep <- assumed_depth
-valley_mu_aea$MRes_dep[valley_mu_aea$Misc_Res=='Yes'] <- misc_res_by_mukey$resdept_r[match(valley_mu_aea$mukey[valley_mu_aea$Misc_Res=='Yes'], misc_res_by_mukey$mukey)]
+valley_mu_shp$Depth_aqp <- horizons_valley_majcomps$soil_depth[match(valley_mu_shp$mukey, horizons_valley_majcomps$mukey)]
+valley_mu_shp$Lthc_dep <- assumed_depth
+valley_mu_shp$Lthc_dep[valley_mu_shp$Lithic=='Yes'] <- lithic_by_mukey$resdept_r[match(valley_mu_shp$mukey[valley_mu_shp$Lithic=='Yes'], lithic_by_mukey$mukey)]
+valley_mu_shp$Plth_dep <- assumed_depth
+valley_mu_shp$Plth_dep[valley_mu_shp$Paralith=='Yes'] <- paralithic_by_mukey$resdept_r[match(valley_mu_shp$mukey[valley_mu_shp$Paralith=='Yes'], paralithic_by_mukey$mukey)]
+valley_mu_shp$Drpn_dep <- assumed_depth
+valley_mu_shp$Drpn_dep[valley_mu_shp$Duripan=='Yes'] <- duripan_by_mukey$resdept_r[match(valley_mu_shp$mukey[valley_mu_shp$Duripan=='Yes'], duripan_by_mukey$mukey)]
+valley_mu_shp$ATC_dep <- assumed_depth
+valley_mu_shp$ATC_dep[valley_mu_shp$ATC=='Yes'] <- ATC_by_mukey$resdept_r[match(valley_mu_shp$mukey[valley_mu_shp$ATC=='Yes'], ATC_by_mukey$mukey)]
+valley_mu_shp$Natr_dep <- assumed_depth
+valley_mu_shp$Natr_dep[valley_mu_shp$Natric=='Yes'] <- natric_by_mukey$resdept_r[match(valley_mu_shp$mukey[valley_mu_shp$Natric=='Yes'], natric_by_mukey$mukey)]
+valley_mu_shp$Salc_dep <- assumed_depth
+valley_mu_shp$Salc_dep[valley_mu_shp$Salic=='Yes'] <- salic_by_mukey$resdept_r[match(valley_mu_shp$mukey[valley_mu_shp$Salic=='Yes'], salic_by_mukey$mukey)]
+valley_mu_shp$SCTS_dep <- assumed_depth
+valley_mu_shp$SCTS_dep[valley_mu_shp$SCTS=='Yes'] <- SCTS_by_mukey$resdept_r[match(valley_mu_shp$mukey[valley_mu_shp$SCTS=='Yes'], SCTS_by_mukey$mukey)]
+valley_mu_shp$MRes_dep <- assumed_depth
+valley_mu_shp$MRes_dep[valley_mu_shp$Misc_Res=='Yes'] <- misc_res_by_mukey$resdept_r[match(valley_mu_shp$mukey[valley_mu_shp$Misc_Res=='Yes'], misc_res_by_mukey$mukey)]
 #minimum of all reskind depths
-valley_mu_aea$MnRs_dep <- apply(as.data.frame(valley_mu_aea)[ ,c('Lthc_dep', 'Plth_dep', 'Drpn_dep', 'ATC_dep', 'Natr_dep', 'Salc_dep', 'SCTS_dep', 'MRes_dep')], 1, min)
-#
+valley_mu_shp$MnRs_dep <- apply(as.data.frame(valley_mu_shp)[ ,c('Lthc_dep', 'Plth_dep', 'Drpn_dep', 'ATC_dep', 'Natr_dep', 'Salc_dep', 'SCTS_dep', 'MRes_dep')], 1, min)
+
 #now add horizon aggregated data
 #from previous comp level aggregation work
 # lapply(comp_valley_10cm, class)
 # colnames(comp_valley_10cm)[5:ncol(comp_valley_10cm)]
-valley_10cm_muagg <- MUAggregate_wrapper(df1=comp_valley_10cm, varnames = colnames(comp_valley_10cm)[5:ncol(comp_valley_10cm)])
+# valley_10cm_muagg <- MUAggregate_wrapper(df1=comp_valley_10cm, varnames = colnames(comp_valley_10cm)[5:ncol(comp_valley_10cm)])
 # head(valley_10cm_muagg)
 # dim(valley_10cm_muagg)
 # lapply(valley_10cm_muagg, class)
 valley_30cm_muagg <- MUAggregate_wrapper(df1=comp_valley_30cm, varnames = colnames(comp_valley_30cm)[5:ncol(comp_valley_30cm)])
-valley_100cm_muagg <- MUAggregate_wrapper(df1=comp_valley_100cm, varnames = colnames(comp_valley_100cm)[5:ncol(comp_valley_100cm)])
+# valley_100cm_muagg <- MUAggregate_wrapper(df1=comp_valley_100cm, varnames = colnames(comp_valley_100cm)[5:ncol(comp_valley_100cm)])
 
-# names(valley_mu_aea)
-valley_mu_aea_10cm <- merge(valley_mu_aea, valley_10cm_muagg, by = 'mukey')
-valley_mu_aea_30cm <- merge(valley_mu_aea, valley_30cm_muagg, by = 'mukey')
-valley_mu_aea_100cm <- merge(valley_mu_aea, valley_100cm_muagg, by = 'mukey')
+# names(valley_mu_shp)
+# valley_mu_shp_10cm <- merge(valley_mu_shp, valley_10cm_muagg, by = 'mukey')
+valley_mu_shp_30cm <- merge(valley_mu_shp, valley_30cm_muagg, by = 'mukey')
+# valley_mu_shp_100cm <- merge(valley_mu_shp, valley_100cm_muagg, by = 'mukey')
 
 #write 30cm to shapefile for cluster analysis
-shapefile(valley_mu_aea_30cm, file.path(summaryDir, 'valley_30cm.shp'), overwrite=TRUE)
+shapefile(valley_mu_shp_30cm, file.path(summaryDir, 'shapefiles with data', 'valley_30cm.shp'), overwrite=TRUE)
 
 #write 10 cm to csv
-valley_10cm <- as.data.frame(valley_mu_aea_10cm)
+# valley_10cm <- as.data.frame(valley_mu_shp_10cm)
 # colnames(valley_10cm)
-write.csv(valley_10cm, file.path(summaryDir, 'valley_10cm_test.csv'), row.names = FALSE)
+# write.csv(valley_10cm, file.path(summaryDir, 'valley_10cm_test.csv'), row.names = FALSE)
 # lapply(valley_10cm, function(x) sum(is.na(x)))
 
 #write 30 cm to csv
-valley_30cm <- as.data.frame(valley_mu_aea_30cm)
+valley_30cm <- as.data.frame(valley_mu_shp_30cm)
 # colnames(valley_30cm)
-write.csv(valley_30cm, file.path(summaryDir, 'valley_30cm_test.csv'), row.names = FALSE)
+write.csv(valley_30cm, file.path(summaryDir, 'valley_30cm_data.csv'), row.names = FALSE)
 # lapply(valley_30cm, function(x) sum(is.na(x)))
 
 #write 100 cm to csv
-valley_100cm <- as.data.frame(valley_mu_aea_100cm)
+# valley_100cm <- as.data.frame(valley_mu_shp_100cm)
 # colnames(valley_100cm)
-write.csv(valley_100cm, file.path(summaryDir, 'valley_100cm_test.csv'), row.names = FALSE)
-plot(valley_100cm$aws100wta, valley_100cm$awc_100cm)
-sum(valley_100cm$awc_100cm  - valley_100cm$aws100wta > 0.2, na.rm = TRUE) #163 polygons have slightly different AWC values; most likely due to the fact that I did not include minor components
-unique(valley_100cm$muname[which(valley_100cm$awc_100cm  - valley_100cm$aws100wta > 0.2)])
-#investigate components and horizon data for these
-#[1] "Mocho silty clay loam, 2 to 9 percent slopes"                              
-#[2] "Diablo clay, 15 to 30 percent slopes, MLRA 15"                             
-#[3] "Clear Lake clay, 0 to 1 percent slopes, frequently flooded, MLRA 14"       
-#[4] "Diablo clay, 5 to 25 percent slopes, MLRA 15"                              
-#[5] "Rindge muck, 0 to 2 percent slopes, MLRA 14"                               
-#[6] "Clear Lake clay, sandy substratum, drained, 0 to 1 percent slopes, MLRA 14"
-#[7] "Diablo clay, 30 to 50 percent slopes, MLRA 15" 
+# write.csv(valley_100cm, file.path(summaryDir, 'valley_100cm_test.csv'), row.names = FALSE)
+# plot(valley_100cm$aws100wta, valley_100cm$awc_100cm)
+# sum(valley_100cm$awc_100cm  - valley_100cm$aws100wta > 0.2, na.rm = TRUE) #163 polygons have slightly different AWC values; most likely due to the fact that I did not include minor components
+# unique(valley_100cm$muname[which(valley_100cm$awc_100cm  - valley_100cm$aws100wta > 0.2)])
 
-#write to file
-names(valley_mu_aea_v2)
-shapefile(valley_mu_aea_v2, file.path(ssurgoDir, 'ca_mapunits/fresno_only/ca651_653_654mu_aea.shp'), overwrite=TRUE)
-
-#lapply(split(x=comp_valley_10cm, f=comp_valley_10cm$mukey), FUN=function(x) {if(sum(!is.na(x$clay))==0) {NA} else{sum(x$comppct[!is.na(x$clay)] * x$clay[!is.na(x$clay)] / sum(x$comppct[!is.na(x$clay)]))}}))
-#this needs help
-valley_mu_aea$Lthc_cm[valley_mu_aea$Lithic=='Yes'] <- restrictions_valley$resdept_r[restrictions_valley$reskind=="Lithic bedrock"][match(valley_mu_aea$mukey[valley_mu_aea$Lithic=='Yes'], restrictions_valley$mukey[restrictions_valley$reskind=="Lithic bedrock"])]
-summary(valley_mu_aea$Lthc_cm)
-
-
-
-#check it!
-valley_mu_aea[valley_mu_aea$mukey==467090, ]
-comp_data_valley[comp_data_valley$mukey==467090,]
-valley_mu_aea[337,]
-
-
-
-
-
+#previous beginning of crops investigation
 crops_fresno <- crop(crops, fresno_area_aea)
 #shapefile(crops_fresno, file.path(cropsDir, 'fresno_only', 'crops_fresno.shp'))
 unique(crops_fresno$Crop2014)
@@ -734,8 +732,3 @@ crop_acreage_fresno <- crop_acreage_fresno[order(crop_acreage_fresno$acres, decr
 #write.csv(crop_acreage_fresno, file.path(summaryDir, 'crop_acreage_DWR14.csv'), row.names = FALSE)
 
 
-#some test code
-paste(unlist(majcomp_taxorders_by_mukey[which(row.names(majcomp_taxorders_by_mukey)=='467090')], use.names = FALSE), collapse = '-')
-majcomp_taxorders_by_mukey
-
-test[337]
