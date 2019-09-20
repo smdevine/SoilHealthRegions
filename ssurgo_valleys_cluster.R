@@ -1,9 +1,10 @@
+#this modified to work with aggregated dataset from ssurgo_calag_aggregate.R
 #TO-DO
-#(1) run cluster analysis on Salinas only {DONE}
+#(1) run cluster analysis on Salinas only [DONE]
 #(2) summarize classes for 4 and 5 
-#(3) log transform om and ksat
+#(3) log transform om and ksat [DONE]
 #(4) identify outliers
-laptop <- TRUE
+laptop <- FALSE
 library(raster)
 library(corrplot)
 library(cluster)
