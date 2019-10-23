@@ -23,9 +23,9 @@ ecoDir <- file.path(mainDir, 'soil health/ecoregions') #need to rename directory
 ssurgoDir <- file.path(mainDir, 'soil health/ssurgo_data')
 cropsDir <- file.path(mainDir, 'soil health/crops')
 summaryDir <- file.path(mainDir, 'soil health/summaries/valley_final')
-FiguresDir <- file.path(mainDir, 'soil health/Figures/ag_land')
+# FiguresDir <- file.path(mainDir, 'soil health/Figures/ag_land')
 cropsCRS <- crs('+proj=aea +lat_1=34 +lat_2=40.5 +lat_0=0 +lon_0=-120 +x_0=0 +y_0=-4000000 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs')
-res_plots <- 150
+# res_plots <- 150
 CAcountiesDir <- 'C:/Users/smdevine/Desktop/SpatialData/CA_counties/government_units'
 list.files(summaryDir)
 list.files(ssurgoDir)
@@ -730,5 +730,3 @@ sum(crops_fresno$Acres) #1,718.419 acres, so 52% of total area
 crop_acreage_fresno <- data.frame(crop=row.names(tapply(crops_fresno$Acres, crops_fresno$Crop2014, function(x) sum(x))), acres=as.numeric(tapply(crops_fresno$Acres, crops_fresno$Crop2014, function(x) sum(x))))
 crop_acreage_fresno <- crop_acreage_fresno[order(crop_acreage_fresno$acres, decreasing = TRUE), ]
 #write.csv(crop_acreage_fresno, file.path(summaryDir, 'crop_acreage_DWR14.csv'), row.names = FALSE)
-
-
