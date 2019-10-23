@@ -15,7 +15,8 @@ library(extrafont)
 library(extrafontdb)
 #font_import() #only needs to be done one time after updating and re-installing R and moving and updating packages
 loadfonts(device = 'win')
-# 
+#
+
 if (laptop) {
   dataDir <- 'C:/Users/smdevine/Desktop/post doc/soil health/summaries/valley_final' #was valley_trial
   FiguresDir <- 'C:/Users/smdevine/Desktop/post doc/soil health/Figures/valley_final' #was valley_trial
@@ -24,7 +25,7 @@ if (laptop) {
   FiguresDir <- 'C:/Users/smdevine/Desktop/PostDoc/soil health/Figures/valley_final' #was valley_trial
   
 }
-mar_settings <- c(4, 4.5, 1, 1)
+# mar_settings <- c(4, 4.5, 1, 1)
 list.files(dataDir)
 # valley_mu_shp_30cm <- shapefile(file.path(dataDir, 'shapefiles with data', 'valley_30cm.shp'))
 # names(valley_mu_shp_30cm)
@@ -55,14 +56,42 @@ valley30cm_by_mukey$area_proportion <- valley30cm_by_mukey$area_ac / sum(valley3
 # sum(valley30cm_by_mukey_v2$area_ac[grepl('Rock outcrop', valley30cm_by_mukey_v2$mjcmpnms)])
 #apply QC using criteria that 85% of mapunit needs to have OM data, as is SSURGO standard
 # sum(valley30cm_by_mukey$area_ac[which(valley30cm_by_mukey$compct_om >= 85)]) / sum(valley30cm_by_mukey$area_ac) #which is to handle NAs
-valley30cm_by_mukey <- valley30cm_by_mukey[which(valley30cm_by_mukey$compct_om >= 85), ]
+#a few checks before moving on to v2
+sum(valley30cm_by_mukey$area_ac[which(valley30cm_by_mukey$compct_om >= 80 & valley30cm_by_mukey$compct_om < 85)]) #1,073,363 acres
+valley30cm_by_mukey$flag <- ifelse(valley30cm_by_mukey$compct_om >= 80, 1, 2)
+sum(valley30cm_by_mukey$area_ac[which(valley30cm_by_mukey$flag==1)]) #12,712,879
+sum(valley30cm_by_mukey$area_ac) #13,873,110
+
+# valley30cm_by_mukey <- valley30cm_by_mukey[which(valley30cm_by_mukey$compct_om >= 85), ]
 # sum(is.na(valley30cm_by_mukey$aws050wta))
 # sum(is.na(valley30cm_by_mukey$om_30cm))
 # summary(valley30cm_by_mukey$compct_om)
 # summary(valley30cm_by_mukey$mjcmp_pct)
-analysis_preview <- na.omit(valley30cm_by_mukey[ ,c('MnRs_dep', 'clay_30cm', 'om_30cm', 'cec_30cm', 'bd_30cm', 'ec_30cm', 'pH_30cm', 'sar_30cm', 'lep_30cm', 'ksat_30cm', 'awc_30cm', 'area_ac')])
-# sum(analysis_preview$area_ac) #11,290,964 acres will be assigned a soil health diagnostic indicators cluster class
+analysis_preview <- valley30cm_by_mukey[which(valley30cm_by_mukey$flag==1), c('MnRs_dep', 'clay_30cm', 'om_30cm', 'cec_30cm', 'bd_30cm', 'ec_30cm', 'pH_30cm', 'lep_30cm', 'ksat_30cm', 'awc_30cm', 'area_ac', 'muname', 'mukey', 'complex', 'associan')]
+sum(analysis_preview$area_ac[analysis_preview$complex=='Yes'])
+sum(analysis_preview$area_ac[analysis_preview$associan=='Yes'])
+non_analysis_preview <- valley30cm_by_mukey[which(valley30cm_by_mukey$flag==2), c('MnRs_dep', 'clay_30cm', 'om_30cm', 'cec_30cm', 'bd_30cm', 'ec_30cm', 'pH_30cm', 'lep_30cm', 'ksat_30cm', 'awc_30cm', 'area_ac', 'muname', 'mjcmpnms', 'compct_om', 'dmcmp_pct', 'mukey')]
+sum(non_analysis_preview$area_ac)
 
+analysis_preview$count_NAs <- apply(analysis_preview[,1:10], 1, function(x) sum(is.na(x)))
+tapply(analysis_preview$area_ac, analysis_preview$count_NAs, sum)
+apply(analysis_preview[,1:10], 2, function(x) sum(is.na(x)))
+analysis_preview$ec_30cm[is.na(analysis_preview$ec_30cm) & analysis_preview$count_NAs==1] <- 0
+sum(na.omit(analysis_preview)$area_ac) #12,455,906 without EC;
+#12,363,398 acres in v2 with EC and no SAR
+#11,290,964 acres were assigned a soil health diagnostic indicators cluster class in v1
+non_analysis_preview$count_NAs <- apply(non_analysis_preview[,1:10], 1, function(x) sum(is.na(x)))
+tapply(non_analysis_preview$area_ac, non_analysis_preview$count_NAs, sum) #794,356.55 with no NAs; 796,308.86 after correcting NA EC with no other NAs
+non_analysis_preview$ec_30cm[is.na(non_analysis_preview$ec_30cm) & non_analysis_preview$count_NAs==1] <- 0
+apply(non_analysis_preview[,1:10], 2, function(x) sum(is.na(x)))
+unique(non_analysis_preview$muname[non_analysis_preview$count_NAs==0])
+unique(non_analysis_preview$mjcmpnms[non_analysis_preview$count_NAs==0])
+hist(non_analysis_preview$compct_om[non_analysis_preview$count_NAs==0])
+hist(non_analysis_preview$dmcmp_pct[non_analysis_preview$count_NAs==0])
+sum(non_analysis_preview$area_ac[non_analysis_preview$count_NAs==0][non_analysis_preview$compct_om[non_analysis_preview$count_NAs==0] >= non_analysis_preview$dmcmp_pct[non_analysis_preview$count_NAs==0]]) #639,712 acres before correcting EC NAs with no other NA data; 640,556 after correcting EC NAs with no other NA data
+imperfect_keep_preview <- non_analysis_preview[non_analysis_preview$count_NAs==0 & non_analysis_preview$compct_om >= non_analysis_preview$dmcmp_pct, ]
+sum(imperfect_keep_preview$area_ac) #640,556 acres
+write.csv(imperfect_keep_preview, file.path(dataDir, 'imperfect_SSURGO_preview_10.22.19.csv'))
 
 #create data.frame for cluster analysis
 df_for_clustering <- valley30cm_by_mukey
@@ -70,31 +99,71 @@ rownames(df_for_clustering) <- df_for_clustering$mukey
 # summary(df_for_clustering)
 df_for_clustering <- df_for_clustering[,c('MnRs_dep', 'clay_30cm', 'om_30cm', 'cec_30cm', 'bd_30cm', 'ec_30cm', 'pH_30cm', 'sar_30cm', 'lep_30cm', 'ksat_30cm', 'awc_30cm')] #frags have 160 mukeys with NA
 # "storiemn", "Lthc_dep", "Plth_dep", "Drpn_dep", "ATC_dep", "Natr_dep", "Salc_dep", "SCTS_dep", "MRes_dep" 'kwf_30cm'
-sum()
+
 mapply(function(x, y) hist(x, main=y), x=df_for_clustering, y=colnames(df_for_clustering))
 lapply(df_for_clustering, class)
-lapply(df_for_clustering, function(x) sum(x==0, na.rm = TRUE)) #verify why some are showing min res depth of 0
-lapply(df_for_clustering, function(x) sum(x<0, na.rm = TRUE))
-lapply(df_for_clustering, function(x) sum(x>0 & x < 0.01, na.rm = TRUE))
-lapply(df_for_clustering, function(x) sum(x>0 & x < 0.1, na.rm = TRUE))
-df_for_clustering[df_for_clustering$MnRs_dep==100,]
-df_for_clustering[which(df_for_clustering$ec_30cm > 0 & df_for_clustering$ec_30cm < 0.01), ]
-df_for_clustering[which(df_for_clustering$bd_30cm < 0.5), ] #doesn't matter since these excluded from na.omit
-log_transform <- function(x, df) {
-  df[[x]] <- log(df[[x]] + 0.01, 10)
+lapply(na.omit(df_for_clustering), function(x) sum(x==0, na.rm = TRUE)) #verify why some are showing min res depth of 0
+lapply(na.omit(df_for_clustering), function(x) sum(x<0, na.rm = TRUE))
+lapply(na.omit(df_for_clustering), function(x) sum(x>0 & x < 0.01, na.rm = TRUE))
+lapply(na.omit(df_for_clustering), function(x) sum(x>=0.01 & x < 0.1, na.rm = TRUE))
+lapply(na.omit(df_for_clustering), function(x) sum(x>=0.1 & x < 0.5, na.rm = TRUE))
+lapply(na.omit(df_for_clustering), function(x) summary(x))
+
+log_transform <- function(x, df, c) {
+  df[[x]] <- log(df[[x]] + c, 10)
   df
 }
+
 var_list <- c('om_30cm', 'cec_30cm', 'ec_30cm', 'sar_30cm', 'lep_30cm', 'ksat_30cm')
 for (i in seq_along(var_list)) {
   df_for_clustering <- log_transform(x=var_list[i], df = df_for_clustering) #above variables are log transformed
 }
+par(mar=c(4, 4, 4, 4))
 mapply(function(x, y) hist(x, main=y), x=df_for_clustering, y=colnames(df_for_clustering))
 dim(df_for_clustering)
 df_for_clustering_scaled <- as.data.frame(scale(df_for_clustering))
 summary(df_for_clustering_scaled)
 colnames(df_for_clustering_scaled)
 mapply(function(x, y) hist(x, main=y), x=df_for_clustering_scaled, y=colnames(df_for_clustering_scaled))
+lapply(na.omit(df_for_clustering_scaled), function(x) summary(x))
+lapply(na.omit(df_for_clustering_scaled), function(x) sd(x))
+lapply(na.omit(df_for_clustering_scaled), function(x) sum((x-mean(x))^2))
+sum((na.omit(df_for_clustering_scaled)$MnRs_dep - mean(na.omit(df_for_clustering_scaled)$MnRs_dep))^2)
 
+#look at relationship between scaled and untransformed data
+plot(na.omit(df_for_clustering)$ec_30cm, na.omit(df_for_clustering_scaled)$ec_30cm)
+plot(na.omit(df_for_clustering)$ec_30cm, scale(na.omit(df_for_clustering)$ec_30cm))
+hist(log(na.omit(df_for_clustering)$ec_30cm + 1, 10))
+hist(scale(log(na.omit(df_for_clustering)$ec_30cm + 1, 10)))
+
+#ec
+df_exploration <- na.omit(df_for_clustering)
+ec_percentiles <- ecdf(df_for_c)
+ecdf_fun <- function(x, perc) {ecdf(x)(perc)}
+
+#om
+
+df_exploration$area_ac <- valley30cm_by_mukey$area_ac[match(rownames(df_exploration), valley30cm_by_mukey$mukey)]
+sum(df_exploration$area_ac)
+#classification scheme from https://www.nrcs.usda.gov/Internet/FSE_DOCUMENTS/stelprdb1044788.pdf
+sum(df_exploration$area_ac[df_exploration$ec_30cm < 2]) / sum(df_exploration$area_ac) #76% considered 'non-saline'
+sum(df_exploration$area_ac[df_exploration$ec_30cm >= 2 & df_exploration$ec_30cm < 4]) / sum(df_exploration$area_ac) #9.0% very slightly saline
+sum(df_exploration$area_ac[df_exploration$ec_30cm >= 4 & df_exploration$ec_30cm < 8]) / sum(df_exploration$area_ac) #7.1% slightly saline
+sum(df_exploration$area_ac[df_exploration$ec_30cm >= 8 & df_exploration$ec_30cm < 16]) / sum(df_exploration$area_ac) #6.3 moderately saline
+sum(df_exploration$area_ac[df_exploration$ec_30cm >= 16]) / sum(df_exploration$area_ac) #1.2% strongly saline
+summary(df_exploration$ec_30cm)
+summary(scale(log(df_exploration$ec_30cm + 0.1, 10)))
+
+#sodicity
+summary(df_exploration$sar_30cm)
+sum(df_exploration$sar_30cm > 15) #127 mukeys with ESP > 15%
+
+
+#om
+hist(na.omit(df_for_clustering)$om_30cm))
+hist(na.omit(df_for_clustering)$om_30cm))
+plot(na.omit(df_for_clustering)$om_30cm, scale(log(na.omit(df_for_clustering)$ec_30cm + 0.5, 10)))
+sum(df_for_clustering$ec_30cm==1, na.rm = TRUE)
 
 kmeans_test <- function(y, z) {sapply(1:y, function(x) {
   result <- kmeans(na.omit(z), centers = x, iter.max = 100, nstart = 25)
@@ -109,6 +178,7 @@ par(mar=mar_settings)
 plot(1:20, rowMeans(results), type='b', xlab='Number of clusters', ylab='Soil variability captured by clustering (%)', cex=0.8, cex.axis=1, cex.lab=1)
 #text(1:12, rowMeans(results), labels=as.character(1:12), pos=1, offset=0.5)
 dev.off()
+plot(na.omit())
 
 cluster_2 <- kmeans(na.omit(df_for_clustering_scaled), centers=2, iter.max = 200, nstart = 50)
 cluster_2
@@ -194,6 +264,29 @@ valley30cm_by_mukey$cluster_11 <- cluster_11$cluster[match(valley30cm_by_mukey$m
 valley30cm_by_mukey$cluster_12 <- cluster_12$cluster[match(valley30cm_by_mukey$mukey, names(cluster_12$cluster))]
 # write.csv(valley30cm_by_mukey, file.path(dataDir, 'valley30cm_by_mukey_cluster.csv'), row.names = FALSE)
 
+#read in cluster valley file by mukey with cluster info
+valley30cm_by_mukey <- read.csv(file.path(dataDir, 'valley30cm_by_mukey_cluster.csv'), stringsAsFactors = FALSE)
+valley30cm_by_mukey[valley30cm_by_mukey$mukey==455568,] #NA check: EC is NA
+summary(valley30cm_by_mukey$ec_30cm[valley30cm_by_mukey$cluster_10==9])
+sum(valley30cm_by_mukey$ec_30cm[which(valley30cm_by_mukey$cluster_10==9)] >= 4) #only 39
+
+#add cluster info to shapefile
+valley_mu_shp_30cm$cluster_2 <- valley30cm_by_mukey$cluster_2[match(valley_mu_shp_30cm$mukey, valley30cm_by_mukey$mukey)]
+tapply(valley_mu_shp_30cm$area_ac, valley_mu_shp_30cm$cluster_2, sum)
+valley_mu_shp_30cm$cluster_3 <- valley30cm_by_mukey$cluster_3[match(valley_mu_shp_30cm$mukey, valley30cm_by_mukey$mukey)]
+valley_mu_shp_30cm$cluster_4 <- valley30cm_by_mukey$cluster_4[match(valley_mu_shp_30cm$mukey, valley30cm_by_mukey$mukey)]
+valley_mu_shp_30cm$cluster_5 <- valley30cm_by_mukey$cluster_5[match(valley_mu_shp_30cm$mukey, valley30cm_by_mukey$mukey)]
+valley_mu_shp_30cm$cluster_6 <- valley30cm_by_mukey$cluster_6[match(valley_mu_shp_30cm$mukey, valley30cm_by_mukey$mukey)]
+valley_mu_shp_30cm$cluster_7 <- valley30cm_by_mukey$cluster_7[match(valley_mu_shp_30cm$mukey, valley30cm_by_mukey$mukey)]
+valley_mu_shp_30cm$cluster_8 <- valley30cm_by_mukey$cluster_8[match(valley_mu_shp_30cm$mukey, valley30cm_by_mukey$mukey)]
+valley_mu_shp_30cm$cluster_9 <- valley30cm_by_mukey$cluster_9[match(valley_mu_shp_30cm$mukey, valley30cm_by_mukey$mukey)]
+valley_mu_shp_30cm$cluster_10 <- valley30cm_by_mukey$cluster_10[match(valley_mu_shp_30cm$mukey, valley30cm_by_mukey$mukey)]
+valley_mu_shp_30cm$cluster_11 <- valley30cm_by_mukey$cluster_11[match(valley_mu_shp_30cm$mukey, valley30cm_by_mukey$mukey)]
+valley_mu_shp_30cm$cluster_12 <- valley30cm_by_mukey$cluster_12[match(valley_mu_shp_30cm$mukey, valley30cm_by_mukey$mukey)]
+sum(tapply(valley_mu_shp_30cm$area_ac, valley_mu_shp_30cm$cluster_10, sum))
+sum(valley_mu_shp_30cm$area_ac[is.na(valley_mu_shp_30cm$cluster_10)])
+shapefile(valley_mu_shp_30cm, file.path(dataDir, 'shapefiles with data', 'valley_30cm_cluster.shp'), overwrite=TRUE)
+
 cluster_area_summary <- c(tapply(valley30cm_by_mukey$area_ac, valley30cm_by_mukey$cluster_2, sum), tapply(valley30cm_by_mukey$area_ac, valley30cm_by_mukey$cluster_3, sum), tapply(valley30cm_by_mukey$area_ac, valley30cm_by_mukey$cluster_4, sum), tapply(valley30cm_by_mukey$area_ac, valley30cm_by_mukey$cluster_5, sum), tapply(valley30cm_by_mukey$area_ac, valley30cm_by_mukey$cluster_6, sum), tapply(valley30cm_by_mukey$area_ac, valley30cm_by_mukey$cluster_7, sum), tapply(valley30cm_by_mukey$area_ac, valley30cm_by_mukey$cluster_8, sum), tapply(valley30cm_by_mukey$area_ac, valley30cm_by_mukey$cluster_9, sum), tapply(valley30cm_by_mukey$area_ac, valley30cm_by_mukey$cluster_10, sum), tapply(valley30cm_by_mukey$area_ac, valley30cm_by_mukey$cluster_11, sum), tapply(valley30cm_by_mukey$area_ac, valley30cm_by_mukey$cluster_12, sum))
 cluster_fk$area_ac <- cluster_area_summary
 cluster_fk$area_pct <- 100 * cluster_fk$area_ac / sum(analysis_preview$area_ac)
@@ -212,7 +305,7 @@ legend(x=-1.4, y=-1.2, legend =c('Loams w/ res.', 'Saline-sodic w/ high 2:1', 'S
 dev.off()
 
 #rgb color codes
-col2rgb(c('tan3', 'lightblue4', 'lightgoldenrod', 'tan3', 'tan4', 'lightblue2', 'black', 'tan4', 'gold', 'lightblue1')[order_lgnd])
+col2rgb(c('tan3', 'lightblue4', 'lightgoldenrod', 'tan3', 'tan4', 'lightblue2', 'black', 'tan4', 'gold', 'lightblue1'))
 
 #see daisy in the cluster package with more possibilities in the case of mixed (continuous / categorical) variables.
 dist_test_4 <- dist(cluster_4$centers, method = 'euclidean')
