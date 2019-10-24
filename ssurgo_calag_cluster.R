@@ -70,16 +70,19 @@ sum(valley30cm_by_mukey$area_ac) #13,873,110
 analysis_preview <- valley30cm_by_mukey[which(valley30cm_by_mukey$flag==1), c('MnRs_dep', 'clay_30cm', 'om_30cm', 'cec_30cm', 'bd_30cm', 'ec_30cm', 'pH_30cm', 'lep_30cm', 'ksat_30cm', 'awc_30cm', 'area_ac', 'muname', 'mukey', 'complex', 'associan')]
 sum(analysis_preview$area_ac[analysis_preview$complex=='Yes'])
 sum(analysis_preview$area_ac[analysis_preview$associan=='Yes'])
-non_analysis_preview <- valley30cm_by_mukey[which(valley30cm_by_mukey$flag==2), c('MnRs_dep', 'clay_30cm', 'om_30cm', 'cec_30cm', 'bd_30cm', 'ec_30cm', 'pH_30cm', 'lep_30cm', 'ksat_30cm', 'awc_30cm', 'area_ac', 'muname', 'mjcmpnms', 'compct_om', 'dmcmp_pct', 'mukey')]
+non_analysis_preview <- valley30cm_by_mukey[which(valley30cm_by_mukey$flag==2), c('MnRs_dep', 'clay_30cm', 'om_30cm', 'cec_30cm', 'bd_30cm', 'ec_30cm', 'pH_30cm', 'lep_30cm', 'ksat_30cm', 'awc_30cm', 'area_ac', 'muname', 'mjcmpnms', 'compct_om', 'dmcmp_pct', 'mukey', 'complex', 'associan')]
 sum(non_analysis_preview$area_ac)
 
 analysis_preview$count_NAs <- apply(analysis_preview[,1:10], 1, function(x) sum(is.na(x)))
 tapply(analysis_preview$area_ac, analysis_preview$count_NAs, sum)
 apply(analysis_preview[,1:10], 2, function(x) sum(is.na(x)))
 analysis_preview$ec_30cm[is.na(analysis_preview$ec_30cm) & analysis_preview$count_NAs==1] <- 0
-sum(na.omit(analysis_preview)$area_ac) #12,455,906 without EC;
+sum(analysis_preview$area_ac) #12,712,879 total acres
+sum(na.omit(analysis_preview)$area_ac) #12,455,906 without EC or with corrected NA ECs;
 #12,363,398 acres in v2 with EC and no SAR
 #11,290,964 acres were assigned a soil health diagnostic indicators cluster class in v1
+write.csv(na.omit(analysis_preview), file.path(dataDir, 'analysis_preview_10.23.19.csv'), row.names = FALSE)
+
 non_analysis_preview$count_NAs <- apply(non_analysis_preview[,1:10], 1, function(x) sum(is.na(x)))
 tapply(non_analysis_preview$area_ac, non_analysis_preview$count_NAs, sum) #794,356.55 with no NAs; 796,308.86 after correcting NA EC with no other NAs
 non_analysis_preview$ec_30cm[is.na(non_analysis_preview$ec_30cm) & non_analysis_preview$count_NAs==1] <- 0
@@ -91,7 +94,10 @@ hist(non_analysis_preview$dmcmp_pct[non_analysis_preview$count_NAs==0])
 sum(non_analysis_preview$area_ac[non_analysis_preview$count_NAs==0][non_analysis_preview$compct_om[non_analysis_preview$count_NAs==0] >= non_analysis_preview$dmcmp_pct[non_analysis_preview$count_NAs==0]]) #639,712 acres before correcting EC NAs with no other NA data; 640,556 after correcting EC NAs with no other NA data
 imperfect_keep_preview <- non_analysis_preview[non_analysis_preview$count_NAs==0 & non_analysis_preview$compct_om >= non_analysis_preview$dmcmp_pct, ]
 sum(imperfect_keep_preview$area_ac) #640,556 acres
-write.csv(imperfect_keep_preview, file.path(dataDir, 'imperfect_SSURGO_preview_10.22.19.csv'))
+sum(imperfect_keep_preview$area_ac[imperfect_keep_preview$complex=='Yes']) #300,081 acres are a complex
+sum(imperfect_keep_preview$area_ac[imperfect_keep_preview$associan=='Yes']) #22825.48
+
+# write.csv(imperfect_keep_preview, file.path(dataDir, 'imperfect_SSURGO_preview_10.22.19.csv'))
 
 #create data.frame for cluster analysis
 df_for_clustering <- valley30cm_by_mukey
