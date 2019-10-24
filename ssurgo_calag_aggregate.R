@@ -13,7 +13,7 @@ library(extrafontdb)
 loadfonts()
 #demo(aqp)
 #demo(slope_effect_hz_thickness)
-laptop <- FALSE
+laptop <- TRUE
 if (laptop) {
   mainDir <- 'C:/Users/smdevine/Desktop/post doc'
 } else { #on UCD desktop
