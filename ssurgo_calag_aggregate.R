@@ -13,7 +13,7 @@ library(extrafontdb)
 loadfonts()
 #demo(aqp)
 #demo(slope_effect_hz_thickness)
-laptop <- TRUE
+laptop <- FALSE
 if (laptop) {
   mainDir <- 'C:/Users/smdevine/Desktop/post doc'
 } else { #on UCD desktop
@@ -176,8 +176,11 @@ mu_data <- read.csv(file.path(ssurgoDir, 'ca_mapunit_data.csv'), stringsAsFactor
 # sum(area(valley_mu_shp)) / 10000 * 2.47105 # 13,873,110 acres
 # length(unique(valley_mu_shp$mukey)) #5,043 map-unit kinds
 # shapefile(valley_mu_shp, file.path(ssurgoDir, 'ca_mapunits', 'valley_only', 'valley_mapunits.shp'))
-valley_mu_shp <- shapefile(file.path(ssurgoDir, 'ca_mapunits', 'valley_only', 'valley_mapunits.shp'))
-mu_data_valley <- mu_data[mu_data$mukey %in% valley_mu_shp$mukey, ]
+# valley_mu_shp <- shapefile(file.path(ssurgoDir, 'ca_mapunits', 'valley_only', 'valley_mapunits.shp'))
+# mukeys_valley <- as.integer(unique(valley_mu_shp$mukey)) #5043
+# write.csv(mukeys_valley, file.path(summaryDir, 'mukeys_unique_valley.csv'), row.names = FALSE)
+mukeys_valley <- read.csv(file.path(summaryDir, 'mukeys_unique_valley.csv'), stringsAsFactors=FALSE)
+mu_data_valley <- mu_data[mu_data$mukey %in% mukeys_valley, ]
 
 #read in component (comp) data
 #valley exploratory version replaces comp_data_Fresno with comp_data_valley
