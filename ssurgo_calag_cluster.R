@@ -4,7 +4,7 @@
 #(2) summarize classes for 4 and 5 
 #(3) log transform om and ksat [DONE]
 #(4) identify outliers
-laptop <- FALSE
+laptop <- TRUE
 library(raster)
 library(corrplot)
 library(cluster)
@@ -15,15 +15,17 @@ library(extrafont)
 library(extrafontdb)
 #font_import() #only needs to be done one time after updating and re-installing R and moving and updating packages
 loadfonts(device = 'win')
-#
-
+if (laptop) {
+  mainDir <- 'C:/Users/smdevine/Desktop/post doc'
+} else { #on UCD desktop
+  mainDir <- 'C:/Users/smdevine/Desktop/PostDoc'
+}
 if (laptop) {
   dataDir <- 'C:/Users/smdevine/Desktop/post doc/soil health/summaries/valley_final' #was valley_trial
   FiguresDir <- 'C:/Users/smdevine/Desktop/post doc/soil health/Figures/valley_final' #was valley_trial
 } else { #on UCD desktop
   dataDir <- 'C:/Users/smdevine/Desktop/PostDoc/soil health/summaries/valley_final' #was valley_trial
   FiguresDir <- 'C:/Users/smdevine/Desktop/PostDoc/soil health/Figures/valley_final' #was valley_trial
-  
 }
 # mar_settings <- c(4, 4.5, 1, 1)
 list.files(dataDir)
