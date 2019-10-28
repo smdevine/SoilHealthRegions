@@ -7,13 +7,13 @@
 #add tabulation of majcomps with data
 library(raster)
 library(aqp)
-library(extrafont)
-library(extrafontdb)
+# library(extrafont)
+# library(extrafontdb)
 #font_import() only needs to be done once
-loadfonts()
+# loadfonts()
 #demo(aqp)
 #demo(slope_effect_hz_thickness)
-laptop <- FALSE
+laptop <- TRUE
 if (laptop) {
   mainDir <- 'C:/Users/smdevine/Desktop/post doc'
 } else { #on UCD desktop
@@ -104,7 +104,7 @@ horizon_to_comp <- function(horizon_SPC, depth, comp_df, vars_of_interest = c('c
   columnames <- paste0(varnames, '_', depth, 'cm')
   print(cbind(vars_of_interest, columnames)) #show that it's all lined up
   assign("depth", depth, envir = .GlobalEnv) #this necessary because slice can't find the variable otherwise
-  sliced_SPC <- slice(horizon_SPC, 0:depth ~ .)
+  sliced_SPC <- slice(horizon_SPC, 0:(depth-1) ~ .) #depth was '0:depth' in previous version
   for (i in seq_along(vars_of_interest)) {
     s <- site(sliced_SPC)
     s[[columnames[i]]] <- profileApply(sliced_SPC, FUN = wtd.mean, y=vars_of_interest[i])
@@ -143,7 +143,7 @@ mu_data <- read.csv(file.path(ssurgoDir, 'ca_mapunit_data.csv'), stringsAsFactor
 
 #read in map unit spatial data
 # list.files(file.path(ssurgoDir, 'ca_mapunits'))
-# mu_shp <- shapefile(file.path(ssurgoDir, 'ca_mapunits', 'ca_mapunits.shp'))
+mu_shp <- shapefile(file.path(ssurgoDir, 'ca_mapunits', 'ca_mapunits.shp'))
 # unique(mu_shp$areasymbol)
 
 #read in MLRA shapefile
@@ -176,11 +176,11 @@ mu_data <- read.csv(file.path(ssurgoDir, 'ca_mapunit_data.csv'), stringsAsFactor
 # sum(area(valley_mu_shp)) / 10000 * 2.47105 # 13,873,110 acres
 # length(unique(valley_mu_shp$mukey)) #5,043 map-unit kinds
 # shapefile(valley_mu_shp, file.path(ssurgoDir, 'ca_mapunits', 'valley_only', 'valley_mapunits.shp'))
-# valley_mu_shp <- shapefile(file.path(ssurgoDir, 'ca_mapunits', 'valley_only', 'valley_mapunits.shp'))
+valley_mu_shp <- shapefile(file.path(ssurgoDir, 'ca_mapunits', 'valley_only', 'valley_mapunits.shp'))
 # mukeys_valley <- as.integer(unique(valley_mu_shp$mukey)) #5043
 # write.csv(mukeys_valley, file.path(summaryDir, 'mukeys_unique_valley.csv'), row.names = FALSE)
 mukeys_valley <- read.csv(file.path(summaryDir, 'mukeys_unique_valley.csv'), stringsAsFactors=FALSE)
-mu_data_valley <- mu_data[mu_data$mukey %in% mukeys_valley, ]
+mu_data_valley <- mu_data[mu_data$mukey %in% mukeys_valley$x, ]
 
 #read in component (comp) data
 #valley exploratory version replaces comp_data_Fresno with comp_data_valley
@@ -190,7 +190,7 @@ colnames(comp_data)
 # dim(comp_data) #91193
 # length(unique(comp_data$mukey)) #18,861 
 # length(unique(comp_data$cokey)) #91,193 unique cokeys
-comp_data_valley <- comp_data[comp_data$mukey %in% valley_mu_shp$mukey,]
+comp_data_valley <- comp_data[comp_data$mukey %in% mu_data_valley$mukey,]
 if(sum(is.na(comp_data_valley$majcompflag)) > 0) {stop(print('there are NAs in majcomp column!'))}
 if(sum(is.na(comp_data_valley$comppct_r)) > 0) {stop(print('there are NAs in the comppct column!'))}
 sum(is.na(comp_data_valley$comppct_r))
@@ -208,7 +208,7 @@ comp_data_valley[comp_data_valley$majcompflag=='No ' & !is.na(comp_data_valley$c
 summary(comp_data_valley$comppct_r[comp_data_valley$majcompflag=='Yes'])
 sum(comp_data_valley$comppct_r[comp_data_valley$majcompflag=='Yes'] < 15) #10 instance of <15% comppct_r flagged as majcomps
 comp_data_valley[comp_data_valley$majcompflag=='Yes' & comp_data_valley$comppct_r < 15,]
-sum(comp_data_valley$comppct_r[comp_data_valley$majcompflag=='No '] >= 15) #110 not flagged as majcomp in these valleys with < 15%
+sum(comp_data_valley$comppct_r[comp_data_valley$majcompflag=='No '] >= 15) #110 not flagged as majcomp in these valleys with > 15%
 comp_data_valley[comp_data_valley$majcompflag=='No ' & comp_data_valley$comppct_r>=15, ]
 sum(comp_data_valley$majcompflag=='No ' & comp_data_valley$comppct_r>=15 & !is.na(comp_data_valley$castorieindex)) #7
 
@@ -391,9 +391,9 @@ head(horizon_data_valley[horizon_data_valley$majcompflag=='No ', ], 100)
 
 #convert to Soil Profile collection class with no minor comps per filtering above
 horizons_valley_majcomps <- horizon_data_valley[horizon_data_valley$majcompflag=='Yes', ]
-# dim(horizons_valley_majcomps) #2997 horizons
-# length(unique(horizons_valley_majcomps$cokey)) #935 profiles (e.g. unique cokeys)
-# length(unique(horizons_valley_majcomps$mukey)) #771 after getting rid of minor components
+# dim(horizons_valley_majcomps) #21313 horizons
+# length(unique(horizons_valley_majcomps$cokey)) #6030 profiles (e.g. unique cokeys)
+# length(unique(horizons_valley_majcomps$mukey)) #4897 after getting rid of minor components
 
 #upgrade data.frame to a SoilProfileCollection object
 #see https://r-forge.r-project.org/scm/viewvc.php/*checkout*/docs/aqp/aqp-intro.html?root=aqp
@@ -433,22 +433,83 @@ horizons_valley_majcomps$soil_depth <- profileApply(horizons_valley_majcomps, FU
 # head(comp_valley_100cm)
 
 #30 cm dataset
+test_hz_aggregation <- horizon_to_comp(horizon_SPC = horizons_valley_majcomps[4], depth = 30, comp_df = comp_data_valley)
+test_hz_aggregation
+horizon_data_valley[horizon_data_valley$cokey==16264388,]
+#om test: 1.791667 
+2*25/30+0.75*5/30
+#awc test: 4.75 cm
+0.16*25 + 0.15*5
+
 comp_valley_30cm <- horizon_to_comp(horizon_SPC = horizons_valley_majcomps, depth = 30, comp_df = comp_data_valley)
+# write.csv(comp_valley_30cm, file.path(summaryDir, 'comp_valley_30cm_10.25.19.csv'), row.names = FALSE)
 head(comp_valley_30cm)
-dim(comp_valley_30cm)
+dim(comp_valley_30cm) #6030
+colnames(comp_valley_30cm)
 lapply(comp_valley_30cm[ ,2:ncol(comp_valley_30cm)], summary)
 lapply(comp_valley_30cm[,2:ncol(comp_valley_30cm)], function(x) unique(comp_valley_30cm$compname[is.na(x)]))
+problematic_compnames <- unique(unlist(lapply(comp_valley_30cm[,c('compname', 'clay_30cm', 'om_30cm', 'cec_30cm', 'ksat_30cm', 'awc_30cm')], function(x) unique(comp_valley_30cm$compname[x==0]))))
+problematic_compnames <- data.frame(compname=problematic_compnames[order(problematic_compnames)], stringsAsFactors = FALSE)
+write.csv(problematic_compnames, file.path(summaryDir, 'problematic_compnames_10.25.19.csv'), row.names = FALSE)
+unique(comp_valley_30cm$compname[which(comp_valley_30cm$om_30cm==0)])
+zero_om_cokeys <- unique(comp_valley_30cm$cokey[which(comp_valley_30cm$om_30cm==0)])
+horizon_data_zero_om <- horizon_data_valley[horizon_data_valley$cokey %in% zero_om_cokeys,]
+horizon_data_zero_om$compname <- comp_valley_30cm$compname[match(horizon_data_zero_om$cokey, comp_valley_30cm$cokey)]
+#write.csv(horizon_data_zero_om, file.path(summaryDir, 'horizon_data_zero_om_10.25.19.csv'), row.names=FALSE)
+
+#convert zeroes for some variables (OM, CEC, Ks, AWC) to NA
+#om
+sum(comp_valley_30cm$om_30cm==0, na.rm = TRUE)
+sum(is.na(comp_valley_30cm$om_30cm))
+
+comp_valley_30cm$om_30cm[comp_valley_30cm$om_30cm==0] <- NA
+#cec
+sum(comp_valley_30cm$cec_30cm==0, na.rm = TRUE)
+sum(is.na(comp_valley_30cm$cec_30cm))
+comp_valley_30cm$cec_30cm[comp_valley_30cm$cec_30cm==0] <- NA
+sum(is.na(comp_valley_30cm$cec_30cm))
+
+#Ks
+sum(comp_valley_30cm$ksat_30cm==0, na.rm = TRUE)
+sum(is.na(comp_valley_30cm$ksat_30cm))
+comp_valley_30cm$ksat_30cm[comp_valley_30cm$ksat_30cm==0] <- NA
+sum(is.na(comp_valley_30cm$ksat_30cm))
+
+#awc
+sum(comp_valley_30cm$awc_30cm==0, na.rm = TRUE)
+sum(is.na(comp_valley_30cm$awc_30cm))
+comp_valley_30cm$awc_30cm[comp_valley_30cm$awc_30cm==0] <- NA
+sum(is.na(comp_valley_30cm$awc_30cm))
+
 length(unique(comp_valley_30cm$mukey)) #4897
 length(unique(comp_data_valley$mukey)) #5043
 length(unique(comp_valley_30cm$compname)) #899
 length(unique(comp_data_valley$compname)) #1153
 unique(comp_valley_30cm$compname)
-#these variables are used for clustering later: c('MnRs_dep', 'clay_30cm', 'om_30cm', 'cec_30cm', 'bd_30cm', 'ec_30cm', 'pH_30cm', 'sar_30cm', 'lep_30cm', 'ksat_30cm', 'awc_30cm')
+#these variables are used for clustering later: c('MnRs_dep', 'clay_30cm', 'om_30cm', 'cec_30cm', 'bd_30cm', 'ec_30cm', 'pH_30cm', 'lep_30cm', 'ksat_30cm', 'awc_30cm') #sar_30cm was removed
 sum(is.na(comp_valley_30cm$om_30cm)) #210 comps have NA
+sum(comp_valley_30cm$om_30cm==0, na.rm = TRUE) #66 comps impacted by om=0
+
+#metadata about om data availability
 comppct_by_mukey_om_data <- data.frame(mukey=row.names(tapply(comp_valley_30cm$comppct[!is.na(comp_valley_30cm$om_30cm)], comp_valley_30cm$mukey[!is.na(comp_valley_30cm$om_30cm)], sum)), comppct_tot=as.numeric(tapply(comp_valley_30cm$comppct[!is.na(comp_valley_30cm$om_30cm)], comp_valley_30cm$mukey[!is.na(comp_valley_30cm$om_30cm)], sum)), stringsAsFactors = FALSE)
 summary(comppct_by_mukey_om_data$comppct_tot)
-sum(comppct_by_mukey_om_data$comppct_tot < 70)
-       
+sum(comppct_by_mukey_om_data$comppct_tot < 70) #290
+
+#metadata about awc data availability
+comppct_by_mukey_awc_data <- data.frame(mukey=row.names(tapply(comp_valley_30cm$comppct[!is.na(comp_valley_30cm$awc_30cm)], comp_valley_30cm$mukey[!is.na(comp_valley_30cm$awc_30cm)], sum)), comppct_tot=as.numeric(tapply(comp_valley_30cm$comppct[!is.na(comp_valley_30cm$awc_30cm)], comp_valley_30cm$mukey[!is.na(comp_valley_30cm$awc_30cm)], sum)), stringsAsFactors = FALSE)
+summary(comppct_by_mukey_awc_data$comppct_tot)
+sum(comppct_by_mukey_awc_data$comppct_tot < 70) #286
+
+#Ks
+comppct_by_mukey_ksat_data <- data.frame(mukey=row.names(tapply(comp_valley_30cm$comppct[!is.na(comp_valley_30cm$ksat_30cm)], comp_valley_30cm$mukey[!is.na(comp_valley_30cm$ksat_30cm)], sum)), comppct_tot=as.numeric(tapply(comp_valley_30cm$comppct[!is.na(comp_valley_30cm$ksat_30cm)], comp_valley_30cm$mukey[!is.na(comp_valley_30cm$ksat_30cm)], sum)), stringsAsFactors = FALSE)
+summary(comppct_by_mukey_ksat_data$comppct_tot)
+sum(comppct_by_mukey_ksat_data$comppct_tot < 70) #266
+
+#cec
+comppct_by_mukey_cec_data <- data.frame(mukey=row.names(tapply(comp_valley_30cm$comppct[!is.na(comp_valley_30cm$cec_30cm)], comp_valley_30cm$mukey[!is.na(comp_valley_30cm$cec_30cm)], sum)), comppct_tot=as.numeric(tapply(comp_valley_30cm$comppct[!is.na(comp_valley_30cm$cec_30cm)], comp_valley_30cm$mukey[!is.na(comp_valley_30cm$cec_30cm)], sum)), stringsAsFactors = FALSE)
+summary(comppct_by_mukey_cec_data$comppct_tot)
+sum(comppct_by_mukey_cec_data$comppct_tot < 70) #307
+
 #10 cm dataset
 # comp_valley_10cm <- horizon_to_comp(horizon_SPC = horizons_valley_majcomps, depth = 10, comp_df = comp_data_valley)
 # head(comp_valley_10cm)
