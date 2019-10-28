@@ -13,7 +13,7 @@ library(aqp)
 # loadfonts()
 #demo(aqp)
 #demo(slope_effect_hz_thickness)
-laptop <- TRUE
+laptop <- FALSE
 if (laptop) {
   mainDir <- 'C:/Users/smdevine/Desktop/post doc'
 } else { #on UCD desktop
@@ -143,7 +143,7 @@ mu_data <- read.csv(file.path(ssurgoDir, 'ca_mapunit_data.csv'), stringsAsFactor
 
 #read in map unit spatial data
 # list.files(file.path(ssurgoDir, 'ca_mapunits'))
-mu_shp <- shapefile(file.path(ssurgoDir, 'ca_mapunits', 'ca_mapunits.shp'))
+# mu_shp <- shapefile(file.path(ssurgoDir, 'ca_mapunits', 'ca_mapunits.shp'))
 # unique(mu_shp$areasymbol)
 
 #read in MLRA shapefile
@@ -442,7 +442,7 @@ horizon_data_valley[horizon_data_valley$cokey==16264388,]
 0.16*25 + 0.15*5
 
 comp_valley_30cm <- horizon_to_comp(horizon_SPC = horizons_valley_majcomps, depth = 30, comp_df = comp_data_valley)
-# write.csv(comp_valley_30cm, file.path(summaryDir, 'comp_valley_30cm_10.25.19.csv'), row.names = FALSE)
+write.csv(comp_valley_30cm, file.path(summaryDir, 'comp_valley_30cm_10.28.19.csv'), row.names = FALSE)
 head(comp_valley_30cm)
 dim(comp_valley_30cm) #6030
 colnames(comp_valley_30cm)
@@ -450,36 +450,42 @@ lapply(comp_valley_30cm[ ,2:ncol(comp_valley_30cm)], summary)
 lapply(comp_valley_30cm[,2:ncol(comp_valley_30cm)], function(x) unique(comp_valley_30cm$compname[is.na(x)]))
 problematic_compnames <- unique(unlist(lapply(comp_valley_30cm[,c('compname', 'clay_30cm', 'om_30cm', 'cec_30cm', 'ksat_30cm', 'awc_30cm')], function(x) unique(comp_valley_30cm$compname[x==0]))))
 problematic_compnames <- data.frame(compname=problematic_compnames[order(problematic_compnames)], stringsAsFactors = FALSE)
-write.csv(problematic_compnames, file.path(summaryDir, 'problematic_compnames_10.25.19.csv'), row.names = FALSE)
+write.csv(problematic_compnames, file.path(summaryDir, 'problematic_compnames_10.28.19.csv'), row.names = FALSE)
 unique(comp_valley_30cm$compname[which(comp_valley_30cm$om_30cm==0)])
 zero_om_cokeys <- unique(comp_valley_30cm$cokey[which(comp_valley_30cm$om_30cm==0)])
 horizon_data_zero_om <- horizon_data_valley[horizon_data_valley$cokey %in% zero_om_cokeys,]
 horizon_data_zero_om$compname <- comp_valley_30cm$compname[match(horizon_data_zero_om$cokey, comp_valley_30cm$cokey)]
-#write.csv(horizon_data_zero_om, file.path(summaryDir, 'horizon_data_zero_om_10.25.19.csv'), row.names=FALSE)
+write.csv(horizon_data_zero_om, file.path(summaryDir, 'horizon_data_zero_om_10.28.19.csv'), row.names=FALSE)
 
 #convert zeroes for some variables (OM, CEC, Ks, AWC) to NA
 #om
 sum(comp_valley_30cm$om_30cm==0, na.rm = TRUE)
 sum(is.na(comp_valley_30cm$om_30cm))
 
+comp_valley_30cm$om_zero <- ifelse(comp_valley_30cm$om_30cm==0, 'Yes', 'No') #because these are changed to NA for map unit aggregation purposes
 comp_valley_30cm$om_30cm[comp_valley_30cm$om_30cm==0] <- NA
 #cec
 sum(comp_valley_30cm$cec_30cm==0, na.rm = TRUE)
 sum(is.na(comp_valley_30cm$cec_30cm))
+comp_valley_30cm$cec_zero <- ifelse(comp_valley_30cm$cec_30cm==0, 'Yes', 'No') #because these are changed to NA for map unit aggregation purposes
 comp_valley_30cm$cec_30cm[comp_valley_30cm$cec_30cm==0] <- NA
 sum(is.na(comp_valley_30cm$cec_30cm))
 
 #Ks
 sum(comp_valley_30cm$ksat_30cm==0, na.rm = TRUE)
 sum(is.na(comp_valley_30cm$ksat_30cm))
+comp_valley_30cm$ksat_zero <- ifelse(comp_valley_30cm$ksat_30cm==0, 'Yes', 'No') #because these are changed to NA for map unit aggregation purposes
 comp_valley_30cm$ksat_30cm[comp_valley_30cm$ksat_30cm==0] <- NA
 sum(is.na(comp_valley_30cm$ksat_30cm))
+table(comp_valley_30cm$ksat_zero)
 
 #awc
 sum(comp_valley_30cm$awc_30cm==0, na.rm = TRUE)
 sum(is.na(comp_valley_30cm$awc_30cm))
+comp_valley_30cm$awc_zero <- ifelse(comp_valley_30cm$awc_30cm==0, 'Yes', 'No') #because these are changed to NA for map unit aggregation purposes
 comp_valley_30cm$awc_30cm[comp_valley_30cm$awc_30cm==0] <- NA
 sum(is.na(comp_valley_30cm$awc_30cm))
+table(comp_valley_30cm$awc_zero)
 
 length(unique(comp_valley_30cm$mukey)) #4897
 length(unique(comp_data_valley$mukey)) #5043
@@ -487,8 +493,6 @@ length(unique(comp_valley_30cm$compname)) #899
 length(unique(comp_data_valley$compname)) #1153
 unique(comp_valley_30cm$compname)
 #these variables are used for clustering later: c('MnRs_dep', 'clay_30cm', 'om_30cm', 'cec_30cm', 'bd_30cm', 'ec_30cm', 'pH_30cm', 'lep_30cm', 'ksat_30cm', 'awc_30cm') #sar_30cm was removed
-sum(is.na(comp_valley_30cm$om_30cm)) #210 comps have NA
-sum(comp_valley_30cm$om_30cm==0, na.rm = TRUE) #66 comps impacted by om=0
 
 #metadata about om data availability
 comppct_by_mukey_om_data <- data.frame(mukey=row.names(tapply(comp_valley_30cm$comppct[!is.na(comp_valley_30cm$om_30cm)], comp_valley_30cm$mukey[!is.na(comp_valley_30cm$om_30cm)], sum)), comppct_tot=as.numeric(tapply(comp_valley_30cm$comppct[!is.na(comp_valley_30cm$om_30cm)], comp_valley_30cm$mukey[!is.na(comp_valley_30cm$om_30cm)], sum)), stringsAsFactors = FALSE)
@@ -509,6 +513,31 @@ sum(comppct_by_mukey_ksat_data$comppct_tot < 70) #266
 comppct_by_mukey_cec_data <- data.frame(mukey=row.names(tapply(comp_valley_30cm$comppct[!is.na(comp_valley_30cm$cec_30cm)], comp_valley_30cm$mukey[!is.na(comp_valley_30cm$cec_30cm)], sum)), comppct_tot=as.numeric(tapply(comp_valley_30cm$comppct[!is.na(comp_valley_30cm$cec_30cm)], comp_valley_30cm$mukey[!is.na(comp_valley_30cm$cec_30cm)], sum)), stringsAsFactors = FALSE)
 summary(comppct_by_mukey_cec_data$comppct_tot)
 sum(comppct_by_mukey_cec_data$comppct_tot < 70) #307
+
+#clay
+comppct_by_mukey_clay_data <- data.frame(mukey=row.names(tapply(comp_valley_30cm$comppct[!is.na(comp_valley_30cm$clay_30cm)], comp_valley_30cm$mukey[!is.na(comp_valley_30cm$clay_30cm)], sum)), comppct_tot=as.numeric(tapply(comp_valley_30cm$comppct[!is.na(comp_valley_30cm$clay_30cm)], comp_valley_30cm$mukey[!is.na(comp_valley_30cm$clay_30cm)], sum)), stringsAsFactors = FALSE)
+summary(comppct_by_mukey_clay_data$comppct_tot)
+sum(comppct_by_mukey_clay_data$comppct_tot < 70) #281
+
+#bd
+comppct_by_mukey_bd_data <- data.frame(mukey=row.names(tapply(comp_valley_30cm$comppct[!is.na(comp_valley_30cm$bd_30cm)], comp_valley_30cm$mukey[!is.na(comp_valley_30cm$bd_30cm)], sum)), comppct_tot=as.numeric(tapply(comp_valley_30cm$comppct[!is.na(comp_valley_30cm$bd_30cm)], comp_valley_30cm$mukey[!is.na(comp_valley_30cm$bd_30cm)], sum)), stringsAsFactors = FALSE)
+summary(comppct_by_mukey_bd_data$comppct_tot)
+sum(comppct_by_mukey_bd_data$comppct_tot < 70) #290
+
+#ec
+comppct_by_mukey_ec_data <- data.frame(mukey=row.names(tapply(comp_valley_30cm$comppct[!is.na(comp_valley_30cm$ec_30cm)], comp_valley_30cm$mukey[!is.na(comp_valley_30cm$ec_30cm)], sum)), comppct_tot=as.numeric(tapply(comp_valley_30cm$comppct[!is.na(comp_valley_30cm$ec_30cm)], comp_valley_30cm$mukey[!is.na(comp_valley_30cm$ec_30cm)], sum)), stringsAsFactors = FALSE)
+summary(comppct_by_mukey_ec_data$comppct_tot)
+sum(comppct_by_mukey_ec_data$comppct_tot < 70) #250
+
+#pH
+comppct_by_mukey_pH_data <- data.frame(mukey=row.names(tapply(comp_valley_30cm$comppct[!is.na(comp_valley_30cm$pH_30cm)], comp_valley_30cm$mukey[!is.na(comp_valley_30cm$pH_30cm)], sum)), comppct_tot=as.numeric(tapply(comp_valley_30cm$comppct[!is.na(comp_valley_30cm$pH_30cm)], comp_valley_30cm$mukey[!is.na(comp_valley_30cm$pH_30cm)], sum)), stringsAsFactors = FALSE)
+summary(comppct_by_mukey_pH_data$comppct_tot)
+sum(comppct_by_mukey_pH_data$comppct_tot < 70) #287
+
+#lep
+comppct_by_mukey_lep_data <- data.frame(mukey=row.names(tapply(comp_valley_30cm$comppct[!is.na(comp_valley_30cm$lep_30cm)], comp_valley_30cm$mukey[!is.na(comp_valley_30cm$lep_30cm)], sum)), comppct_tot=as.numeric(tapply(comp_valley_30cm$comppct[!is.na(comp_valley_30cm$lep_30cm)], comp_valley_30cm$mukey[!is.na(comp_valley_30cm$lep_30cm)], sum)), stringsAsFactors = FALSE)
+summary(comppct_by_mukey_lep_data$comppct_tot)
+sum(comppct_by_mukey_lep_data$comppct_tot < 70) #282
 
 #10 cm dataset
 # comp_valley_10cm <- horizon_to_comp(horizon_SPC = horizons_valley_majcomps, depth = 10, comp_df = comp_data_valley)
@@ -558,22 +587,37 @@ valley_mu_shp$dmcmp_pct <- domcomp_pct_by_mukey$docomppct[match(valley_mu_shp$mu
 summary(valley_mu_shp$dmcmp_pct)
 valley_mu_shp$mjcmp_pct <- majcomp_pct_by_mukey$majcomppct[match(valley_mu_shp$mukey, majcomp_pct_by_mukey$mukey)]
 summary(valley_mu_shp$mjcmp_pct) #114 NAs
-summary(valley_mu_shp$domcomp_pct / valley_mu_shp$majcomp_pct)
 
 valley_mu_shp$compct_om <- comppct_by_mukey_om_data$comppct_tot[match(valley_mu_shp$mukey, comppct_by_mukey_om_data$mukey)]
-summary(valley_mu_shp$compct_om) #5910 NAs
+summary(valley_mu_shp$compct_om) #was 5910 NAs; now 6364 NAs because of 0 operation
 hist(valley_mu_shp$compct_om)
-sum(valley_mu_shp$area_ac[is.na(valley_mu_shp$compct_om)]) #so, 303,581 acres have no organic matter data
-sum(valley_mu_shp$area_ac[valley_mu_shp$compct_om < 70], na.rm = TRUE) #another 411,696 acres have some data but only for less than 70% of map unit
-sum(valley_mu_shp$area_ac[valley_mu_shp$compct_om < 80], na.rm = TRUE) #or, 856,650 acres have some data but only for less than 80% of map unit
+sum(valley_mu_shp$area_ac[is.na(valley_mu_shp$compct_om)]) #337,461 acres have no organic matter data; was 303,581
+sum(valley_mu_shp$area_ac[valley_mu_shp$compct_om < 70], na.rm = TRUE) #another 509,239 (was 411,696) acres have some data but only for less than 70% of map unit
+sum(valley_mu_shp$area_ac[valley_mu_shp$compct_om < 80], na.rm = TRUE) #or, 960,057 (was 856,650) acres have some data but only for less than 80% of map unit
 sum(valley_mu_shp$area_ac[valley_mu_shp$compct_om < 85], na.rm = TRUE) #1,930,013
 
+#add additional qc info
+valley_mu_shp$compct_cec <- comppct_by_mukey_cec_data$comppct_tot[match(valley_mu_shp$mukey, comppct_by_mukey_cec_data$mukey)]
+hist(valley_mu_shp$compct_cec)
+
+valley_mu_shp$compct_ksat <- comppct_by_mukey_ksat_data$comppct_tot[match(valley_mu_shp$mukey, comppct_by_mukey_ksat_data$mukey)]
+hist(valley_mu_shp$compct_ksat)
+
+valley_mu_shp$compct_awc <- comppct_by_mukey_awc_data$comppct_tot[match(valley_mu_shp$mukey, comppct_by_mukey_awc_data$mukey)]
+hist(valley_mu_shp$compct_awc)
+
+valley_mu_shp$compct_clay <- comppct_by_mukey_clay_data$comppct_tot[match(valley_mu_shp$mukey, comppct_by_mukey_clay_data$mukey)]
+
+valley_mu_shp$compct_bd <- comppct_by_mukey_bd_data$comppct_tot[match(valley_mu_shp$mukey, comppct_by_mukey_bd_data$mukey)]
+
+valley_mu_shp$compct_ec <- comppct_by_mukey_ec_data$comppct_tot[match(valley_mu_shp$mukey, comppct_by_mukey_ec_data$mukey)]
+
+valley_mu_shp$compct_pH <- comppct_by_mukey_pH_data$comppct_tot[match(valley_mu_shp$mukey, comppct_by_mukey_pH_data$mukey)]
+
+valley_mu_shp$compct_lep <- comppct_by_mukey_lep_data$comppct_tot[match(valley_mu_shp$mukey, comppct_by_mukey_lep_data$mukey)]
 
 #add more naming information
 valley_mu_shp$muname <- mu_data_valley$muname[match(valley_mu_shp$mukey, mu_data_valley$mukey)]
-unique(valley_mu_shp$muname[is.na(valley_mu_shp$compct_om)])
-unique(valley_mu_shp$muname[valley_mu_shp$compct_om < 70])
-
 valley_mu_shp$mjcmpnms <- majcompnames_by_mukey$majcompnames[match(valley_mu_shp$mukey, majcompnames_by_mukey$mukey)]
 valley_mu_shp$complex <- ifelse(grepl('complex', valley_mu_shp$muname), 'Yes', 'No')
 # table(valley_mu_shp$complex)
@@ -755,7 +799,8 @@ valley_mu_shp$MnRs_dep <- apply(as.data.frame(valley_mu_shp)[ ,c('Lthc_dep', 'Pl
 # head(valley_10cm_muagg)
 # dim(valley_10cm_muagg)
 # lapply(valley_10cm_muagg, class)
-valley_30cm_muagg <- MUAggregate_wrapper(df1=comp_valley_30cm, varnames = colnames(comp_valley_30cm)[5:ncol(comp_valley_30cm)])
+colnames(comp_valley_30cm)[5:21]
+valley_30cm_muagg <- MUAggregate_wrapper(df1=comp_valley_30cm, varnames = colnames(comp_valley_30cm)[5:21])
 # valley_100cm_muagg <- MUAggregate_wrapper(df1=comp_valley_100cm, varnames = colnames(comp_valley_100cm)[5:ncol(comp_valley_100cm)])
 
 # names(valley_mu_shp)
@@ -775,7 +820,7 @@ shapefile(valley_mu_shp_30cm, file.path(summaryDir, 'shapefiles with data', 'val
 #write 30 cm to csv
 valley_30cm <- as.data.frame(valley_mu_shp_30cm)
 # colnames(valley_30cm)
-write.csv(valley_30cm, file.path(summaryDir, 'valley_30cm_data.csv'), row.names = FALSE)
+write.csv(valley_30cm, file.path(summaryDir, 'valley_30cm_data_10.28.19.csv'), row.names = FALSE)
 # lapply(valley_30cm, function(x) sum(is.na(x)))
 
 #write 100 cm to csv
