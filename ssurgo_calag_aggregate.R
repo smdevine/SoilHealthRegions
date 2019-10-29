@@ -487,6 +487,11 @@ comp_valley_30cm$awc_30cm[comp_valley_30cm$awc_30cm==0] <- NA
 sum(is.na(comp_valley_30cm$awc_30cm))
 table(comp_valley_30cm$awc_zero)
 
+#convert Ksat values > 0 for rock outcrop to NA, which was affecting 3,897 acres in dataset selected for final analysis.  Ksat was only variable for map units with rock outcrop as major component that affected map-unit averaged properties
+sum(comp_valley_30cm$compname=='Rock outcrop' & comp_valley_30cm$ksat_30cm > 0, na.rm = TRUE) #13 instances, as verified by post-hoc check in 
+sum(comp_valley_30cm$ksat_30cm > 0, na.rm = TRUE) #5788
+comp_valley_30cm$ksat_30cm[which(comp_valley_30cm$compname=='Rock outcrop' & comp_valley_30cm$ksat_30cm > 0)] <- NA
+
 length(unique(comp_valley_30cm$mukey)) #4897
 length(unique(comp_data_valley$mukey)) #5043
 length(unique(comp_valley_30cm$compname)) #899
@@ -584,27 +589,27 @@ valley_mu_shp$txorders <- majcomp_taxorders_by_mukey$taxorders[match(valley_mu_s
 # taxorders_area
 # write.csv(taxorders_area, file.path(summaryDir, 'taxorders_area_valley.csv'), row.names=FALSE)
 valley_mu_shp$dmcmp_pct <- domcomp_pct_by_mukey$docomppct[match(valley_mu_shp$mukey, domcomp_pct_by_mukey$mukey)]
-summary(valley_mu_shp$dmcmp_pct)
+# summary(valley_mu_shp$dmcmp_pct)
 valley_mu_shp$mjcmp_pct <- majcomp_pct_by_mukey$majcomppct[match(valley_mu_shp$mukey, majcomp_pct_by_mukey$mukey)]
-summary(valley_mu_shp$mjcmp_pct) #114 NAs
+# summary(valley_mu_shp$mjcmp_pct) #114 NAs
 
 valley_mu_shp$compct_om <- comppct_by_mukey_om_data$comppct_tot[match(valley_mu_shp$mukey, comppct_by_mukey_om_data$mukey)]
-summary(valley_mu_shp$compct_om) #was 5910 NAs; now 6364 NAs because of 0 operation
-hist(valley_mu_shp$compct_om)
-sum(valley_mu_shp$area_ac[is.na(valley_mu_shp$compct_om)]) #337,461 acres have no organic matter data; was 303,581
-sum(valley_mu_shp$area_ac[valley_mu_shp$compct_om < 70], na.rm = TRUE) #another 509,239 (was 411,696) acres have some data but only for less than 70% of map unit
-sum(valley_mu_shp$area_ac[valley_mu_shp$compct_om < 80], na.rm = TRUE) #or, 960,057 (was 856,650) acres have some data but only for less than 80% of map unit
-sum(valley_mu_shp$area_ac[valley_mu_shp$compct_om < 85], na.rm = TRUE) #1,930,013
+# summary(valley_mu_shp$compct_om) #was 5910 NAs; now 6364 NAs because of 0 operation
+# hist(valley_mu_shp$compct_om)
+# sum(valley_mu_shp$area_ac[is.na(valley_mu_shp$compct_om)]) #337,461 acres have no organic matter data; was 303,581
+# sum(valley_mu_shp$area_ac[valley_mu_shp$compct_om < 70], na.rm = TRUE) #another 509,239 (was 411,696) acres have some data but only for less than 70% of map unit
+# sum(valley_mu_shp$area_ac[valley_mu_shp$compct_om < 80], na.rm = TRUE) #or, 960,057 (was 856,650) acres have some data but only for less than 80% of map unit
+# sum(valley_mu_shp$area_ac[valley_mu_shp$compct_om < 85], na.rm = TRUE) #1,930,013
 
 #add additional qc info
 valley_mu_shp$compct_cec <- comppct_by_mukey_cec_data$comppct_tot[match(valley_mu_shp$mukey, comppct_by_mukey_cec_data$mukey)]
-hist(valley_mu_shp$compct_cec)
+# hist(valley_mu_shp$compct_cec)
 
 valley_mu_shp$compct_ksat <- comppct_by_mukey_ksat_data$comppct_tot[match(valley_mu_shp$mukey, comppct_by_mukey_ksat_data$mukey)]
-hist(valley_mu_shp$compct_ksat)
+# hist(valley_mu_shp$compct_ksat)
 
 valley_mu_shp$compct_awc <- comppct_by_mukey_awc_data$comppct_tot[match(valley_mu_shp$mukey, comppct_by_mukey_awc_data$mukey)]
-hist(valley_mu_shp$compct_awc)
+# hist(valley_mu_shp$compct_awc)
 
 valley_mu_shp$compct_clay <- comppct_by_mukey_clay_data$comppct_tot[match(valley_mu_shp$mukey, comppct_by_mukey_clay_data$mukey)]
 
@@ -632,43 +637,42 @@ valley_mu_shp$storiern <- storie_rng_by_mukey$storierng[match(valley_mu_shp$muke
 
 #add concatenated restrictive info
 valley_mu_shp$restrict <- reskinds_by_mukey$reskinds[match(valley_mu_shp$mukey, reskinds_by_mukey$mukey)]
-table(valley_mu_shp$restrict)
-sum(is.na(valley_mu_shp$restrict))
+# table(valley_mu_shp$restrict)
+# sum(is.na(valley_mu_shp$restrict))
 valley_mu_shp$restrict[is.na(valley_mu_shp$restrict)] <- 'None'
-sum(valley_mu_shp$area_ac[valley_mu_shp$restrict=='None']) #8,978,326 map unit acres have no components with restrictions
+# sum(valley_mu_shp$area_ac[valley_mu_shp$restrict=='None']) #8,978,326 map unit acres have no components with restrictions
 
 valley_mu_shp$Rock_OC <- ifelse(grepl('Rock outcrop', compnames_by_mukey$compnames[match(valley_mu_shp$mukey, compnames_by_mukey$mukey)]), 'Yes', 'No')
-table(valley_mu_shp$Rock_OC)
-sum(valley_mu_shp$area_ac[valley_mu_shp$Rock_OC=='Yes']) #531301.6 acres have at least some presence of rock oc
+# table(valley_mu_shp$Rock_OC)
+# sum(valley_mu_shp$area_ac[valley_mu_shp$Rock_OC=='Yes']) #531301.6 acres have at least some presence of rock oc
 
 #not including rock OC in this one
 # unique(reskinds_by_mukey$reskinds)
 valley_mu_shp$Lithic <- ifelse(grepl('Lithic bedrock', reskinds_by_mukey$reskinds[match(valley_mu_shp$mukey, reskinds_by_mukey$mukey)]), 'Yes', 'No') #632 were 'yes' after accounting for mukeys with more than one cokey with restrictions | valley_mu_shp$Rock_OC=='Yes' add to conditional
-table(valley_mu_shp$Lithic)
+# table(valley_mu_shp$Lithic)
 
 valley_mu_shp$Paralith <- ifelse(grepl('Paralithic bedrock', reskinds_by_mukey$reskinds[match(valley_mu_shp$mukey, reskinds_by_mukey$mukey)]), 'Yes', 'No')
-table(valley_mu_shp$Paralith)
+# table(valley_mu_shp$Paralith)
 
 valley_mu_shp$Duripan <- ifelse(grepl('Duripan', reskinds_by_mukey$reskinds[match(valley_mu_shp$mukey, reskinds_by_mukey$mukey)]), 'Yes', 'No')
-table(valley_mu_shp$Duripan)
+# table(valley_mu_shp$Duripan)
 
 valley_mu_shp$ATC <- ifelse(grepl('Abrupt textural change', reskinds_by_mukey$reskinds[match(valley_mu_shp$mukey, reskinds_by_mukey$mukey)]), 'Yes', 'No') #ATC=abrupt textural change
-table(valley_mu_shp$ATC)
+# table(valley_mu_shp$ATC)
 
 valley_mu_shp$Natric <- ifelse(grepl('Natric', reskinds_by_mukey$reskinds[match(valley_mu_shp$mukey, reskinds_by_mukey$mukey)]), 'Yes', 'No')
-table(valley_mu_shp$Natric)
+# table(valley_mu_shp$Natric)
 
 valley_mu_shp$Salic <- ifelse(grepl('Salic', reskinds_by_mukey$reskinds[match(valley_mu_shp$mukey, reskinds_by_mukey$mukey)]), 'Yes', 'No')
-table(valley_mu_shp$Salic)
+# table(valley_mu_shp$Salic)
 
 valley_mu_shp$SCTS <- ifelse(grepl('Strongly contrasting textural stratification', reskinds_by_mukey$reskinds[match(valley_mu_shp$mukey, reskinds_by_mukey$mukey)]), 'Yes', 'No')
-table(valley_mu_shp$SCTS) 
+# table(valley_mu_shp$SCTS) 
 
 valley_mu_shp$Misc_Res <- ifelse(grepl('Densic material|Cemented horizon|Petrocalcic', reskinds_by_mukey$reskinds[match(valley_mu_shp$mukey, reskinds_by_mukey$mukey)]), 'Yes', 'No')
-table(valley_mu_shp$Misc_Res)
+# table(valley_mu_shp$Misc_Res)
 #another way to get a count
-sum(table(valley_mu_shp$mukey[valley_mu_shp$mukey %in% misc_res_by_cokey$mukey])) 
-
+# sum(table(valley_mu_shp$mukey[valley_mu_shp$mukey %in% misc_res_by_cokey$mukey])) 
 
 #add awc info
 valley_mu_shp$aws050wta <- mu_data_valley$aws050wta[match(valley_mu_shp$mukey, mu_data_valley$mukey)]
@@ -746,23 +750,23 @@ valley_Misc_comppct
 #add reskind comppct to mapunit
 valley_mu_shp$Lthc_pct <- 0
 valley_mu_shp$Lthc_pct[valley_mu_shp$Lithic=='Yes'] <- valley_lithic_comppct$compct_sum[match(valley_mu_shp$mukey[valley_mu_shp$Lithic=='Yes'], valley_lithic_comppct$mukey)]
-summary(valley_mu_shp$Lthc_pct)
+# summary(valley_mu_shp$Lthc_pct)
 valley_mu_shp$RckOC_pct <- 0
 valley_mu_shp$RckOC_pct[valley_mu_shp$Rock_OC=='Yes'] <- valley_rockOC_comppct$compct_sum[match(valley_mu_shp$mukey[valley_mu_shp$Rock_OC=='Yes'], valley_rockOC_comppct$mukey)]
-summary(valley_mu_shp$RckOC_pct)
-summary(rowSums(as.data.frame(valley_mu_shp[c('Lthc_pct', 'RckOC_pct')])))
+# summary(valley_mu_shp$RckOC_pct)
+# summary(rowSums(as.data.frame(valley_mu_shp[c('Lthc_pct', 'RckOC_pct')])))
 valley_mu_shp$Plth_pct <- 0
 valley_mu_shp$Plth_pct[valley_mu_shp$Paralith=='Yes'] <- valley_paralithic_comppct$compct_sum[match(valley_mu_shp$mukey[valley_mu_shp$Paralith=='Yes'], valley_paralithic_comppct$mukey)]
-summary(valley_mu_shp$Plth_pct)
+# summary(valley_mu_shp$Plth_pct)
 valley_mu_shp$Drpn_pct <- 0
 valley_mu_shp$Drpn_pct[valley_mu_shp$Duripan=='Yes'] <- valley_duripan_comppct$compct_sum[match(valley_mu_shp$mukey[valley_mu_shp$Duripan=='Yes'], valley_duripan_comppct$mukey)]
-summary(valley_mu_shp$Drpn_pct)
+# summary(valley_mu_shp$Drpn_pct)
 valley_mu_shp$ATC_pct <- 0
 valley_mu_shp$ATC_pct[valley_mu_shp$ATC=='Yes'] <- valley_ATC_comppct$compct_sum[match(valley_mu_shp$mukey[valley_mu_shp$ATC=='Yes'], valley_ATC_comppct$mukey)]
-summary(valley_mu_shp$ATC_pct)
+# summary(valley_mu_shp$ATC_pct)
 valley_mu_shp$Natr_pct <- 0
 valley_mu_shp$Natr_pct[valley_mu_shp$Natric=='Yes'] <- valley_Natric_comppct$compct_sum[match(valley_mu_shp$mukey[valley_mu_shp$Natric=='Yes'], valley_Natric_comppct$mukey)]
-summary(valley_mu_shp$Natr_pct)
+# summary(valley_mu_shp$Natr_pct)
 valley_mu_shp$Salc_pct <- 0
 valley_mu_shp$Salc_pct[valley_mu_shp$Salic=='Yes'] <- valley_Salic_comppct$compct_sum[match(valley_mu_shp$mukey[valley_mu_shp$Salic=='Yes'], valley_Salic_comppct$mukey)]
 valley_mu_shp$SCTS_pct <- 0
@@ -820,7 +824,7 @@ shapefile(valley_mu_shp_30cm, file.path(summaryDir, 'shapefiles with data', 'val
 #write 30 cm to csv
 valley_30cm <- as.data.frame(valley_mu_shp_30cm)
 # colnames(valley_30cm)
-write.csv(valley_30cm, file.path(summaryDir, 'valley_30cm_data_10.28.19.csv'), row.names = FALSE)
+write.csv(valley_30cm, file.path(summaryDir, 'valley_30cm_data_10.29.19.csv'), row.names = FALSE)
 # lapply(valley_30cm, function(x) sum(is.na(x)))
 
 #write 100 cm to csv
