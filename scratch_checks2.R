@@ -1,3 +1,4 @@
+#rule is 80% of a map unit must have data with no NAs --or-- at least data for the dominant component (given by % with data with no NAs)
 laptop <- TRUE
 if (laptop) {
   dataDir <- 'C:/Users/smdevine/Desktop/post doc/soil health/summaries/valley_final' #was valley_trial
@@ -15,13 +16,28 @@ ssurgoDir <- file.path(mainDir, 'soil health/ssurgo_data')
 comp_data <- read.csv(file.path(ssurgoDir, 'component_data', 'ca_component_data.csv'), stringsAsFactors = FALSE, na.strings = c('', ' '))
 horizon_data <- read.csv(file.path(ssurgoDir, 'ca_horizon_data.csv'), stringsAsFactors = FALSE)
 
-valley30cm <- read.csv(file.path(dataDir, 'valley_30cm_data.csv'), stringsAsFactors = FALSE)
+valley30cm <- read.csv(file.path(dataDir, 'valley_30cm_data_10.28.19.csv'), stringsAsFactors = FALSE)
 acres_by_mukey <- aggregate(area_ac ~ mukey, data = valley30cm, sum)
 valley30cm_by_mukey <- valley30cm[!duplicated(valley30cm$mukey), ]
 valley30cm_by_mukey$area_ac <- acres_by_mukey$area_ac[match(valley30cm_by_mukey$mukey, acres_by_mukey$mukey)]
-unique(valley30cm_by_mukey)
-#a few checks before moving on to v2
-sum(valley30cm_by_mukey$area_ac[which(valley30cm_by_mukey$compct_om >= 80 & valley30cm_by_mukey$compct_om < 85)]) #1,073,363 acres
+
+#new checks based on meeting minimum data requirement for at least the dominant component percentage
+analysis_preview_v2 <- valley30cm_by_mukey[ ,c('MnRs_dep', 'clay_30cm', 'om_30cm', 'cec_30cm', 'bd_30cm', 'ec_30cm', 'pH_30cm', 'lep_30cm', 'ksat_30cm', 'awc_30cm', 'area_ac', 'muname', 'mjcmpnms', 'compct_om', 'compct_cec', 'compct_ksat', 'compct_awc', 'compct_clay', 'compct_bd', 'compct_pH', 'compct_lep', 'dmcmp_pct', 'mukey', 'complex', 'associan')]
+analysis_preview_v2$count_NAs <- apply(analysis_preview_v2[,1:10], 1, function(x) sum(is.na(x)))
+tapply(analysis_preview_v2$area_ac, analysis_preview_v2$count_NAs, sum) #0 NAs are 13,134,775 acres
+analysis_preview_v2$ec_30cm[is.na(analysis_preview_v2$ec_30cm) & analysis_preview_v2$count_NAs==1] <- 0
+analysis_preview_v2$count_NAs <- apply(analysis_preview_v2[,1:10], 1, function(x) sum(is.na(x)))
+tapply(analysis_preview_v2$area_ac, analysis_preview_v2$count_NAs, sum) #with EC correction, now 13,229,694
+colnames(analysis_preview_v2)
+analysis_preview_v2$min_dat_cov <- apply(analysis_preview_v2[,14:21], 1, min)
+analysis_preview_v2$dat_80pct <- ifelse(analysis_preview_v2$min_dat_cov >= 80, "Yes", "No")
+summary(as.factor(analysis_preview_v2$dat_80pct)) #369 NAs if EC data is ignored (434 NAs if not)
+sum(analysis_preview_v2$area_ac[(analysis_preview_v2$dat_80pct=='Yes' & analysis_preview_v2$count_NAs==0)], na.rm = TRUE) #12,307,706 acres highest quality data
+sum(analysis_preview_v2$area_ac[(analysis_preview_v2$dat_80pct=='Yes' & analysis_preview_v2$count_NAs==0) | (analysis_preview_v2$min_dat_cov >= analysis_preview_v2$dmcmp_pct & analysis_preview_v2$count_NAs==0)], na.rm = TRUE) #13,034,096 with additional rule
+sum(analysis_preview_v2$area_ac[analysis_preview_v2$min_dat_cov >= analysis_preview_v2$dmcmp_pct & analysis_preview_v2$count_NAs==0 & analysis_preview_v2$min_dat_cov < 80], na.rm = TRUE) #because 726,390 meet the lower QC criteria
+
+#previous checks
+sum(valley30cm_by_mukey$area_ac[which(valley30cm_by_mukey$compct_om >= 80 & valley30cm_by_mukey$compct_om < 85)]) #1,073,805 acres
 valley30cm_by_mukey$flag <- ifelse(valley30cm_by_mukey$compct_om >= 80, 1, 2)
 sum(valley30cm_by_mukey$area_ac[which(valley30cm_by_mukey$flag==1)]) #12,712,879
 sum(valley30cm_by_mukey$area_ac) #13,873,110
