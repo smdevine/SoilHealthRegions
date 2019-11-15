@@ -1,4 +1,5 @@
 #rule is 80% of a map unit must have data with no NAs (with NA ECs and no other NAs converted to 0) --or-- data coverage for at the dominant component (given by % with data with no NAs with same EC rule)
+#rock outcrop with Ksat > 0 converted to NA so as not to affect map-unit aggregated data
 #remaining question is whether or not CEC should be used in cluster analysis; would add 131,608 acres to analysis if excluded
 laptop <- TRUE
 if (laptop) {
@@ -17,7 +18,7 @@ min_modified <- function(x) {
 }
 comp_data <- read.csv(file.path(ssurgoDir, 'component_data', 'ca_component_data.csv'), stringsAsFactors = FALSE, na.strings = c('', ' '))
 horizon_data <- read.csv(file.path(ssurgoDir, 'ca_horizon_data.csv'), stringsAsFactors = FALSE)
-valley30cm <- read.csv(file.path(dataDir, 'valley_30cm_data_10.28.19.csv'), stringsAsFactors = FALSE)
+valley30cm <- read.csv(file.path(dataDir, 'valley_30cm_data_10.29.19.csv'), stringsAsFactors = FALSE)
 acres_by_mukey <- aggregate(area_ac ~ mukey, data = valley30cm, sum)
 valley30cm_by_mukey <- valley30cm[!duplicated(valley30cm$mukey), ]
 valley30cm_by_mukey$area_ac <- acres_by_mukey$area_ac[match(valley30cm_by_mukey$mukey, acres_by_mukey$mukey)]
@@ -33,14 +34,14 @@ tapply(analysis_dataset$area_ac, analysis_dataset$count_NAs, sum) #with EC corre
 colnames(analysis_dataset)
 analysis_dataset$min_dat_cov <- apply(analysis_dataset[,which(colnames(analysis_dataset)=='compct_om'):which(colnames(analysis_dataset)=='compct_lep')], 1, min_modified)
 analysis_dataset$dat_80pct <- ifelse(analysis_dataset$min_dat_cov >= 80, "Yes", "No")
-summary(as.factor(analysis_dataset$dat_80pct)) #369 NAs if EC data is ignored (434 NAs if not)
+summary(as.factor(analysis_dataset$dat_80pct)) #211 NAs if EC data is ignored
 sum(analysis_dataset$area_ac[(analysis_dataset$dat_80pct=='Yes' & analysis_dataset$count_NAs==0)], na.rm = TRUE) #12,307,706 acres highest quality data
 sum(analysis_dataset$area_ac[(analysis_dataset$dat_80pct=='Yes' & analysis_dataset$count_NAs==0) | (analysis_dataset$min_dat_cov >= analysis_dataset$dmcmp_pct & analysis_dataset$count_NAs==0)], na.rm = TRUE) #13,034,096 with additional rule
 sum(analysis_dataset$area_ac[analysis_dataset$min_dat_cov >= analysis_dataset$dmcmp_pct & analysis_dataset$count_NAs==0 & analysis_dataset$min_dat_cov < 80], na.rm = TRUE) #because 726,390 meet the lower QC criteria
 analysis_dataset_final <- analysis_dataset[which((analysis_dataset$dat_80pct=='Yes' & analysis_dataset$count_NAs==0) | (analysis_dataset$min_dat_cov >= analysis_dataset$dmcmp_pct & analysis_dataset$count_NAs==0)), ]
 sum(analysis_dataset_final$area_ac) #check 13,034,096 acres
 
-#investigate map units with only 1 NA
+#investigate map units with only 1 NA using unedited version
 sum(analysis_dataset$area_ac[analysis_dataset$count_NAs==1 & is.na(analysis_dataset$clay_30cm)] & analysis_dataset$min_dat_cov >= analysis_dataset$dmcmp_pct) #0
 sum(analysis_dataset$area_ac[analysis_dataset$count_NAs==1 & is.na(analysis_dataset$om_30cm) & analysis_dataset$min_dat_cov >= analysis_dataset$dmcmp_pct]) #1064.5
 sum(analysis_dataset$area_ac[analysis_dataset$count_NAs==1 & is.na(analysis_dataset$cec_30cm) & analysis_dataset$min_dat_cov >= analysis_dataset$dmcmp_pct]) #131607.7
@@ -61,8 +62,6 @@ investigate_CEC_horizons <- horizon_data[horizon_data$cokey %in% compkeys_inveti
 investigate_CEC_horizons$mukey <- comp_data$mukey[match(investigate_CEC_horizons$cokey, comp_data$cokey)]
 investigate_CEC_horizons <- investigate_CEC_horizons[,c(ncol(investigate_CEC_horizons), 1:(ncol(investigate_CEC_horizons)-1))]
 write.csv(investigate_CEC_horizons, file.path(dataDir, 'horizons_with_NA_CEC.csv'), row.names = FALSE)
-
-
 
 #add up complex and associations
 
@@ -118,3 +117,16 @@ horizon_data_rockOC[,c('hzdept_r', 'hzdepb_r', 'ksat_r')]
 rockOC_cokey_prob <- horizon_data_rockOC$cokey[which(horizon_data_rockOC$ksat_r > 0)]
 rockOC_mukey_prob <- analysis_rock_comp_data$mukey[match(rockOC_cokey_prob, analysis_rock_comp_data$cokey)]
 sum(analysis_dataset_final$area_ac[analysis_dataset_final$mukey %in% rockOC_mukey_prob]) #3897 acres affected by crappy rock OC Ksat data
+analysis_dataset_final[analysis_dataset_final$mukey %in% rockOC_mukey_prob, ]
+analysis_dataset_final[analysis_dataset_final$mukey==459994,]
+comp_data[comp_data$mukey==459994,]
+horizon_data[horizon_data$cokey==16453073,] #Gaviota
+horizon_data[horizon_data$cokey==16453074,] #Rock outcrop with ksat of 71!  No longer affects final data
+
+
+#write revised  mu aggregated data to file
+valley30cm_by_mukey_final <- valley30cm_by_mukey[valley30cm_by_mukey$mukey %in% analysis_dataset_final$mukey, ]
+sum(valley30cm_by_mukey_final$area_ac) #13034096 acres
+sum(is.na(valley30cm_by_mukey_final$ec_30cm))
+valley30cm_by_mukey_final$ec_30cm[is.na(valley30cm_by_mukey_final$ec_30cm)] <- 0
+write.csv(valley30cm_by_mukey_final, file.path(dataDir, 'for cluster analysis', 'valley30cm_by_mukey_final.csv'), row.names = FALSE)
