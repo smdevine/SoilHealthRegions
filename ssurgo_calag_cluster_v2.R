@@ -31,7 +31,7 @@ if (laptop) {
 mar_settings <- c(4, 4.5, 1, 1)
 ec_zero_rule <- 1.5
 list.files(dataDir)
-valley_mu_shp_30cm <- shapefile(file.path(dataDir, 'shapefiles with data', 'valley_30cm.shp'))
+# valley_mu_shp_30cm <- shapefile(file.path(dataDir, 'shapefiles with data', 'valley_30cm.shp'))
 # names(valley_mu_shp_30cm)
 valley30cm_by_mukey <- read.csv(file.path(dataDir, 'for cluster analysis', 'valley30cm_by_mukey_final.csv'), stringsAsFactors = FALSE)
 
@@ -100,10 +100,10 @@ kmeans_test <- function(y, z) {sapply(1:y, function(x) {
   result <- kmeans(z, centers = x, iter.max = 100, nstart = 25)
   round(100 * result$betweenss / result$totss, 1)})
 }
-results <- replicate(100, kmeans_test(20, df_for_clustering_scaled))
-dim(results)
-rowMeans(results)
-apply(results, 1, sd)
+# results <- replicate(100, kmeans_test(20, df_for_clustering_scaled))
+# dim(results)
+# rowMeans(results)
+# apply(results, 1, sd)
 tiff(file = file.path(FiguresDir, 'v2', 'kmeans_comparison_10.30.19.tif'), family = 'Times New Roman', width = 6.5, height = 4.5, pointsize = 12, units = 'in', res=800, compression='lzw')
 par(mar=mar_settings)
 plot(1:20, rowMeans(results), type='b', xlab='Number of clusters', ylab='Soil variability captured by clustering (%)', cex=0.8, cex.axis=1, cex.lab=1)
@@ -162,10 +162,9 @@ cluster_fk <- do.call(rbind, mapply(function(x, y) {
 # var_quantiles <- as.data.frame(apply(na.omit(df_for_clustering_scaled)[,1:11], 2, function(x) quantile(x, probs=c(0.1, 0.25, 0.75, 0.9)))) #use whole dataset to establish breaks
 
 # cluster_fk_labels <- as.data.frame(mapply(function(x, y, z) if(z=='MnRs_dep') {ifelse(x < y[1], 'v. shallow', ifelse(x < y[2], 'shallow', ifelse(x < y[3], 'mod', ifelse(x < y[4], 'deep', 'v. deep'))))} else {ifelse(x < y[1], 'v. low', ifelse(x < y[2], 'low', ifelse(x < y[3], 'mod', ifelse(x < y[4], 'high', 'v. high'))))}, x = cluster_fk[,1:11], y=var_quantiles, z=colnames(var_quantiles), SIMPLIFY = FALSE)) #sar, lep, ec, and res dep have problematic distributions
-colnames(cluster_fk)
-dim(cluster_fk)
+# colnames(cluster_fk)
+# dim(cluster_fk)
 cluster_fk$avg_dist_within <- cluster_fk$withinss / cluster_fk$n
-cluster_fk
 # cbind(cluster_fk[cluster_fk$clusters==5, 13:16], cluster_fk_labels[(nrow(cluster_fk_labels)-4):nrow(cluster_fk_labels), ])
 
 #make a radarchart plotting function
@@ -232,11 +231,11 @@ cluster_fk$area_pct <- 100 * cluster_fk$area_ac / sum(valley30cm_by_mukey$area_a
 # write.csv(cluster_fk, file.path(dataDir, 'v2 results', 'clusters2_to_12_df_for_radarchart.csv'), row.names = FALSE)
 # cluster_fk <- read.csv(file.path(dataDir, 'v2', 'clusters2_to_12_df_for_radarchart.csv'))
 
-colnames(cluster_fk)
+# colnames(cluster_fk)
 cluster_9_df <- cluster_fk[cluster_fk$clusters==9,1:10]
 radarchart_9 <- rbind(apply(cluster_9_df, 2, max), apply(cluster_9_df, 2, min), cluster_9_df)
 
-#use this for final cluster no. selection (previous was 10)
+#9-class cluster option
 tiff(file = file.path(FiguresDir, 'v2', 'valley_9_classes_spider_11.8.19.tif'), family = 'Times New Roman', width = 9, height = 6.5, pointsize = 11, units = 'in', res=800, compression = 'lzw')
 par(xpd=TRUE, mar=c(4, 0.1, 0.1, 0.1))
 radarchart(radarchart_9[,c('clay_30cm', 'om_30cm', 'lep_30cm', 'cec_30cm', 'ec_30cm', 'pH_30cm',  "MnRs_dep", 'ksat_30cm', 'awc_30cm')], plty = c(1, 2, 1, 3, 3, 1, 2, 2, 3), pcol = c('lightgoldenrod', 'violetred', 'tan2', 'black', 'gold', 'tan4', 'lightblue1', 'deepskyblue', 'firebrick3'), vlabels=c('Clay', 'Organic\nmatter', ' Shrink-\n  swell', 'CEC', 'Salinity', 'pH',  "Depth to\nRestriction", expression('K'['s']), 'Available water\n   capacity'), maxmin = TRUE, plwd = 3)
@@ -244,12 +243,6 @@ order_lgnd <- c(1,3,6,5,9,4,7,8,2)
 legend(x=-1.8, y=-1.2, legend = c('1. Sandy soils', '9. Shrink-swell clays', '2. Loams w/ no res. & mod OM-low SS', '6. Loams w/ res. & high OM', '4. Loams w/ res. & low OM', '3. Loams w/ no res. & mod OM-mod SS', '7. Saline-sodic loams', '8. Saline-sodic clays', '5. Loams w/ res. & mod OM')[order_lgnd], col=c('lightgoldenrod', 'violetred', 'tan2', 'black', 'gold', 'tan4', 'lightblue1', 'deepskyblue', 'firebrick3')[order_lgnd], lty=c(1, 2, 1, 3, 3, 1, 2, 2, 3)[order_lgnd], lwd = 3, ncol = 3, bty='n')
 dev.off()
 
-tiff(file = file.path(FiguresDir, 'v2', 'valley_9_classes_spider_MA2.tif'), family = 'Times New Roman', width = 9, height = 6.5, pointsize = 11, units = 'in', res=800, compression = 'lzw')
-par(xpd=TRUE, mar=c(0.1, 0.1, 0.1, 0.1))
-radarchart(radarchart_9[,c('clay_30cm', 'om_30cm', 'lep_30cm', 'cec_30cm', 'ec_30cm', 'pH_30cm',  "MnRs_dep", 'ksat_30cm', 'awc_30cm')], plty = c(1, 2, 1, 3, 3, 1, 2, 2, 3), pcol = c('lightgoldenrod', 'violetred', 'tan2', 'black', 'gold', 'tan4', 'lightblue1', 'deepskyblue', 'firebrick3'), vlabels=NULL, maxmin = TRUE, plwd = 3)
-dev.off()
-
-# Oct 2019 color scheme: c('lightgoldenrod', 'tomato3', 'tan2', 'black', 'tan2', 'chocolate4', 'lightblue1', 'lightblue4', 'chocolate4')
 # #rgb color codes
 col2rgb(c('lightgoldenrod', 'violetred', 'tan2', 'black', 'gold', 'tan4', 'lightblue1', 'deepskyblue', 'firebrick3'))
 
@@ -257,6 +250,7 @@ col2rgb(c('lightgoldenrod', 'violetred', 'tan2', 'black', 'gold', 'tan4', 'light
 cluster_10_df <- cluster_fk[cluster_fk$clusters==10,1:10]
 radarchart_10 <- rbind(apply(cluster_10_df, 2, max), apply(cluster_10_df, 2, min), cluster_10_df)
 clus_10_colors <- c('violetred', 'tan4', 'lightgoldenrod', 'black', 'sandybrown', 'deepskyblue', 'gold', 'firebrick3', 'tan2', 'lightblue1')
+col2rgb(clus_10_colors)
 order_lgnd_10 <- c(3,5,9,2,7,8,4,10,6,1)
 
 tiff(file = file.path(FiguresDir, 'v2', 'valley_10_classes_spider_11.11.19.tif'), family = 'Times New Roman', width = 9, height = 6.5, pointsize = 11, units = 'in', res=800, compression = 'lzw')
@@ -265,6 +259,62 @@ radarchart(radarchart_10[,c('clay_30cm', 'om_30cm', 'lep_30cm', 'cec_30cm', 'ec_
 order_lgnd_10 <- c(3,5,9,2,7,8,4,10,6,1)
 legend(x=-1.8, y=-1.2, legend = c('10. Shrink-swell clays', '4. Loams w/no res & mod OM-mod SS', '1. Sandy soils', '7. Loams w/res & high OM', '2. Loams w/no res & low OM', '9. Saline-sodic clays', '5. Loams w/res & low OM', '6. Loams w/res & mod OM', '3. Loams w/no res & mod OM-low SS', '8. Saline-sodic loams')[order_lgnd_10], col=clus_10_colors[order_lgnd_10], lty=c(2,1,1,3,1,2,3,3,1,2)[order_lgnd_10], lwd = 3, ncol = 3, bty='n')
 dev.off()
+
+#revised 7-class option
+cluster_7_df <- cluster_fk[cluster_fk$clusters==7,1:10]
+radarchart_7 <- rbind(apply(cluster_7_df, 2, max), apply(cluster_7_df, 2, min), cluster_7_df)
+clus_7_colors <- c('gold', 'deepskyblue', 'lightblue1', 'lightgoldenrod', 'violetred', 'tan4', 'firebrick3')
+order_lgnd_7 <- c(4,6,1,7,3,2,5)
+clus_7_lines <- c(3,2,2,1,2,1,3)
+tiff(file = file.path(FiguresDir, 'v2', 'valley_7_classes_spider_11.15.19.tif'), family = 'Times New Roman', width = 9, height = 6.5, pointsize = 11, units = 'in', res=800, compression = 'lzw')
+par(xpd=TRUE, mar=c(4, 0.1, 0.1, 0.1))
+radarchart(radarchart_7[,c('clay_30cm', 'om_30cm', 'lep_30cm', 'cec_30cm', 'ec_30cm', 'pH_30cm',  "MnRs_dep", 'ksat_30cm', 'awc_30cm')], plty = clus_7_lines, pcol = clus_7_colors, vlabels=c('Clay', 'Organic\nmatter', ' Shrink-\n  swell', 'CEC', 'Salinity', 'pH',  "Depth to\nRestriction", expression('K'['s']), 'Available water\n   capacity'), maxmin = TRUE, plwd = 3)
+legend(x=-1.6, y=-1.2, legend = c('3. Loams w/res & low OM', '6. Saline-sodic clays', '5. Saline-sodic loams', '1. Sandy loam soils', '7. Shrink-swell clays', '2. Loams w/no res', '4. Loams w/ res. & mod OM')[order_lgnd_7], col=clus_7_colors[order_lgnd_7], lty=clus_7_lines[order_lgnd_7], lwd = 3, ncol = 3, bty='n')
+dev.off()
+#Loams w/no res could have mod OM-mod SS added
+col2rgb(c('gold', 'deepskyblue', 'lightblue1', 'lightgoldenrod', 'violetred', 'tan4', 'firebrick3'))
+
+#revised 8-class option
+cluster_8_df <- cluster_fk[cluster_fk$clusters==8,1:10]
+radarchart_8 <- rbind(apply(cluster_8_df, 2, max), apply(cluster_8_df, 2, min), cluster_8_df)
+clus_8_colors <- c('firebrick3', 'lightgoldenrod', 'deepskyblue', 'gold', 'tan2', 'lightblue1', 'tan4', 'violetred')
+order_lgnd_8 <- c(2,5,7,4,1,6,3,8)
+clus_8_lines <- c(3,1,2,3,1,2,1,2)
+tiff(file = file.path(FiguresDir, 'v2', 'valley_8_classes_spider_11.15.19.tif'), family = 'Times New Roman', width = 9, height = 6.5, pointsize = 11, units = 'in', res=800, compression = 'lzw')
+par(xpd=TRUE, mar=c(4, 0.1, 0.1, 0.1))
+radarchart(radarchart_8[,c('clay_30cm', 'om_30cm', 'lep_30cm', 'cec_30cm', 'ec_30cm', 'pH_30cm',  "MnRs_dep", 'ksat_30cm', 'awc_30cm')], plty = clus_8_lines, pcol = clus_8_colors, vlabels=c('Clay', 'Organic\nmatter', ' Shrink-\n  swell', 'CEC', 'Salinity', 'pH',  "Depth to\nRestriction", expression('K'['s']), 'Available water\n   capacity'), maxmin = TRUE, plwd = 3)
+legend(x=-1.6, y=-1.2, legend = c('5. Loams w/ res. & mod OM', '1. Sandy soils', '7. Saline-sodic clays', '4. Loams w/ res. & low OM', '2. Loams w/ no res. & mod. OM-low SS', '6. Saline-sodic loams', '3. Loams w/ no res. & mod OM-mod SS', '8. Shrink-swell clays')[order_lgnd_8], col=clus_8_colors[order_lgnd_8], lty=clus_8_lines[order_lgnd_8], lwd = 3, ncol = 3, bty='n')
+dev.off()
+#Loams w/no res could have mod OM-mod SS added
+col2rgb(clus_8_colors)
+
+#revised 5-class option
+cluster_5_df <- cluster_fk[cluster_fk$clusters==5,1:10]
+radarchart_5 <- rbind(apply(cluster_5_df, 2, max), apply(cluster_5_df, 2, min), cluster_5_df)
+clus_5_colors <- c('tan4', 'lightgoldenrod', 'violetred', 'lightblue1', 'firebrick3')
+order_lgnd_5 <- c(2,1,5,4,3)
+clus_5_lines <- c(1,1,3,3,2)
+tiff(file = file.path(FiguresDir, 'v2', 'valley_5_classes_spider_11.15.19.tif'), family = 'Times New Roman', width = 9, height = 6.5, pointsize = 11, units = 'in', res=800, compression = 'lzw')
+par(xpd=TRUE, mar=c(4, 0.1, 0.1, 0.1))
+radarchart(radarchart_5[,c('clay_30cm', 'om_30cm', 'lep_30cm', 'cec_30cm', 'ec_30cm', 'pH_30cm',  "MnRs_dep", 'ksat_30cm', 'awc_30cm')], plty = clus_5_lines, pcol = clus_5_colors, vlabels=c('Clay', 'Organic\nmatter', ' Shrink-\n  swell', 'CEC', 'Salinity', 'pH',  "Depth to\nRestriction", expression('K'['s']), 'Available water\n   capacity'), maxmin = TRUE, plwd = 3)
+legend(x=-1.2, y=-1.2, legend = c('2. Loams w/no res', '1. Sandy & sandy loam soils', '5. Shrink-swell clays', '4. Saline-sodic loams', '3. Loams w/res')[order_lgnd_5], col=clus_5_colors[order_lgnd_5], lty=clus_5_lines[order_lgnd_5], lwd = 3, ncol = 2, bty='n')
+dev.off()
+#Loams w/no res could have mod OM-mod SS added
+col2rgb(clus_5_colors)
+
+#revised 6-class option
+cluster_6_df <- cluster_fk[cluster_fk$clusters==6,1:10]
+radarchart_6 <- rbind(apply(cluster_6_df, 2, max), apply(cluster_6_df, 2, min), cluster_6_df)
+clus_6_colors <- c('lightblue1', 'violetred', 'lightgoldenrod', 'firebrick3', 'gold', 'tan4')
+order_lgnd_6 <- c(3,6,5,4,1,2)
+clus_6_lines <- c(3,3,1,2,2,1)
+tiff(file = file.path(FiguresDir, 'v2', 'valley_6_classes_spider_11.15.19.tif'), family = 'Times New Roman', width = 9, height = 6.5, pointsize = 11, units = 'in', res=800, compression = 'lzw')
+par(xpd=TRUE, mar=c(4, 0.1, 0.1, 0.1))
+radarchart(radarchart_6[,c('clay_30cm', 'om_30cm', 'lep_30cm', 'cec_30cm', 'ec_30cm', 'pH_30cm',  "MnRs_dep", 'ksat_30cm', 'awc_30cm')], plty = clus_6_lines, pcol = clus_6_colors, vlabels=c('Clay', 'Organic\nmatter', ' Shrink-\n  swell', 'CEC', 'Salinity', 'pH',  "Depth to\nRestriction", expression('K'['s']), 'Available water\n   capacity'), maxmin = TRUE, plwd = 3)
+legend(x=-1.2, y=-1.2, legend = c('5. Saline-sodic loams', '6. Shrink-swell clays', '1. Sandy (sandy loam) soils', '4. Loams w/res & mod OM', '3. Loams w/res & low OM', '2. Loams w/no res')[order_lgnd_6], col=clus_6_colors[order_lgnd_6], lty=clus_6_lines[order_lgnd_6], lwd = 3, ncol = 2, bty='n')
+dev.off()
+#Loams w/no res could have mod OM-mod SS added
+col2rgb(clus_6_colors)
 
 #calc intra-cluster distances
 compute_intra_clus_dist <- function(x, y) {
@@ -291,23 +341,39 @@ plot(hc_4)
 
 dist_test_5 <- dist(cluster_5$centers, method = 'euclidean')
 hc_5 <- hclust(dist_test_5)
-hc_5_labels <- c('Loams w/ no res. & mod OM-mod SS', 'Sandy soils', 'Shrink-swell clays', 'Saline-sodic loams', 'Loams w/ res. & mod OM')
+hc_5_labels <- c('2. Loams w/no res', '1. Sandy & sandy loam soils', '5. Shrink-swell clays', '4. Saline-sodic loams', '3. Loams w/res')
 plot(hc_5, labels=hc_5_labels)
+tiff(file = file.path(FiguresDir, 'v2', 'cluster_dendrogram_class5.tif'), family = 'Times New Roman', width = 6.5, height = 5, pointsize = 12, units = 'in', res=800, compression='lzw')
+par(mar=c(0.2,0.2,0.2,0.2))
+plot(hc_5, labels=hc_5_labels, axes=FALSE, ann=FALSE)
+dev.off()
 
 dist_test_6 <- dist(cluster_6$centers, method = 'euclidean')
 hc_6 <- hclust(dist_test_6)
-hc_6_labels <- c('Saline-sodic loams', 'Shrink-swell clays', 'Sandy soils', 'Loams w/ res. & mod OM', 'Loams w/ res. & low OM', 'Loams w/ no res. & mod OM-mod SS')
+hc_6_labels <- c('5. Saline-sodic loams', '6. Shrink-swell clays', '1. Sandy (sandy loam) soils', '4. Loams w/res & mod OM', '3. Loams w/res & low OM', '2. Loams w/no res')
 plot(hc_6, labels= hc_6_labels)
+tiff(file = file.path(FiguresDir, 'v2', 'cluster_dendrogram_class6.tif'), family = 'Times New Roman', width = 6.5, height = 5, pointsize = 12, units = 'in', res=800, compression='lzw')
+par(mar=c(0.2,0.2,0.2,0.2))
+plot(hc_6, labels=hc_6_labels, axes=FALSE, ann=FALSE)
+dev.off()
 
 dist_test_7 <- dist(cluster_7$centers, method = 'euclidean')
 hc_7 <- hclust(dist_test_7)
-hc_7_labels <- c('Loams w/ res. & low OM', 'Saline-sodic clays', 'Saline-sodic loams', 'Sandy soils', 'Shrink-swell clays', 'Loams w/ no res. & mod OM-mod SS', 'Loams w/ res. & mod OM')
+hc_7_labels <- c('3. Loams w/res & low OM', '6. Saline-sodic clays', '5. Saline-sodic loams', '1. Sandy loam soils', '7. Shrink-swell clays', '2. Loams w/no res', '4. Loams w/ res. & mod OM')
 plot(hc_7, labels=hc_7_labels)
+tiff(file = file.path(FiguresDir, 'v2', 'cluster_dendrogram_class7.tif'), family = 'Times New Roman', width = 6.5, height = 5, pointsize = 12, units = 'in', res=800, compression='lzw')
+par(mar=c(0.2,0.2,0.2,0.2))
+plot(hc_7, labels=hc_7_labels, axes=FALSE, ann=FALSE)
+dev.off()
 
 dist_test_8 <- dist(cluster_8$centers, method = 'euclidean')
 hc_8 <- hclust(dist_test_8)
 hc_8_labels <- c('Loams w/ res. & mod OM', 'Sandy soils', 'Saline-sodic clays', 'Loams w/ res. & low OM', 'Loams w/ no res. & mod. OM-low SS', 'Saline-sodic loams', 'Loams w/ no res. & mod OM-mod SS', 'Shrink-swell clays')
 plot(hc_8, labels=hc_8_labels)
+tiff(file = file.path(FiguresDir, 'v2', 'cluster_dendrogram_class8.tif'), family = 'Times New Roman', width = 6.5, height = 5, pointsize = 12, units = 'in', res=800, compression='lzw')
+par(mar=c(0.2,0.2,0.2,0.2))
+plot(hc_8, labels=hc_8_labels, axes=FALSE, ann=FALSE)
+dev.off()
 
 dist_test_9 <- dist(cluster_9$centers, method = 'euclidean')
 hc_9 <- hclust(dist_test_9)
@@ -322,8 +388,12 @@ dev.off()
 
 dist_test_10 <- dist(cluster_10$centers, method = 'euclidean')
 hc_10 <- hclust(dist_test_10)
-hc_10_labels <- c('Shrink-swell clays', 'Loams w/ no res. & mod OM-mod SS', 'Sandy soils', 'Loams w/ res. & high OM', 'Loams w/ no res. & low OM', 'Saline-sodic clays', 'Loams w/ res. & low OM', 'Loams w/ res. & mod OM', 'Loams w/ no res. & mod OM-low SS', 'Saline-sodic loams')
+hc_10_labels <- c('10. Shrink-swell clays', '4. Loams w/ no res. & mod OM-mod SS', '1. Sandy soils', '7. Loams w/ res. & high OM', '2. Loams w/ no res. & low OM', '9. Saline-sodic clays', '5. Loams w/ res. & low OM', '6. Loams w/ res. & mod OM', '3. Loams w/ no res. & mod OM-low SS', '8. Saline-sodic loams')
 plot(hc_10, labels=hc_10_labels)
+tiff(file = file.path(FiguresDir, 'v2', 'cluster_dendrogram_class10.tif'), family = 'Times New Roman', width = 6.5, height = 5, pointsize = 12, units = 'in', res=800, compression='lzw')
+par(mar=c(0.2,0.2,0.2,0.2))
+plot(hc_10, labels=hc_10_labels, axes=FALSE, ann=FALSE)
+dev.off()
 
 dist_test_11 <- dist(cluster_11$centers, method = 'euclidean')
 hc_11 <- hclust(dist_test_11)
@@ -438,6 +508,34 @@ vioplot_mod_clus5(valley30cm_by_mukey, 'MnRs_dep', ylim_vioplot = c(0,200), plot
 vioplot_mod_clus5(valley30cm_by_mukey, 'logks_30cm', ylim_vioplot = c(-4.58,5.85), plot_order = order_lgnd_5, area_fact = 10, ylab=expression('Saturated conductivity (log'[10]~mu*'m H'[2]*'O s'^-1*')'), fname='class5_logKs_vioplots.tif', mar=c(3.5, 4.25, 1, 1))
 vioplot_mod_clus5(valley30cm_by_mukey, 'lep_30cm', ylim_vioplot = c(0,17), plot_order = order_lgnd_5, area_fact = 10, ylab='Linear extensibility (%)', fname='class5_lep_vioplots.tif', mar=c(3.5, 4.25, 1, 1))
 
+#6 class vioplot
+clus_6_colors <- c('lightblue1', 'violetred', 'lightgoldenrod', 'firebrick3', 'gold', 'tan4')
+order_lgnd_6 <- c(3,6,5,4,1,2)
+clus_6_colors[order_lgnd_6]
+vioplot_mod_clus6 <- function(df, varname, ylim_vioplot, plot_order, area_fact, labnames, ylab, fname, mar) {
+  plot_order2 <- (1:6)[plot_order]
+  tiff(file = file.path(FiguresDir, 'v2', fname), family = 'Times New Roman', width = 6.5, height = 4.5, pointsize = 12, units = 'in', res=800, compression='lzw')
+  par(mar=mar)
+  vioplot(rep(df[[varname]][df$cluster_6==plot_order2[1]], times=round(df$area_ac[df$cluster_6==plot_order2[1]]/area_fact, 0)), rep(df[[varname]][df$cluster_6==plot_order2[2]], times=round(df$area_ac[df$cluster_6==plot_order2[2]]/area_fact, 0)), rep(df[[varname]][df$cluster_6==plot_order2[3]], times=round(df$area_ac[df$cluster_6==plot_order2[3]]/area_fact, 0)), rep(df[[varname]][df$cluster_6==plot_order2[4]], times=round(df$area_ac[df$cluster_6==plot_order2[4]]/area_fact, 0)), rep(df[[varname]][df$cluster_6==plot_order2[5]], times=round(df$area_ac[df$cluster_6==plot_order2[5]]/area_fact, 0)), rep(df[[varname]][df$cluster_6==plot_order2[6]], times=round(df$area_ac[df$cluster_6==plot_order2[6]]/area_fact, 0)), col=clus_6_colors[plot_order], rectCol = 'gray', ylim = ylim_vioplot, ylab = ylab)
+  mtext('Soil health region', side = 1, line = 2.25)
+  dev.off()
+}
+
+vioplot_mod_clus6(valley30cm_by_mukey, 'clay_30cm', ylim_vioplot = c(0.5,70), plot_order = order_lgnd_6, area_fact = 10, ylab='Clay (%)', fname='class6_clay_vioplots.tif', mar=c(3.5, 4.25, 1, 1))
+vioplot_mod_clus6(valley30cm_by_mukey, 'om_30cm', ylim_vioplot = c(0.1,12), plot_order = order_lgnd_6, area_fact = 10, ylab='Organic matter (%)', fname='class6_OM_vioplots.tif', mar=c(3.5, 4.25, 1, 1))
+valley30cm_by_mukey$logom_30cm <- log(valley30cm_by_mukey$om_30cm)
+vioplot_mod_clus6(valley30cm_by_mukey, 'logom_30cm', ylim_vioplot = c(-3.15,3.61),  plot_order = order_lgnd_6, area_fact = 10, ylab=expression('Organic matter (Log'[10]~'%)'), fname='class6_LogOM_vioplots.tif', mar=c(3.5, 4.25, 1, 1))
+vioplot_mod_clus6(valley30cm_by_mukey, 'cec_30cm', ylim_vioplot = c(0.5,60), plot_order = order_lgnd_6, area_fact = 10, ylab=expression('Cation exchange capacity (mEq 100g'^-1*')'), fname='class6_CEC_vioplots.tif', mar=c(3.5, 4.25, 1, 1))
+vioplot_mod_clus6(valley30cm_by_mukey, 'pH_30cm', ylim_vioplot = c(5.2,10.1), plot_order = order_lgnd_6, area_fact = 10, ylab='soil pH', fname='class6_pH_vioplots.tif', mar=c(3.5, 4.25, 1, 1))
+vioplot_mod_clus6(valley30cm_by_mukey, 'awc_30cm', ylim_vioplot = c(0.55,7.1), plot_order = order_lgnd_6, area_fact = 10, ylab=expression('Available water capacity (cm H'[2]*'O 30 cm'^-1~'soil)'), fname='class6_AWC_vioplots.tif', mar=c(3.5, 4.25, 1, 1))
+vioplot_mod_clus6(valley30cm_by_mukey, 'ec_30cm', ylim_vioplot = c(0,50), plot_order = order_lgnd_6, area_fact = 10, ylab=expression('Electrical conductivity (mmhos cm'^-1*')'), fname='class6_EC_vioplots.tif', mar=c(3.5, 4.25, 1, 1))
+vioplot_mod_clus6(valley30cm_by_mukey, 'bd_30cm', ylim_vioplot = c(0.75,1.8), plot_order = order_lgnd_6, area_fact = 10, ylab=expression('Bulk density (g soil cm'^-3*'soil)'), fname='class6_BD_vioplots.tif', mar=c(3.5, 4.25, 1, 1))
+vioplot_mod_clus6(valley30cm_by_mukey, 'MnRs_dep', ylim_vioplot = c(0,200), plot_order = order_lgnd_6, area_fact = 10, ylab='Minimum depth to restrictive layer', fname='class6_MnRs_vioplots.tif', mar=c(3.5, 4.25, 1, 1))
+# vioplot_mod_clus6(valley30cm_by_mukey, 'ksat_30cm', ylim_vioplot = c(0,350), plot_order = 1:9, area_fact = 10, labnames = NULL)
+valley30cm_by_mukey$logks_30cm <- log(valley30cm_by_mukey$ksat_30cm)
+vioplot_mod_clus6(valley30cm_by_mukey, 'logks_30cm', ylim_vioplot = c(-4.58,5.85), plot_order = order_lgnd_6, area_fact = 10, ylab=expression('Saturated conductivity (log'[10]~mu*'m H'[2]*'O s'^-1*')'), fname='class6_logKs_vioplots.tif', mar=c(3.5, 4.25, 1, 1))
+vioplot_mod_clus6(valley30cm_by_mukey, 'lep_30cm', ylim_vioplot = c(0,17), plot_order = order_lgnd_6, area_fact = 10, ylab='Linear extensibility (%)', fname='class6_lep_vioplots.tif', mar=c(3.5, 4.25, 1, 1))
+
 
 #7 class vioplot
 clus_7_colors <- c('gold', 'deepskyblue', 'lightblue1', 'lightgoldenrod', 'violetred', 'tan4', 'firebrick3')
@@ -477,10 +575,9 @@ vioplot_mod_clus8 <- function(df, varname, ylim_vioplot, plot_order, area_fact, 
   mtext('Soil health region', side = 1, line = 2.25)
   dev.off()
 }
-#order_lgnd_8 was defined for radarchart
 vioplot_mod_clus8(valley30cm_by_mukey, 'clay_30cm', ylim_vioplot = c(0.5,70), plot_order = order_lgnd_8, area_fact = 10, ylab='Clay (%)', fname='class8_clay_vioplots.tif', mar=c(3.5, 4.25, 1, 1))
 vioplot_mod_clus8(valley30cm_by_mukey, 'om_30cm', ylim_vioplot = c(0.1,12), plot_order = order_lgnd_8, area_fact = 10, ylab='Organic matter (%)', fname='class8_OM_vioplots.tif', mar=c(3.5, 4.25, 1, 1))
-# valley30cm_by_mukey$logom_30cm <- log(valley30cm_by_mukey$om_30cm)
+valley30cm_by_mukey$logom_30cm <- log(valley30cm_by_mukey$om_30cm)
 vioplot_mod_clus8(valley30cm_by_mukey, 'logom_30cm', ylim_vioplot = c(-3.15,3.61),  plot_order = order_lgnd_8, area_fact = 10, ylab=expression('Organic matter (Log'[10]~'%)'), fname='class8_LogOM_vioplots.tif', mar=c(3.5, 4.25, 1, 1))
 vioplot_mod_clus8(valley30cm_by_mukey, 'cec_30cm', ylim_vioplot = c(0.5,60), plot_order = order_lgnd_8, area_fact = 10, ylab=expression('Cation exchange capacity (mEq 100g'^-1*')'), fname='class8_CEC_vioplots.tif', mar=c(3.5, 4.25, 1, 1))
 vioplot_mod_clus8(valley30cm_by_mukey, 'pH_30cm', ylim_vioplot = c(5.2,10.1), plot_order = order_lgnd_8, area_fact = 10, ylab='soil pH', fname='class8_pH_vioplots.tif', mar=c(3.5, 4.25, 1, 1))
