@@ -99,12 +99,16 @@ textural.class.calc <- function(sand, silt, clay, QC_param=1) {
                           ifelse(clay >= 40 & silt >= 40, 'silty clay',
                             ifelse(clay >= 40 & sand <= 45 & silt < 40, 'clay','undefined textural class'))))))))))))))
 }
-
+# horizon_SPC <- horizons_valley_majcomps
+# depth <- 30
+# vars_of_interest <- c('claytotal_r', 'silttotal_r', 'sandtotal_r', 'om_r', 'cec7_r', 'dbthirdbar_r', 'fragvol_r_sum', 'kwfact', 'ec_r', 'ph1to1h2o_r', 'sar_r', 'caco3_r', 'gypsum_r', 'lep_r', 'ksat_r')
+# varnames <- c('clay', 'silt', 'sand', 'om', 'cec', 'bd', 'frags', 'kwf', 'ec', 'pH', 'sar', 'caco3', 'gyp', 'lep', 'ksat')
 horizon_to_comp <- function(horizon_SPC, depth, comp_df, vars_of_interest = c('claytotal_r', 'silttotal_r', 'sandtotal_r', 'om_r', 'cec7_r', 'dbthirdbar_r', 'fragvol_r_sum', 'kwfact', 'ec_r', 'ph1to1h2o_r', 'sar_r', 'caco3_r', 'gypsum_r', 'lep_r', 'ksat_r'), varnames = c('clay', 'silt', 'sand', 'om', 'cec', 'bd', 'frags', 'kwf', 'ec', 'pH', 'sar', 'caco3', 'gyp', 'lep', 'ksat')) { #lep is linear extensibility
   columnames <- paste0(varnames, '_', depth, 'cm')
   print(cbind(vars_of_interest, columnames)) #show that it's all lined up
   assign("depth", depth, envir = .GlobalEnv) #this necessary because slice can't find the variable otherwise
   sliced_SPC <- slice(horizon_SPC, 0:(depth-1) ~ .) #depth was '0:depth' in previous version
+  stopifnot(unique(sliced_SPC$pedon_key)==site(sliced_SPC)$pedon_key)
   for (i in seq_along(vars_of_interest)) {
     s <- site(sliced_SPC)
     s[[columnames[i]]] <- profileApply(sliced_SPC, FUN = wtd.mean, y=vars_of_interest[i])
@@ -212,6 +216,9 @@ sum(comp_data_valley$comppct_r[comp_data_valley$majcompflag=='No '] >= 15) #110 
 comp_data_valley[comp_data_valley$majcompflag=='No ' & comp_data_valley$comppct_r>=15, ]
 sum(comp_data_valley$majcompflag=='No ' & comp_data_valley$comppct_r>=15 & !is.na(comp_data_valley$castorieindex)) #7
 
+#check length of each cokey
+cokey_lengths <- unlist(lapply(strsplit(as.character(comp_data_valley$cokey[1:2]), ""), length))
+summary(cokey_lengths) #all 8 so slice won't create problems later
 #fix a few majcompflag errors
 comp_data_valley$majcompflag[comp_data_valley$majcompflag=='No ' & comp_data_valley$comppct_r>=15 & !is.na(comp_data_valley$castorieindex)] <- 'Yes'
 comp_data_valley$majcompflag[comp_data_valley$majcompflag=='Yes' & comp_data_valley$comppct_r < 15] <- 'No '
