@@ -1,10 +1,11 @@
+#TO-DO: run soil horizon aggregation by excluding any 0-30 cm variables with missing data for a horizon
 library(raster)
 library(aqp)
 library(vioplot)
 library(extrafont)
 library(extrafontdb)
 loadfonts(device = 'win')
-laptop <- TRUE
+laptop <- FALSE
 
 if (laptop) {
   mainDir <- 'C:/Users/smdevine/Desktop/post doc'
@@ -29,18 +30,18 @@ crs(valley_mu_shp_30cm)
 kssl_ssurgo_30cm <- extract(valley_mu_shp_30cm, kssl_shp, df=TRUE)
 # sum(kssl_ssurgo_30cm$cluster_10 == old_data$cluster_10, na.rm = TRUE) #made no difference whether NAD83 or WGS84 was specified
 # old_data <- kssl_ssurgo_30cm
-head(kssl_ssurgo_30cm)
-dim(kssl_ssurgo_30cm)
-table(kssl_ssurgo_30cm$cluster_5)
-table(kssl_ssurgo_30cm$cluster_6)
-table(kssl_ssurgo_30cm$cluster_7)
-table(kssl_ssurgo_30cm$cluster_8)
-table(kssl_ssurgo_30cm$cluster_9)
-table(kssl_ssurgo_30cm$cluster_10)
+# head(kssl_ssurgo_30cm)
+# dim(kssl_ssurgo_30cm)
+# table(kssl_ssurgo_30cm$cluster_5)
+# table(kssl_ssurgo_30cm$cluster_6)
+# table(kssl_ssurgo_30cm$cluster_7)
+# table(kssl_ssurgo_30cm$cluster_8)
+# table(kssl_ssurgo_30cm$cluster_9)
+# table(kssl_ssurgo_30cm$cluster_10)
 kssl_ssurgo_30cm <- kssl_ssurgo_30cm[!is.na(kssl_ssurgo_30cm$cluster_9), ]
 kssl_ssurgo_30cm$pedon_key <- kssl_shp$pedn_ky[kssl_ssurgo_30cm$point.ID] #point.ID is the row number
 kssl_ssurgo_30cm$labsampnum <- kssl_shp$pdlbsmp[kssl_ssurgo_30cm$point.ID]
-colnames(kssl_ssurgo_30cm)
+# colnames(kssl_ssurgo_30cm)
 
 kssl_horizons <- read.csv(file.path(ksslDir, 'ca_kssl_horizons.csv'), stringsAsFactors = FALSE)
 
@@ -48,11 +49,11 @@ wtd.mean_v2 <- function(x, y) {
   # use horizon thickness as a weight
   thick <- x$hzn_bot - x$hzn_top
   # compute the weighted mean, accounting for the possibility of missing data
-  m <- weighted.mean(horizons(x)[[y]], w=thick, na.rm=TRUE)
+  m <- weighted.mean(horizons(x)[[y]], w=thick, na.rm=FALSE)
   m
 }
 
-awc_sum_v2 <- function(x, rm.NAs=TRUE) {
+awc_sum_v2 <- function(x, rm.NAs=FALSE) {
   thick <- x$hzn_bot - x$hzn_top
   sum(thick * x$whc, na.rm = rm.NAs)
 }
@@ -95,19 +96,19 @@ kssl_horizons[kssl_horizons$pedon_key==72040,] #15N01738, 15N01739
 kssl_horizons[kssl_horizons$pedon_key==17783,] #all problematic 91P02043, 91P02044, 91P02045
 horizons_to_exclude <- c('91P02043', '91P02044', '91P02045', '15N01738', '15N01739', '94P02038', '94P02028', '94P02018', '94P02019', '94P02020', '93P02017', '93P02018',  '91P04438', '91P04439', '91P04440', '91P04441', '91P04442', '91P04443', '91P04444', '91P04445', '88P01488', '85P05356', '79P01239', '79P01240', '79P01241', '79P01242', '79P01177', '79P00471', '79P00472', '40A22466', '40A22467', '40A22468')
 kssl_horizons_subset <- kssl_horizons[kssl_horizons$pedon_key %in% kssl_ssurgo_30cm$pedon_key, ]
-dim(kssl_horizons_subset)
+# dim(kssl_horizons_subset)
 kssl_horizons_subset <- kssl_horizons_subset[!(kssl_horizons_subset$labsampnum %in% horizons_to_exclude), ]
-dim(kssl_horizons_subset)
+# dim(kssl_horizons_subset)
 depths(kssl_horizons_subset) <- pedon_key ~ hzn_top + hzn_bot
-class(kssl_horizons_subset)
-horizons(kssl_horizons_subset)[kssl_horizons_subset$pedon_key==73286,]
+# class(kssl_horizons_subset)
+# horizons(kssl_horizons_subset)[kssl_horizons_subset$pedon_key==73286,]
 kssl_horizons_subset$soil_depth <- profileApply(kssl_horizons_subset, FUN = estimateSoilDepth, name='hzn_desgn', top='hzn_top', bottom='hzn_bot')
-which(kssl_horizons_subset$soil_depth==0)
-which(site(kssl_horizons_subset)==73286)
-kssl_horizons_subset[113]
-test_hz_aggregation_v1 <- horizon_to_comp_v2(horizon_SPC = kssl_horizons_subset[1:113], depth = 30)
-head(test_hz_aggregation_v1)
-kssl_horizons[kssl_horizons$pedon_key %in% c(165,166,204) & kssl_horizons$hzn_top <=30,]
+# which(kssl_horizons_subset$soil_depth==0)
+# which(site(kssl_horizons_subset)==73286)
+# kssl_horizons_subset[113]
+# test_hz_aggregation_v1 <- horizon_to_comp_v2(horizon_SPC = kssl_horizons_subset[1:113], depth = 30)
+# head(test_hz_aggregation_v1)
+# kssl_horizons[kssl_horizons$pedon_key %in% c(165,166,204) & kssl_horizons$hzn_top <=30,]
 kssl_points_30cm <- horizon_to_comp_v2(horizon_SPC = kssl_horizons_subset, depth = 30)
 dim(kssl_points_30cm)
 head(kssl_points_30cm)
@@ -127,7 +128,7 @@ kssl_horizons[kssl_horizons$pedon_key==14771 & kssl_horizons$hzn_top <=30,]
 21.5*4/30+16.3*11/30+6.7*10/30+5.2*5/30
 #oc:0.656%
 1.87*4/30+0.71*11/30+0.37*10/30+0.14*5/30
-sum(kssl_points_30cm$soil_depth==0)
+sum(kssl_points_30cm$soil_depth==0) #12
 kssl_points_30cm[kssl_points_30cm$pedon_key==7327, ]
 
 kssl_points_30cm <- kssl_points_30cm[!(kssl_points_30cm$soil_depth==0), ]
@@ -143,46 +144,45 @@ kssl_points_30cm$cluster_10 <- kssl_ssurgo_30cm$cluster_10[match(kssl_points_30c
 kssl_points_30cm$cluster_11 <- kssl_ssurgo_30cm$cluster_11[match(kssl_points_30cm$pedon_key, kssl_ssurgo_30cm$pedon_key)]
 kssl_points_30cm$cluster_12 <- kssl_ssurgo_30cm$cluster_12[match(kssl_points_30cm$pedon_key, kssl_ssurgo_30cm$pedon_key)]
 
-write.csv(kssl_points_30cm, file.path(ksslDir, 'kssl_cluster_30cm.csv'), row.names = FALSE)
+write.csv(kssl_points_30cm, file.path(ksslDir, 'kssl_cluster_30cm_NArm.csv'), row.names = FALSE)
 
 tapply(kssl_points_30cm$oc_30cm, kssl_points_30cm$cluster_9, summary)
 tapply(kssl_points_30cm$pH_H2O_30cm, kssl_points_30cm$cluster_9, summary)
 tapply(kssl_points_30cm$cec_7_30cm, kssl_points_30cm$cluster_9, summary)
 write.csv(kssl_ssurgo_30cm, file.path(ksslDir, 'kssl_pts_ssurgo_30cm_extract.csv'), row.names = FALSE)
 
-kssl_points_30cm <- read.csv(file.path(ksslDir, 'kssl_cluster_30cm.csv'), stringsAsFactors = FALSE)
+kssl_points_30cm <- read.csv(file.path(ksslDir, 'kssl_cluster_30cm_NArm.csv'), stringsAsFactors = FALSE)
 
 order_lgnd_9 <- c(1,3,6,5,9,7,8,2)
-vioplot_kssl_clus9 <- function(df, varname, ylim_vioplot, plot_order, labnames, ylab, fname, mar) {
+vioplot_kssl_clus9 <- function(df, varname, ylim_vioplot, plot_order, labnames, ylab, fname, mar, group_names) {
   plot_order2 <- (1:9)[plot_order]
   tiff(file = file.path(FiguresDir, 'v2', 'kssl', fname), family = 'Times New Roman', width = 6.5, height = 4.5, pointsize = 12, units = 'in', res=800, compression='lzw')
   par(mar=mar)
-  vioplot(df[[varname]][df$cluster_9==plot_order2[1]], df[[varname]][df$cluster_9==plot_order2[2]], df[[varname]][df$cluster_9==plot_order2[3]], df[[varname]][df$cluster_9==plot_order2[4]], df[[varname]][df$cluster_9==plot_order2[5]], df[[varname]][df$cluster_9==plot_order2[6]], df[[varname]][df$cluster_9==plot_order2[7]], df[[varname]][df$cluster_9==plot_order2[8]], col=c('lightgoldenrod', 'violetred', 'tan2', 'black', 'gold', 'tan4', 'lightblue1', 'deepskyblue', 'firebrick3')[plot_order], rectCol = 'gray', ylim = ylim_vioplot, ylab = ylab)
+  vioplot(df[[varname]][df$cluster_9==plot_order2[1]], df[[varname]][df$cluster_9==plot_order2[2]], df[[varname]][df$cluster_9==plot_order2[3]], df[[varname]][df$cluster_9==plot_order2[4]], df[[varname]][df$cluster_9==plot_order2[5]], df[[varname]][df$cluster_9==plot_order2[6]], df[[varname]][df$cluster_9==plot_order2[7]], df[[varname]][df$cluster_9==plot_order2[8]], col=c('lightgoldenrod', 'violetred', 'tan2', 'black', 'gold', 'tan4', 'lightblue1', 'deepskyblue', 'firebrick3')[plot_order], rectCol = 'gray', ylim = ylim_vioplot, ylab = ylab, names = group_names)
   mtext('Soil health region', side = 1, line = 2.25)
   dev.off()
 }
 colnames(kssl_points_30cm)
 #order_lgnd was defined for radarchart
-vioplot_kssl_clus9(kssl_points_30cm, 'clay_30cm', ylim_vioplot = c(0.5,75), plot_order = order_lgnd_9, ylab='Clay (%)', fname='class9_clay_vioplots.tif', mar=c(3.5, 4.25, 1, 1))
-vioplot_kssl_clus9(kssl_points_30cm, 'om_30cm', ylim_vioplot = c(0.1,9), plot_order = order_lgnd_9,  ylab='Organic matter (%)', fname='class9_OM_vioplots.tif', mar=c(3.5, 4.25, 1, 1))
+vioplot_kssl_clus9(kssl_points_30cm, 'clay_30cm', ylim_vioplot = c(0.5,75), plot_order = order_lgnd_9, ylab='Clay (%)', fname='class9_clay_vioplots.tif', mar=c(3.5, 4.25, 1, 1), group_names = c(1:5,7:9))
+vioplot_kssl_clus9(kssl_points_30cm, 'om_30cm', ylim_vioplot = c(0.1,9), plot_order = order_lgnd_9,  ylab='Organic matter (%)', fname='class9_OM_vioplots.tif', mar=c(3.5, 4.25, 1, 1), group_names = c(1:5,7:9))
 kssl_points_30cm$logom_30cm <- log(kssl_points_30cm$om_30cm)
-vioplot_kssl_clus9(kssl_points_30cm, 'logom_30cm', ylim_vioplot = c(-2,2),  plot_order = order_lgnd_9,  ylab=expression('Organic matter (Log'[10]~'%)'), fname='class9_LogOM_vioplots.tif', mar=c(3.5, 4.25, 1, 1))
-vioplot_kssl_clus9(kssl_points_30cm, 'cec_7_30cm', ylim_vioplot = c(0.5,60), plot_order = order_lgnd_9,  ylab=expression('Cation exchange capacity (mEq 100g'^-1*')'), fname='class9_CEC_vioplots.tif', mar=c(3.5, 4.25, 1, 1))
-vioplot_kssl_clus9(kssl_points_30cm, 'pH_H2O_30cm', ylim_vioplot = c(4.9,10.1), plot_order = order_lgnd_9,  ylab='soil pH', fname='class9_pH_vioplots.tif', mar=c(3.5, 4.25, 1, 1))
-vioplot_kssl_clus9(kssl_points_30cm, 'awc_30cm', ylim_vioplot = c(0.55,7.1), plot_order = order_lgnd_9,  ylab=expression('Available water capacity (cm H'[2]*'O 30 cm'^-1~'soil)'), fname='class9_AWC_vioplots.tif', mar=c(3.5, 4.25, 1, 1))
+vioplot_kssl_clus9(kssl_points_30cm, 'logom_30cm', ylim_vioplot = c(-2,2),  plot_order = order_lgnd_9,  ylab=expression('Organic matter (Log'[10]~'%)'), fname='class9_LogOM_vioplots.tif', mar=c(3.5, 4.25, 1, 1), group_names = c(1:5,7:9))
+vioplot_kssl_clus9(kssl_points_30cm, 'cec_7_30cm', ylim_vioplot = c(0.5,60), plot_order = order_lgnd_9,  ylab=expression('Cation exchange capacity (mEq 100g'^-1*')'), fname='class9_CEC_vioplots.tif', mar=c(3.5, 4.25, 1, 1), group_names = c(1:5,7:9))
+vioplot_kssl_clus9(kssl_points_30cm, 'pH_H2O_30cm', ylim_vioplot = c(4.9,10.1), plot_order = order_lgnd_9,  ylab='soil pH', fname='class9_pH_vioplots.tif', mar=c(3.5, 4.25, 1, 1), group_names = c(1:5,7:9))
+vioplot_kssl_clus9(kssl_points_30cm, 'awc_30cm', ylim_vioplot = c(0.55,7.1), plot_order = order_lgnd_9,  ylab=expression('Available water capacity (cm H'[2]*'O 30 cm'^-1~'soil)'), fname='class9_AWC_vioplots.tif', mar=c(3.5, 4.25, 1, 1), group_names = c(1:5,7:9))
 summary(kssl_points_30cm$ec_30cm)
-vioplot_kssl_clus9(kssl_points_30cm, 'ec_30cm', ylim_vioplot = c(0,20.5), plot_order = order_lgnd_9,  ylab=expression('Electrical conductivity (mmhos cm'^-1*')'), fname='class9_EC_vioplots.tif', mar=c(3.5, 4.25, 1, 1))
+vioplot_kssl_clus9(kssl_points_30cm, 'ec_30cm', ylim_vioplot = c(0,20.5), plot_order = order_lgnd_9,  ylab=expression('Electrical conductivity (mmhos cm'^-1*')'), fname='class9_EC_vioplots.tif', mar=c(3.5, 4.25, 1, 1), group_names = c(1:5,7:9))
 summary(kssl_points_30cm$bd_13b_30cm)
 tapply(kssl_points_30cm$bd_13b_30cm, kssl_points_30cm$cluster_9, summary)
-vioplot_kssl_clus9(kssl_points_30cm, 'bd_13b_30cm', ylim_vioplot = c(1.0,1.9), plot_order = order_lgnd_9,  ylab=expression('Bulk density (g soil cm'^-3*'soil)'), fname='class9_BD_vioplots.tif', mar=c(3.5, 4.25, 1, 1))
-vioplot_kssl_clus9(kssl_points_30cm, 'ksat_30cm', ylim_vioplot = c(0.2,2.8), plot_order = order_lgnd_9, ylab=expression('Hydraulic conductivity (units unknown)'), fname='class9_ksat_vioplots.tif', mar=c(3.5, 4.25, 1, 1))
+vioplot_kssl_clus9(kssl_points_30cm, 'bd_13b_30cm', ylim_vioplot = c(1.0,1.9), plot_order = order_lgnd_9,  ylab=expression('Bulk density (g soil cm'^-3*'soil)'), fname='class9_BD_vioplots.tif', mar=c(3.5, 4.25, 1, 1), group_names = c(1:5,7:9))
+vioplot_kssl_clus9(kssl_points_30cm, 'ksat_30cm', ylim_vioplot = c(0.2,2.8), plot_order = order_lgnd_9, ylab=expression('Hydraulic conductivity (units unknown)'), fname='class9_ksat_vioplots.tif', mar=c(3.5, 4.25, 1, 1), group_names = c(1:5,7:9))
 #kssl_points_30cm$logks_30cm <- log(kssl_points_30cm$ksat_30cm)
 #vioplot_kssl_clus9(kssl_points_30cm, 'logks_30cm', ylim_vioplot = c(-4.58,5.85), plot_order = order_lgnd_9,  ylab=expression('Saturated conductivity (log'[10]~mu*'m H'[2]*'O s'^-1*')'), fname='class9_logKs_vioplots.tif', mar=c(3.5, 4.25, 1, 1))
-summary(kssl_points_30cm$lep_30cm*100)
+summary(kssl_points_30cm$lep_30cm)
 kssl_points_30cm$lep_30cm <- kssl_points_30cm$lep_30cm*100
 tapply(kssl_points_30cm$lep_30cm, kssl_points_30cm$cluster_9, function(x) sum(!is.na(x)))
-vioplot_kssl_clus9(kssl_points_30cm, 'lep_30cm', ylim_vioplot = c(-0.1,17), plot_order = order_lgnd_9,  ylab='Linear extensibility (%)', fname='class9_lep_vioplots.tif', mar=c(3.5, 4.25, 1, 1))
-table(kssl_points_30cm$cluster_9)
+vioplot_kssl_clus9(kssl_points_30cm, 'lep_30cm', ylim_vioplot = c(-0.1,17), plot_order = order_lgnd_9,  ylab='Linear extensibility (%)', fname='class9_lep_vioplots.tif', mar=c(3.5, 4.25, 1, 1), group_names = c(1:5,7:9))
 
 order_lgnd_9 <- c(1,3,6,5,9,4,7,8,2)
 tiff(file = file.path(FiguresDir, 'v2', 'kssl', 'kssl_samples_cluster9.tif'), pointsize = 11, family = 'Times New Roman', width = 6.5, height = 5, units = 'in', res=800, compression = 'lzw')
