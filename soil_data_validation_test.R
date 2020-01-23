@@ -135,7 +135,7 @@ pts_30cm$cluster_10 <- pts_ssurgo_extract_30cm$cluster_10[match(pts_30cm$Concate
 pts_30cm$cluster_11 <- pts_ssurgo_extract_30cm$cluster_11[match(pts_30cm$Concatenate, pts_ssurgo_extract_30cm$Concatenate)]
 pts_30cm$cluster_12 <- pts_ssurgo_extract_30cm$cluster_12[match(pts_30cm$Concatenate, pts_ssurgo_extract_30cm$Concatenate)]
 
-write.csv(pts_30cm, file.path(workDir, 'CDFA_samples_cluster_30cm.csv'), row.names = FALSE)
+# write.csv(pts_30cm, file.path(workDir, 'CDFA_samples_cluster_30cm.csv'), row.names = FALSE)
 colnames(pts_30cm)
 tapply(pts_30cm$totC_30cm, pts_30cm$cluster_9, summary)
 tapply(pts_30cm$pH_H2O_30cm, pts_30cm$cluster_9, summary)
@@ -143,7 +143,7 @@ tapply(pts_30cm$clay_30cm, pts_30cm$cluster_9, summary)
 table(pts_30cm$cluster_9[!is.na(pts_30cm$clay_30cm)])
 tapply(pts_30cm$bd_30cm, pts_30cm$cluster_9, summary)
 tapply(pts_30cm$bd_30cm, pts_30cm$cluster_9, summary)
-write.csv(pts_ssurgo_extract_30cm, file.path(workDir, 'CDFA_pts_ssurgo_30cm_extract.csv'), row.names = FALSE)
+# write.csv(pts_ssurgo_extract_30cm, file.path(workDir, 'CDFA_pts_ssurgo_30cm_extract.csv'), row.names = FALSE)
 
 pts_ssurgo_extract_30cm <- read.csv(file.path(workDir, 'CDFA_pts_ssurgo_30cm_extract.csv'), stringsAsFactors = FALSE) 
 pts_30cm <- read.csv(file.path(workDir, 'CDFA_samples_cluster_30cm.csv'), stringsAsFactors = FALSE)
@@ -341,10 +341,85 @@ table(pts_30cm$cluster_9[which(!is.na(pts_30cm$kgOrg.m2_30cm) & pts_30cm$tillage
 #no till samples with C content data counts by cluster 9 ID
 table(pts_30cm$cluster_9[which(!is.na(pts_30cm$kgOrg.m2_30cm) & pts_30cm$tillage=='no till')])
 
-
-
-
 #30 cm
+#(a) Compare Till x Irrigated x Compost across these regions: cluster 3 (n=9) vs. cluster 5 (n=9) vs. cluster 6 (n=14)
+sum(!is.na(pts_30cm$totC_30cm) & pts_30cm$tillage=='till' & pts_30cm$irrigated_vs_dryfarm=='irrigated' & pts_30cm$compost_added=='yes'& pts_30cm$cluster_9==3, na.rm=TRUE) #9
+sum(!is.na(pts_30cm$totC_30cm) & pts_30cm$tillage=='till' & pts_30cm$irrigated_vs_dryfarm=='irrigated' & pts_30cm$compost_added=='yes'& pts_30cm$cluster_9==5, na.rm=TRUE)#9
+sum(!is.na(pts_30cm$totC_30cm) & pts_30cm$tillage=='till' & pts_30cm$irrigated_vs_dryfarm=='irrigated' & pts_30cm$compost_added=='yes'& pts_30cm$cluster_9==6, na.rm=TRUE)
+vioplot(pts_30cm$totC_30cm[which(pts_30cm$tillage=='till' & pts_30cm$irrigated_vs_dryfarm=='irrigated' & pts_30cm$compost_added=='yes'& pts_30cm$cluster_9==3)], pts_30cm$totC_30cm[which(pts_30cm$tillage=='till' & pts_30cm$irrigated_vs_dryfarm=='irrigated' & pts_30cm$compost_added=='yes'& pts_30cm$cluster_9==5)], pts_30cm$totC_30cm[which(pts_30cm$tillage=='till' & pts_30cm$irrigated_vs_dryfarm=='irrigated' & pts_30cm$compost_added=='yes'& pts_30cm$cluster_9==6)], names=c(3,5,6))
+
+#(b)	Compare tillage in cluster 6 (controlling for irrigation and compost): till x irrigated x compost (n=14); no-till x irrigated x compost (n=13); dryfarm x tillage x compost (n=12)
+sum(!is.na(pts_30cm$totC_30cm) & pts_30cm$tillage=='till' & pts_30cm$irrigated_vs_dryfarm=='irrigated' & pts_30cm$compost_added=='yes'& pts_30cm$cluster_9==6, na.rm=TRUE) #9
+sum(!is.na(pts_30cm$totC_30cm) & pts_30cm$tillage=='no till' & pts_30cm$irrigated_vs_dryfarm=='irrigated' & pts_30cm$compost_added=='yes'& pts_30cm$cluster_9==6, na.rm=TRUE)#13
+sum(!is.na(pts_30cm$totC_30cm) & pts_30cm$tillage=='till' & pts_30cm$irrigated_vs_dryfarm=='dryfarm' & pts_30cm$compost_added=='yes'& pts_30cm$cluster_9==6, na.rm=TRUE) #12
+vioplot(pts_30cm$totC_30cm[which(pts_30cm$tillage=='till' & pts_30cm$irrigated_vs_dryfarm=='irrigated' & pts_30cm$compost_added=='yes'& pts_30cm$cluster_9==6)], pts_30cm$totC_30cm[which(pts_30cm$tillage=='no till' & pts_30cm$irrigated_vs_dryfarm=='irrigated' & pts_30cm$compost_added=='yes'& pts_30cm$cluster_9==6)], pts_30cm$totC_30cm[which(pts_30cm$tillage=='till' & pts_30cm$irrigated_vs_dryfarm=='dryfarm' & pts_30cm$compost_added=='yes' & pts_30cm$cluster_9==6)], names=c('T-Irr', 'NT-Irr', 'T-DF'))
+#across all clusters
+vioplot(pts_30cm$totC_30cm[which(pts_30cm$tillage=='till' & pts_30cm$irrigated_vs_dryfarm=='irrigated' & pts_30cm$compost_added=='yes')], pts_30cm$totC_30cm[which(pts_30cm$tillage=='no till' & pts_30cm$irrigated_vs_dryfarm=='irrigated' & pts_30cm$compost_added=='yes')], pts_30cm$totC_30cm[which(pts_30cm$tillage=='till' & pts_30cm$irrigated_vs_dryfarm=='dryfarm' & pts_30cm$compost_added=='yes')], names=c('T-Irr', 'NT-Irr', 'T-DF'))
+
+
+#(c)	Compare cluster 6 (n=13) vs. cluster 9 (n=8): controlling for tillage (no-till), irrigation and compost): 
+vioplot(pts_30cm$totC_30cm[which(pts_30cm$tillage=='no till' & pts_30cm$irrigated_vs_dryfarm=='irrigated' & pts_30cm$compost_added=='yes'& pts_30cm$cluster_9==6)], pts_30cm$totC_30cm[which(pts_30cm$tillage=='no till' & pts_30cm$irrigated_vs_dryfarm=='irrigated' & pts_30cm$compost_added=='yes'& pts_30cm$cluster_9==9)])
+t.test(pts_30cm$totC_30cm[which(pts_30cm$tillage=='no till' & pts_30cm$irrigated_vs_dryfarm=='irrigated' & pts_30cm$compost_added=='yes'& pts_30cm$cluster_9==6)], pts_30cm$totC_30cm[which(pts_30cm$tillage=='no till' & pts_30cm$irrigated_vs_dryfarm=='irrigated' & pts_30cm$compost_added=='yes'& pts_30cm$cluster_9==9)])
+
+#compare 3 management types in cluster 6 across each depth segment
+soil_data_cluster6_of_9 <- data.frame(ID=pts_30cm$Concatenate[which(pts_30cm$cluster_9==6)], tillage=pts_30cm$tillage[which(pts_30cm$cluster_9==6)], irrigation=pts_30cm$irrigated_vs_dryfarm[which(pts_30cm$cluster_9==6)], compost=pts_30cm$compost_added[which(pts_30cm$cluster_9==6)], stringsAsFactors = FALSE)
+head(soil_data_cluster6_of_9)
+dim(soil_data_cluster6_of_9)
+length(soil_data$C....g.g..Oven.dry.converted[soil_data$Depth..cm.=='0_5'][match(soil_data_cluster6_of_9$ID, soil_data$Concatenate[soil_data$Depth..cm.=='0_5'])])
+# "0_5"    "5_10"   "10_30"  "30_50"  "50_100"
+soil_data_cluster6_of_9$soil_C_0_5cm <-  soil_data$C....g.g..Oven.dry.converted[soil_data$Depth..cm.=='0_5'][match(soil_data_cluster6_of_9$ID, soil_data$Concatenate[soil_data$Depth..cm.=='0_5'])]
+soil_data_cluster6_of_9$soil_C_5_10cm <-  soil_data$C....g.g..Oven.dry.converted[soil_data$Depth..cm.=='5_10'][match(soil_data_cluster6_of_9$ID, soil_data$Concatenate[soil_data$Depth..cm.=='5_10'])]
+soil_data_cluster6_of_9$soil_C_10_30cm <-  soil_data$C....g.g..Oven.dry.converted[soil_data$Depth..cm.=='10_30'][match(soil_data_cluster6_of_9$ID, soil_data$Concatenate[soil_data$Depth..cm.=='10_30'])]
+soil_data_cluster6_of_9$soil_C_30_50cm <-  soil_data$C....g.g..Oven.dry.converted[soil_data$Depth..cm.=='30_50'][match(soil_data_cluster6_of_9$ID, soil_data$Concatenate[soil_data$Depth..cm.=='30_50'])]
+soil_data_cluster6_of_9$soil_C_50_100cm <-  soil_data$C....g.g..Oven.dry.converted[soil_data$Depth..cm.=='50_100'][match(soil_data_cluster6_of_9$ID, soil_data$Concatenate[soil_data$Depth..cm.=='50_100'])]
+colnames(soil_data_cluster6_of_9)
+lapply(soil_data_cluster6_of_9[,5:9], summary)
+lapply(soil_data_cluster6_of_9[,5:9], function(x) tapply(x, soil_data_cluster6_of_9$tillage, mean, na.rm=TRUE))
+lapply(soil_data_cluster6_of_9[,5:9], function(x) tapply(x, soil_data_cluster6_of_9$irrigation, mean, na.rm=TRUE))
+lapply(soil_data_cluster6_of_9[,5:9], function(x) tapply(x, soil_data_cluster6_of_9$compost, mean, na.rm=TRUE))
+
+
+till_irr_clus6 <- data.frame(C_means=sapply(soil_data_cluster6_of_9[which(soil_data_cluster6_of_9$tillage=='till' & soil_data_cluster6_of_9$irrigation=='irrigated' & soil_data_cluster6_of_9$compost=='yes'),5:9], mean), C_se=sapply(soil_data_cluster6_of_9[which(soil_data_cluster6_of_9$tillage=='till' & soil_data_cluster6_of_9$irrigation=='irrigated' & soil_data_cluster6_of_9$compost=='yes'),5:9], function(x) {sd(x)/sqrt(length(x[!is.na(x)]))}))
+notill_irr_clus6 <- data.frame(C_means=sapply(soil_data_cluster6_of_9[which(soil_data_cluster6_of_9$tillage=='no till' & soil_data_cluster6_of_9$irrigation=='irrigated' & soil_data_cluster6_of_9$compost=='yes'),5:9], mean), C_se=sapply(soil_data_cluster6_of_9[which(soil_data_cluster6_of_9$tillage=='no till' & soil_data_cluster6_of_9$irrigation=='irrigated' & soil_data_cluster6_of_9$compost=='yes'),5:9], function(x) {sd(x)/sqrt(length(x[!is.na(x)]))}))
+till_dry_clus6 <- data.frame(C_means=sapply(soil_data_cluster6_of_9[which(soil_data_cluster6_of_9$tillage=='till' & soil_data_cluster6_of_9$irrigation=='dryfarm' & soil_data_cluster6_of_9$compost=='yes'),5:9], mean), C_se=sapply(soil_data_cluster6_of_9[which(soil_data_cluster6_of_9$tillage=='till' & soil_data_cluster6_of_9$irrigation=='dryfarm' & soil_data_cluster6_of_9$compost=='yes'),5:9], function(x) {sd(x)/sqrt(length(x[!is.na(x)]))}))
+
+
+soil_data_cluster3_of_9 <- data.frame(ID=pts_30cm$Concatenate[which(pts_30cm$cluster_9==3)], tillage=pts_30cm$tillage[which(pts_30cm$cluster_9==3)], irrigation=pts_30cm$irrigated_vs_dryfarm[which(pts_30cm$cluster_9==3)], compost=pts_30cm$compost_added[which(pts_30cm$cluster_9==3)], stringsAsFactors = FALSE)
+soil_data_cluster3_of_9$soil_C_0_5cm <-  soil_data$C....g.g..Oven.dry.converted[soil_data$Depth..cm.=='0_5'][match(soil_data_cluster3_of_9$ID, soil_data$Concatenate[soil_data$Depth..cm.=='0_5'])]
+soil_data_cluster3_of_9$soil_C_5_10cm <-  soil_data$C....g.g..Oven.dry.converted[soil_data$Depth..cm.=='5_10'][match(soil_data_cluster3_of_9$ID, soil_data$Concatenate[soil_data$Depth..cm.=='5_10'])]
+soil_data_cluster3_of_9$soil_C_10_30cm <-  soil_data$C....g.g..Oven.dry.converted[soil_data$Depth..cm.=='10_30'][match(soil_data_cluster3_of_9$ID, soil_data$Concatenate[soil_data$Depth..cm.=='10_30'])]
+soil_data_cluster3_of_9$soil_C_30_50cm <-  soil_data$C....g.g..Oven.dry.converted[soil_data$Depth..cm.=='30_50'][match(soil_data_cluster3_of_9$ID, soil_data$Concatenate[soil_data$Depth..cm.=='30_50'])]
+soil_data_cluster3_of_9$soil_C_50_100cm <-  soil_data$C....g.g..Oven.dry.converted[soil_data$Depth..cm.=='50_100'][match(soil_data_cluster3_of_9$ID, soil_data$Concatenate[soil_data$Depth..cm.=='50_100'])]
+till_irr_clus3 <- data.frame(C_means=sapply(soil_data_cluster3_of_9[which(soil_data_cluster3_of_9$tillage=='till' & soil_data_cluster3_of_9$irrigation=='irrigated' & soil_data_cluster3_of_9$compost=='yes'),5:9], mean), C_se=sapply(soil_data_cluster3_of_9[which(soil_data_cluster3_of_9$tillage=='till' & soil_data_cluster3_of_9$irrigation=='irrigated' & soil_data_cluster3_of_9$compost=='yes'),5:9], function(x) {sd(x)/sqrt(length(x[!is.na(x)]))}))
+
+
+soil_data_cluster9_of_9 <- data.frame(ID=pts_30cm$Concatenate[which(pts_30cm$cluster_9==9)], tillage=pts_30cm$tillage[which(pts_30cm$cluster_9==9)], irrigation=pts_30cm$irrigated_vs_dryfarm[which(pts_30cm$cluster_9==9)], compost=pts_30cm$compost_added[which(pts_30cm$cluster_9==9)], stringsAsFactors = FALSE)
+soil_data_cluster9_of_9$soil_C_0_5cm <-  soil_data$C....g.g..Oven.dry.converted[soil_data$Depth..cm.=='0_5'][match(soil_data_cluster9_of_9$ID, soil_data$Concatenate[soil_data$Depth..cm.=='0_5'])]
+soil_data_cluster9_of_9$soil_C_5_10cm <-  soil_data$C....g.g..Oven.dry.converted[soil_data$Depth..cm.=='5_10'][match(soil_data_cluster9_of_9$ID, soil_data$Concatenate[soil_data$Depth..cm.=='5_10'])]
+soil_data_cluster9_of_9$soil_C_10_30cm <-  soil_data$C....g.g..Oven.dry.converted[soil_data$Depth..cm.=='10_30'][match(soil_data_cluster9_of_9$ID, soil_data$Concatenate[soil_data$Depth..cm.=='10_30'])]
+soil_data_cluster9_of_9$soil_C_30_50cm <-  soil_data$C....g.g..Oven.dry.converted[soil_data$Depth..cm.=='30_50'][match(soil_data_cluster9_of_9$ID, soil_data$Concatenate[soil_data$Depth..cm.=='30_50'])]
+soil_data_cluster9_of_9$soil_C_50_100cm <-  soil_data$C....g.g..Oven.dry.converted[soil_data$Depth..cm.=='50_100'][match(soil_data_cluster9_of_9$ID, soil_data$Concatenate[soil_data$Depth..cm.=='50_100'])]
+notill_irr_clus9 <- data.frame(C_means=sapply(soil_data_cluster9_of_9[which(soil_data_cluster9_of_9$tillage=='no till' & soil_data_cluster9_of_9$irrigation=='irrigated' & soil_data_cluster9_of_9$compost=='yes'),5:9], mean), C_se=sapply(soil_data_cluster9_of_9[which(soil_data_cluster9_of_9$tillage=='no till' & soil_data_cluster9_of_9$irrigation=='irrigated' & soil_data_cluster9_of_9$compost=='yes'),5:9], function(x) {sd(x)/sqrt(length(x[!is.na(x)]))}))
+
+
+soil_data_cluster5_of_9 <- data.frame(ID=pts_30cm$Concatenate[which(pts_30cm$cluster_9==5)], tillage=pts_30cm$tillage[which(pts_30cm$cluster_9==5)], irrigation=pts_30cm$irrigated_vs_dryfarm[which(pts_30cm$cluster_9==5)], compost=pts_30cm$compost_added[which(pts_30cm$cluster_9==5)], stringsAsFactors = FALSE)
+soil_data_cluster5_of_9$soil_C_0_5cm <-  soil_data$C....g.g..Oven.dry.converted[soil_data$Depth..cm.=='0_5'][match(soil_data_cluster5_of_9$ID, soil_data$Concatenate[soil_data$Depth..cm.=='0_5'])]
+soil_data_cluster5_of_9$soil_C_5_10cm <-  soil_data$C....g.g..Oven.dry.converted[soil_data$Depth..cm.=='5_10'][match(soil_data_cluster5_of_9$ID, soil_data$Concatenate[soil_data$Depth..cm.=='5_10'])]
+soil_data_cluster5_of_9$soil_C_10_30cm <-  soil_data$C....g.g..Oven.dry.converted[soil_data$Depth..cm.=='10_30'][match(soil_data_cluster5_of_9$ID, soil_data$Concatenate[soil_data$Depth..cm.=='10_30'])]
+soil_data_cluster5_of_9$soil_C_30_50cm <-  soil_data$C....g.g..Oven.dry.converted[soil_data$Depth..cm.=='30_50'][match(soil_data_cluster5_of_9$ID, soil_data$Concatenate[soil_data$Depth..cm.=='30_50'])]
+soil_data_cluster5_of_9$soil_C_50_100cm <-  soil_data$C....g.g..Oven.dry.converted[soil_data$Depth..cm.=='50_100'][match(soil_data_cluster5_of_9$ID, soil_data$Concatenate[soil_data$Depth..cm.=='50_100'])]
+till_irr_clus5 <- data.frame(C_means=sapply(soil_data_cluster5_of_9[which(soil_data_cluster5_of_9$tillage=='till' & soil_data_cluster5_of_9$irrigation=='irrigated' & soil_data_cluster5_of_9$compost=='yes'),5:9], mean), C_se=sapply(soil_data_cluster5_of_9[which(soil_data_cluster5_of_9$tillage=='till' & soil_data_cluster5_of_9$irrigation=='irrigated' & soil_data_cluster5_of_9$compost=='yes'),5:9], function(x) {sd(x)/sqrt(length(x[!is.na(x)]))}))
+
+depths_cm <- c(2.5, 7.5, 20, 40, 75)
+plot(till_irr_clus6$C_means, -depths_cm, type='b', xlim=c(0,2.6), pch=24, bg='tan4', col='black', cex=1, xlab='Soil organic carbon (%)', ylab='Depth (cm)', yaxt='n')
+axis(side = 2, at=seq(from=-100, to=0, by=20), labels=-seq(from=-100, to=0, by=20))
+points(till_dry_clus6$C_means, -depths_cm, type='b', pch=24, bg='tan4', col='black', lty=2)
+points(notill_irr_clus6$C_means, -depths_cm, type='b', pch=23, bg='tan4', col='black')
+points(till_irr_clus3$C_means, -depths_cm, type = 'b', pch=24, bg='tan2', col='black')
+points(till_irr_clus5$C_means, -depths_cm, type = 'b', pch=24, bg='gold', col='black')
+points(notill_irr_clus9$C_means, -depths_cm, type='b', pch=23, bg='firebrick3', col='black')
+legend('bottomleft', legend=)
+
 #%C by tillage and all samples
 vioplot(pts_30cm$totC_30cm[pts_30cm$tillage=='till'], pts_30cm$totC_30cm[pts_30cm$tillage=='no till'], names = c('Tillage', 'No-till'))
 
