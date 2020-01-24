@@ -105,6 +105,10 @@ pts_50cm <- horizon_to_comp_v3(horizon_SPC = horizon_data, depth = 50)
 colnames(pts_50cm)
 lapply(pts_50cm[,2:12], summary)
 dim(pts_50cm)
+
+pts_100cm <- horizon_to_comp_v3(horizon_SPC = horizon_data, depth = 100)
+colnames(pts_100cm)
+lapply(pts_100cm[,2:12], summary)
 #check the aggregation
 pts_30cm[126,]
 #clay 30 cm: 51, 49.9, 51.15
@@ -135,7 +139,7 @@ pts_30cm$cluster_10 <- pts_ssurgo_extract_30cm$cluster_10[match(pts_30cm$Concate
 pts_30cm$cluster_11 <- pts_ssurgo_extract_30cm$cluster_11[match(pts_30cm$Concatenate, pts_ssurgo_extract_30cm$Concatenate)]
 pts_30cm$cluster_12 <- pts_ssurgo_extract_30cm$cluster_12[match(pts_30cm$Concatenate, pts_ssurgo_extract_30cm$Concatenate)]
 
-# write.csv(pts_30cm, file.path(workDir, 'CDFA_samples_cluster_30cm.csv'), row.names = FALSE)
+
 colnames(pts_30cm)
 tapply(pts_30cm$totC_30cm, pts_30cm$cluster_9, summary)
 tapply(pts_30cm$pH_H2O_30cm, pts_30cm$cluster_9, summary)
@@ -145,8 +149,8 @@ tapply(pts_30cm$bd_30cm, pts_30cm$cluster_9, summary)
 tapply(pts_30cm$bd_30cm, pts_30cm$cluster_9, summary)
 # write.csv(pts_ssurgo_extract_30cm, file.path(workDir, 'CDFA_pts_ssurgo_30cm_extract.csv'), row.names = FALSE)
 
-pts_ssurgo_extract_30cm <- read.csv(file.path(workDir, 'CDFA_pts_ssurgo_30cm_extract.csv'), stringsAsFactors = FALSE) 
-pts_30cm <- read.csv(file.path(workDir, 'CDFA_samples_cluster_30cm.csv'), stringsAsFactors = FALSE)
+# pts_ssurgo_extract_30cm <- read.csv(file.path(workDir, 'CDFA_pts_ssurgo_30cm_extract.csv'), stringsAsFactors = FALSE) 
+# pts_30cm <- read.csv(file.path(workDir, 'CDFA_samples_cluster_30cm.csv'), stringsAsFactors = FALSE)
 
 #add cluster info to 10 cm soil depth aggregation
 pts_10cm$cluster_2 <- pts_ssurgo_extract_30cm$cluster_2[match(pts_10cm$Concatenate, pts_ssurgo_extract_30cm$Concatenate)]
@@ -184,6 +188,8 @@ pts_30cm$irrigated_vs_dryfarm <- soil_data$irrigated.vs.dryfarm[match(pts_30cm$C
 unique(soil_data$organic.vs.conventional.vs.biodynamic)
 soil_data$organic.vs.conventional.vs.biodynamic[which(soil_data$organic.vs.conventional.vs.biodynamic=='organic')] <- 'Organic'
 pts_30cm$management_type <- soil_data$organic.vs.conventional.vs.biodynamic[match(pts_30cm$Concatenate, soil_data$Concatenate)]
+write.csv(pts_30cm, file.path(workDir, 'CDFA_samples_cluster_30cm.csv'), row.names = FALSE)
+
 #10 cm management info
 pts_10cm$tillage <- soil_data$till.or.no.till[match(pts_10cm$Concatenate, soil_data$Concatenate)]
 pts_10cm$compost_added <- soil_data$compost.added.[match(pts_10cm$Concatenate, soil_data$Concatenate)]
@@ -195,6 +201,7 @@ pts_50cm$tillage <- soil_data$till.or.no.till[match(pts_50cm$Concatenate, soil_d
 pts_50cm$compost_added <- soil_data$compost.added.[match(pts_50cm$Concatenate, soil_data$Concatenate)]
 pts_50cm$irrigated_vs_dryfarm <- soil_data$irrigated.vs.dryfarm[match(pts_50cm$Concatenate, soil_data$Concatenate)]
 pts_50cm$management_type <- soil_data$organic.vs.conventional.vs.biodynamic[match(pts_50cm$Concatenate, soil_data$Concatenate)]
+
 #make vioplots
 order_lgnd_9 <- c(3,6,5,9,4,2) #reflecting the clusters that are missing
 # vector_include <- table(pts_30cm$cluster_9[!is.na(pts_30cm$clay_30cm)]) > 4
@@ -311,7 +318,6 @@ table(pts_30cm$cluster_9[which(!is.na(pts_30cm$totC_30cm) & pts_30cm$management_
 #biodynamic samples with C
 table(pts_30cm$cluster_9[which(!is.na(pts_30cm$totC_30cm) & pts_30cm$management_type=='Biodynamic')])
 
-
 #org. samples with C content data counts by cluster 9 ID
 table(pts_30cm$cluster_9[which(!is.na(pts_30cm$totC_30cm) & pts_30cm$management_type=='Organic' & pts_30cm$tillage=='till')])
 table(pts_30cm$cluster_9[which(!is.na(pts_30cm$totC_30cm) & pts_30cm$management_type=='Organic' & pts_30cm$tillage=='no till')])
@@ -345,11 +351,11 @@ table(pts_30cm$cluster_9[which(!is.na(pts_30cm$kgOrg.m2_30cm) & pts_30cm$tillage
 #(a) Compare Till x Irrigated x Compost across these regions: cluster 3 (n=9) vs. cluster 5 (n=9) vs. cluster 6 (n=14)
 sum(!is.na(pts_30cm$totC_30cm) & pts_30cm$tillage=='till' & pts_30cm$irrigated_vs_dryfarm=='irrigated' & pts_30cm$compost_added=='yes'& pts_30cm$cluster_9==3, na.rm=TRUE) #9
 sum(!is.na(pts_30cm$totC_30cm) & pts_30cm$tillage=='till' & pts_30cm$irrigated_vs_dryfarm=='irrigated' & pts_30cm$compost_added=='yes'& pts_30cm$cluster_9==5, na.rm=TRUE)#9
-sum(!is.na(pts_30cm$totC_30cm) & pts_30cm$tillage=='till' & pts_30cm$irrigated_vs_dryfarm=='irrigated' & pts_30cm$compost_added=='yes'& pts_30cm$cluster_9==6, na.rm=TRUE)
+sum(!is.na(pts_30cm$totC_30cm) & pts_30cm$tillage=='till' & pts_30cm$irrigated_vs_dryfarm=='irrigated' & pts_30cm$compost_added=='yes'& pts_30cm$cluster_9==6, na.rm=TRUE) #14
 vioplot(pts_30cm$totC_30cm[which(pts_30cm$tillage=='till' & pts_30cm$irrigated_vs_dryfarm=='irrigated' & pts_30cm$compost_added=='yes'& pts_30cm$cluster_9==3)], pts_30cm$totC_30cm[which(pts_30cm$tillage=='till' & pts_30cm$irrigated_vs_dryfarm=='irrigated' & pts_30cm$compost_added=='yes'& pts_30cm$cluster_9==5)], pts_30cm$totC_30cm[which(pts_30cm$tillage=='till' & pts_30cm$irrigated_vs_dryfarm=='irrigated' & pts_30cm$compost_added=='yes'& pts_30cm$cluster_9==6)], names=c(3,5,6))
 
 #(b)	Compare tillage in cluster 6 (controlling for irrigation and compost): till x irrigated x compost (n=14); no-till x irrigated x compost (n=13); dryfarm x tillage x compost (n=12)
-sum(!is.na(pts_30cm$totC_30cm) & pts_30cm$tillage=='till' & pts_30cm$irrigated_vs_dryfarm=='irrigated' & pts_30cm$compost_added=='yes'& pts_30cm$cluster_9==6, na.rm=TRUE) #9
+sum(!is.na(pts_30cm$totC_30cm) & pts_30cm$tillage=='till' & pts_30cm$irrigated_vs_dryfarm=='irrigated' & pts_30cm$compost_added=='yes'& pts_30cm$cluster_9==6, na.rm=TRUE) #14
 sum(!is.na(pts_30cm$totC_30cm) & pts_30cm$tillage=='no till' & pts_30cm$irrigated_vs_dryfarm=='irrigated' & pts_30cm$compost_added=='yes'& pts_30cm$cluster_9==6, na.rm=TRUE)#13
 sum(!is.na(pts_30cm$totC_30cm) & pts_30cm$tillage=='till' & pts_30cm$irrigated_vs_dryfarm=='dryfarm' & pts_30cm$compost_added=='yes'& pts_30cm$cluster_9==6, na.rm=TRUE) #12
 vioplot(pts_30cm$totC_30cm[which(pts_30cm$tillage=='till' & pts_30cm$irrigated_vs_dryfarm=='irrigated' & pts_30cm$compost_added=='yes'& pts_30cm$cluster_9==6)], pts_30cm$totC_30cm[which(pts_30cm$tillage=='no till' & pts_30cm$irrigated_vs_dryfarm=='irrigated' & pts_30cm$compost_added=='yes'& pts_30cm$cluster_9==6)], pts_30cm$totC_30cm[which(pts_30cm$tillage=='till' & pts_30cm$irrigated_vs_dryfarm=='dryfarm' & pts_30cm$compost_added=='yes' & pts_30cm$cluster_9==6)], names=c('T-Irr', 'NT-Irr', 'T-DF'))
@@ -392,7 +398,6 @@ soil_data_cluster3_of_9$soil_C_30_50cm <-  soil_data$C....g.g..Oven.dry.converte
 soil_data_cluster3_of_9$soil_C_50_100cm <-  soil_data$C....g.g..Oven.dry.converted[soil_data$Depth..cm.=='50_100'][match(soil_data_cluster3_of_9$ID, soil_data$Concatenate[soil_data$Depth..cm.=='50_100'])]
 till_irr_clus3 <- data.frame(C_means=sapply(soil_data_cluster3_of_9[which(soil_data_cluster3_of_9$tillage=='till' & soil_data_cluster3_of_9$irrigation=='irrigated' & soil_data_cluster3_of_9$compost=='yes'),5:9], mean), C_se=sapply(soil_data_cluster3_of_9[which(soil_data_cluster3_of_9$tillage=='till' & soil_data_cluster3_of_9$irrigation=='irrigated' & soil_data_cluster3_of_9$compost=='yes'),5:9], function(x) {sd(x)/sqrt(length(x[!is.na(x)]))}))
 
-
 soil_data_cluster9_of_9 <- data.frame(ID=pts_30cm$Concatenate[which(pts_30cm$cluster_9==9)], tillage=pts_30cm$tillage[which(pts_30cm$cluster_9==9)], irrigation=pts_30cm$irrigated_vs_dryfarm[which(pts_30cm$cluster_9==9)], compost=pts_30cm$compost_added[which(pts_30cm$cluster_9==9)], stringsAsFactors = FALSE)
 soil_data_cluster9_of_9$soil_C_0_5cm <-  soil_data$C....g.g..Oven.dry.converted[soil_data$Depth..cm.=='0_5'][match(soil_data_cluster9_of_9$ID, soil_data$Concatenate[soil_data$Depth..cm.=='0_5'])]
 soil_data_cluster9_of_9$soil_C_5_10cm <-  soil_data$C....g.g..Oven.dry.converted[soil_data$Depth..cm.=='5_10'][match(soil_data_cluster9_of_9$ID, soil_data$Concatenate[soil_data$Depth..cm.=='5_10'])]
@@ -400,7 +405,6 @@ soil_data_cluster9_of_9$soil_C_10_30cm <-  soil_data$C....g.g..Oven.dry.converte
 soil_data_cluster9_of_9$soil_C_30_50cm <-  soil_data$C....g.g..Oven.dry.converted[soil_data$Depth..cm.=='30_50'][match(soil_data_cluster9_of_9$ID, soil_data$Concatenate[soil_data$Depth..cm.=='30_50'])]
 soil_data_cluster9_of_9$soil_C_50_100cm <-  soil_data$C....g.g..Oven.dry.converted[soil_data$Depth..cm.=='50_100'][match(soil_data_cluster9_of_9$ID, soil_data$Concatenate[soil_data$Depth..cm.=='50_100'])]
 notill_irr_clus9 <- data.frame(C_means=sapply(soil_data_cluster9_of_9[which(soil_data_cluster9_of_9$tillage=='no till' & soil_data_cluster9_of_9$irrigation=='irrigated' & soil_data_cluster9_of_9$compost=='yes'),5:9], mean), C_se=sapply(soil_data_cluster9_of_9[which(soil_data_cluster9_of_9$tillage=='no till' & soil_data_cluster9_of_9$irrigation=='irrigated' & soil_data_cluster9_of_9$compost=='yes'),5:9], function(x) {sd(x)/sqrt(length(x[!is.na(x)]))}))
-
 
 soil_data_cluster5_of_9 <- data.frame(ID=pts_30cm$Concatenate[which(pts_30cm$cluster_9==5)], tillage=pts_30cm$tillage[which(pts_30cm$cluster_9==5)], irrigation=pts_30cm$irrigated_vs_dryfarm[which(pts_30cm$cluster_9==5)], compost=pts_30cm$compost_added[which(pts_30cm$cluster_9==5)], stringsAsFactors = FALSE)
 soil_data_cluster5_of_9$soil_C_0_5cm <-  soil_data$C....g.g..Oven.dry.converted[soil_data$Depth..cm.=='0_5'][match(soil_data_cluster5_of_9$ID, soil_data$Concatenate[soil_data$Depth..cm.=='0_5'])]
@@ -410,15 +414,69 @@ soil_data_cluster5_of_9$soil_C_30_50cm <-  soil_data$C....g.g..Oven.dry.converte
 soil_data_cluster5_of_9$soil_C_50_100cm <-  soil_data$C....g.g..Oven.dry.converted[soil_data$Depth..cm.=='50_100'][match(soil_data_cluster5_of_9$ID, soil_data$Concatenate[soil_data$Depth..cm.=='50_100'])]
 till_irr_clus5 <- data.frame(C_means=sapply(soil_data_cluster5_of_9[which(soil_data_cluster5_of_9$tillage=='till' & soil_data_cluster5_of_9$irrigation=='irrigated' & soil_data_cluster5_of_9$compost=='yes'),5:9], mean), C_se=sapply(soil_data_cluster5_of_9[which(soil_data_cluster5_of_9$tillage=='till' & soil_data_cluster5_of_9$irrigation=='irrigated' & soil_data_cluster5_of_9$compost=='yes'),5:9], function(x) {sd(x)/sqrt(length(x[!is.na(x)]))}))
 
+
 depths_cm <- c(2.5, 7.5, 20, 40, 75)
-plot(till_irr_clus6$C_means, -depths_cm, type='b', xlim=c(0,2.6), pch=24, bg='tan4', col='black', cex=1, xlab='Soil organic carbon (%)', ylab='Depth (cm)', yaxt='n')
+tiff(file = file.path(FiguresDir, 'v2', 'CDFA validation', 'CDFA_soilC_profile.tif'), pointsize = 11, family = 'Times New Roman', width = 9, height = 3.5, units = 'in', res=800, compression = 'lzw')
+par(mar=c(3.5, 3.5, 0.5, 0.5))
+plot(till_irr_clus6$C_means, -depths_cm, type='b', xlim=c(0.1,2.6), pch=24, bg='tan4', col='black', cex=1, xlab='', ylab='', yaxt='n')
 axis(side = 2, at=seq(from=-100, to=0, by=20), labels=-seq(from=-100, to=0, by=20))
+mtext(text='Soil organic carbon (%)', side = 1, line=2.25)
+mtext(text='Depth (cm)', side = 2, line=2.25)
 points(till_dry_clus6$C_means, -depths_cm, type='b', pch=24, bg='tan4', col='black', lty=2)
 points(notill_irr_clus6$C_means, -depths_cm, type='b', pch=23, bg='tan4', col='black')
 points(till_irr_clus3$C_means, -depths_cm, type = 'b', pch=24, bg='tan2', col='black')
 points(till_irr_clus5$C_means, -depths_cm, type = 'b', pch=24, bg='gold', col='black')
 points(notill_irr_clus9$C_means, -depths_cm, type='b', pch=23, bg='firebrick3', col='black')
-legend('bottomleft', legend=)
+legend('bottomright', legend=c('2. Loams w/ no res. & mod OM-low SS', '3a. Loams w/ no res. & mod OM-mod SS', '3b. Loams w/ no res. & mod OM-mod SS: No-till', '3c. Loams w/ no res. & mod OM-mod SS: Dry farm', '4. Loams w/ res. & low OM', '5. Loams w/ res. & mod OM: No-till'), pch=c(24,24,23,24,24,23), lty=c(1,1,1,2,1,1), pt.bg=c('tan2', 'tan4', 'tan4', 'tan4', 'gold', 'firebrick3'), col='black')
+dev.off()
+
+#make barplot of 30cm SOC kg m^-2
+plot_da_error <- function(barnum, barcenters, df) {
+  segments(x0=barcenters[barnum,], y0=df$means[barnum] + qnorm(0.975) * df$sd[barnum] / sqrt(df$n[barnum]), x1=barcenters[barnum,], y1=df$means[barnum] + qnorm(0.025) * df$sd[barnum] / sqrt(df$n[barnum]), lwd = 1.2)
+}
+kgOrgC_30cm_data <- data.frame(means=c(mean(pts_30cm$kgOrg.m2_30cm[which(pts_30cm$tillage=='till' & pts_30cm$irrigated_vs_dryfarm=='irrigated' & pts_30cm$compost_added=='yes'& pts_30cm$cluster_9==3)], na.rm=TRUE), mean(pts_30cm$kgOrg.m2_30cm[which(pts_30cm$tillage=='till' & pts_30cm$irrigated_vs_dryfarm=='irrigated' & pts_30cm$compost_added=='yes'& pts_30cm$cluster_9==6)], na.rm=TRUE), mean(pts_30cm$kgOrg.m2_30cm[which(pts_30cm$tillage=='no till' & pts_30cm$irrigated_vs_dryfarm=='irrigated' & pts_30cm$compost_added=='yes'& pts_30cm$cluster_9==6)], na.rm=TRUE), mean(pts_30cm$kgOrg.m2_30cm[which(pts_30cm$tillage=='till' & pts_30cm$irrigated_vs_dryfarm=='dryfarm' & pts_30cm$compost_added=='yes' & pts_30cm$cluster_9==6)], na.rm=TRUE), mean(pts_30cm$kgOrg.m2_30cm[which(pts_30cm$tillage=='till' & pts_30cm$irrigated_vs_dryfarm=='irrigated' & pts_30cm$compost_added=='yes'& pts_30cm$cluster_9==5)], na.rm=TRUE), mean(pts_30cm$kgOrg.m2_30cm[which(pts_30cm$tillage=='no till' & pts_30cm$irrigated_vs_dryfarm=='irrigated' & pts_30cm$compost_added=='yes'& pts_30cm$cluster_9==9)], na.rm=TRUE)), sd=c(sd(pts_30cm$kgOrg.m2_30cm[which(pts_30cm$tillage=='till' & pts_30cm$irrigated_vs_dryfarm=='irrigated' & pts_30cm$compost_added=='yes'& pts_30cm$cluster_9==3)], na.rm=TRUE), sd(pts_30cm$kgOrg.m2_30cm[which(pts_30cm$tillage=='till' & pts_30cm$irrigated_vs_dryfarm=='irrigated' & pts_30cm$compost_added=='yes'& pts_30cm$cluster_9==6)], na.rm=TRUE), sd(pts_30cm$kgOrg.m2_30cm[which(pts_30cm$tillage=='no till' & pts_30cm$irrigated_vs_dryfarm=='irrigated' & pts_30cm$compost_added=='yes'& pts_30cm$cluster_9==6)], na.rm=TRUE), sd(pts_30cm$kgOrg.m2_30cm[which(pts_30cm$tillage=='till' & pts_30cm$irrigated_vs_dryfarm=='dryfarm' & pts_30cm$compost_added=='yes' & pts_30cm$cluster_9==6)], na.rm=TRUE), sd(pts_30cm$kgOrg.m2_30cm[which(pts_30cm$tillage=='till' & pts_30cm$irrigated_vs_dryfarm=='irrigated' & pts_30cm$compost_added=='yes'& pts_30cm$cluster_9==5)], na.rm=TRUE), sd(pts_30cm$kgOrg.m2_30cm[which(pts_30cm$tillage=='no till' & pts_30cm$irrigated_vs_dryfarm=='irrigated' & pts_30cm$compost_added=='yes'& pts_30cm$cluster_9==9)], na.rm=TRUE)), n=c(sum(!is.na(pts_30cm$kgOrg.m2_30cm[which(pts_30cm$tillage=='till' & pts_30cm$irrigated_vs_dryfarm=='irrigated' & pts_30cm$compost_added=='yes'& pts_30cm$cluster_9==3)])), sum(!is.na(pts_30cm$kgOrg.m2_30cm[which(pts_30cm$tillage=='till' & pts_30cm$irrigated_vs_dryfarm=='irrigated' & pts_30cm$compost_added=='yes'& pts_30cm$cluster_9==6)])), sum(!is.na(pts_30cm$kgOrg.m2_30cm[which(pts_30cm$tillage=='no till' & pts_30cm$irrigated_vs_dryfarm=='irrigated' & pts_30cm$compost_added=='yes'& pts_30cm$cluster_9==6)])), sum(!is.na(pts_30cm$kgOrg.m2_30cm[which(pts_30cm$tillage=='till' & pts_30cm$irrigated_vs_dryfarm=='dryfarm' & pts_30cm$compost_added=='yes' & pts_30cm$cluster_9==6)])), sum(!is.na(pts_30cm$kgOrg.m2_30cm[which(pts_30cm$tillage=='till' & pts_30cm$irrigated_vs_dryfarm=='irrigated' & pts_30cm$compost_added=='yes'& pts_30cm$cluster_9==5)])), sum(!is.na(pts_30cm$kgOrg.m2_30cm[which(pts_30cm$tillage=='no till' & pts_30cm$irrigated_vs_dryfarm=='irrigated' & pts_30cm$compost_added=='yes'& pts_30cm$cluster_9==9)]))), row.names = c('2. Loams w/ no res. & mod OM-low SS', '3a. Loams w/ no res. & mod OM-mod SS', '3b. Loams w/ no res. & mod OM-mod SS: No-till', '3c. Loams w/ no res. & mod OM-mod SS: Dry farm', '4. Loams w/ res. & low OM', '5. Loams w/ res. & mod OM: No-till'))
+
+tiff(file = file.path(FiguresDir, 'v2', 'CDFA validation', 'CDFA_soilC_kg_0_30cm.tif'), pointsize = 11, family = 'Times New Roman', width = 4.5, height = 3, units = 'in', res=800, compression = 'lzw')
+par(mar=c(3, 4, 0.5, 0.5))
+barcenters_30cm <- barplot(height=kgOrgC_30cm_data$means, col=c('tan2', 'tan4', 'tan4', 'tan4', 'gold', 'firebrick3'), ylab='', names.arg=c('2', '3a', '3b', '3c', '4', '5'), ylim=c(0,8.5))
+mtext(text=expression('0-30 cm SOC (kg'~m^-2*')'), side = 2, line = 2.5)
+plot_da_error(1, barcenters_30cm, kgOrgC_30cm_data)
+plot_da_error(2, barcenters_30cm, kgOrgC_30cm_data)
+plot_da_error(3, barcenters_30cm, kgOrgC_30cm_data)
+plot_da_error(4, barcenters_30cm, kgOrgC_30cm_data)
+plot_da_error(5, barcenters_30cm, kgOrgC_30cm_data)
+plot_da_error(6, barcenters_30cm, kgOrgC_30cm_data)
+dev.off()
+
+#plot 50 cm C contents
+kgOrgC_50cm_data <- data.frame(means=c(mean(pts_50cm$kgOrg.m2_50cm[which(pts_50cm$tillage=='till' & pts_50cm$irrigated_vs_dryfarm=='irrigated' & pts_50cm$compost_added=='yes'& pts_50cm$cluster_9==3)], na.rm=TRUE), mean(pts_50cm$kgOrg.m2_50cm[which(pts_50cm$tillage=='till' & pts_50cm$irrigated_vs_dryfarm=='irrigated' & pts_50cm$compost_added=='yes'& pts_50cm$cluster_9==6)], na.rm=TRUE), mean(pts_50cm$kgOrg.m2_50cm[which(pts_50cm$tillage=='no till' & pts_50cm$irrigated_vs_dryfarm=='irrigated' & pts_50cm$compost_added=='yes'& pts_50cm$cluster_9==6)], na.rm=TRUE), mean(pts_50cm$kgOrg.m2_50cm[which(pts_50cm$tillage=='till' & pts_50cm$irrigated_vs_dryfarm=='dryfarm' & pts_50cm$compost_added=='yes' & pts_50cm$cluster_9==6)], na.rm=TRUE), mean(pts_50cm$kgOrg.m2_50cm[which(pts_50cm$tillage=='till' & pts_50cm$irrigated_vs_dryfarm=='irrigated' & pts_50cm$compost_added=='yes'& pts_50cm$cluster_9==5)], na.rm=TRUE), mean(pts_50cm$kgOrg.m2_50cm[which(pts_50cm$tillage=='no till' & pts_50cm$irrigated_vs_dryfarm=='irrigated' & pts_50cm$compost_added=='yes'& pts_50cm$cluster_9==9)], na.rm=TRUE)), sd=c(sd(pts_50cm$kgOrg.m2_50cm[which(pts_50cm$tillage=='till' & pts_50cm$irrigated_vs_dryfarm=='irrigated' & pts_50cm$compost_added=='yes'& pts_50cm$cluster_9==3)], na.rm=TRUE), sd(pts_50cm$kgOrg.m2_50cm[which(pts_50cm$tillage=='till' & pts_50cm$irrigated_vs_dryfarm=='irrigated' & pts_50cm$compost_added=='yes'& pts_50cm$cluster_9==6)], na.rm=TRUE), sd(pts_50cm$kgOrg.m2_50cm[which(pts_50cm$tillage=='no till' & pts_50cm$irrigated_vs_dryfarm=='irrigated' & pts_50cm$compost_added=='yes'& pts_50cm$cluster_9==6)], na.rm=TRUE), sd(pts_50cm$kgOrg.m2_50cm[which(pts_50cm$tillage=='till' & pts_50cm$irrigated_vs_dryfarm=='dryfarm' & pts_50cm$compost_added=='yes' & pts_50cm$cluster_9==6)], na.rm=TRUE), sd(pts_50cm$kgOrg.m2_50cm[which(pts_50cm$tillage=='till' & pts_50cm$irrigated_vs_dryfarm=='irrigated' & pts_50cm$compost_added=='yes'& pts_50cm$cluster_9==5)], na.rm=TRUE), sd(pts_50cm$kgOrg.m2_50cm[which(pts_50cm$tillage=='no till' & pts_50cm$irrigated_vs_dryfarm=='irrigated' & pts_50cm$compost_added=='yes'& pts_50cm$cluster_9==9)], na.rm=TRUE)), n=c(sum(!is.na(pts_50cm$kgOrg.m2_50cm[which(pts_50cm$tillage=='till' & pts_50cm$irrigated_vs_dryfarm=='irrigated' & pts_50cm$compost_added=='yes'& pts_50cm$cluster_9==3)])), sum(!is.na(pts_50cm$kgOrg.m2_50cm[which(pts_50cm$tillage=='till' & pts_50cm$irrigated_vs_dryfarm=='irrigated' & pts_50cm$compost_added=='yes'& pts_50cm$cluster_9==6)])), sum(!is.na(pts_50cm$kgOrg.m2_50cm[which(pts_50cm$tillage=='no till' & pts_50cm$irrigated_vs_dryfarm=='irrigated' & pts_50cm$compost_added=='yes'& pts_50cm$cluster_9==6)])), sum(!is.na(pts_50cm$kgOrg.m2_50cm[which(pts_50cm$tillage=='till' & pts_50cm$irrigated_vs_dryfarm=='dryfarm' & pts_50cm$compost_added=='yes' & pts_50cm$cluster_9==6)])), sum(!is.na(pts_50cm$kgOrg.m2_50cm[which(pts_50cm$tillage=='till' & pts_50cm$irrigated_vs_dryfarm=='irrigated' & pts_50cm$compost_added=='yes'& pts_50cm$cluster_9==5)])), sum(!is.na(pts_50cm$kgOrg.m2_50cm[which(pts_50cm$tillage=='no till' & pts_50cm$irrigated_vs_dryfarm=='irrigated' & pts_50cm$compost_added=='yes'& pts_50cm$cluster_9==9)]))), row.names = c('2. Loams w/ no res. & mod OM-low SS', '3a. Loams w/ no res. & mod OM-mod SS', '3b. Loams w/ no res. & mod OM-mod SS: No-till', '3c. Loams w/ no res. & mod OM-mod SS: Dry farm', '4. Loams w/ res. & low OM', '5. Loams w/ res. & mod OM: No-till'))
+
+tiff(file = file.path(FiguresDir, 'v2', 'CDFA validation', 'CDFA_soilC_kg_0_50cm.tif'), pointsize = 11, family = 'Times New Roman', width = 4.5, height = 3, units = 'in', res=800, compression = 'lzw')
+par(mar=c(3, 4, 0.5, 0.5))
+barcenters_50cm <- barplot(height=kgOrgC_50cm_data$means, col=c('tan2', 'tan4', 'tan4', 'tan4', 'gold', 'firebrick3'), ylab='', names.arg=c('2', '3a', '3b', '3c', '4', '5'), ylim=c(0,13))
+mtext(text=expression('0-50 cm SOC (kg'~m^-2*')'), side = 2, line = 2.5)
+plot_da_error(1, barcenters_50cm, kgOrgC_50cm_data)
+plot_da_error(2, barcenters_50cm, kgOrgC_50cm_data)
+plot_da_error(3, barcenters_50cm, kgOrgC_50cm_data)
+plot_da_error(4, barcenters_50cm, kgOrgC_50cm_data)
+plot_da_error(5, barcenters_50cm, kgOrgC_50cm_data)
+plot_da_error(6, barcenters_50cm, kgOrgC_50cm_data)
+dev.off()
+
+#plot 50 cm C contents
+kgOrgC_10cm_data <- data.frame(means=c(mean(pts_10cm$kgOrg.m2_10cm[which(pts_10cm$tillage=='till' & pts_10cm$irrigated_vs_dryfarm=='irrigated' & pts_10cm$compost_added=='yes'& pts_10cm$cluster_9==3)], na.rm=TRUE), mean(pts_10cm$kgOrg.m2_10cm[which(pts_10cm$tillage=='till' & pts_10cm$irrigated_vs_dryfarm=='irrigated' & pts_10cm$compost_added=='yes'& pts_10cm$cluster_9==6)], na.rm=TRUE), mean(pts_10cm$kgOrg.m2_10cm[which(pts_10cm$tillage=='no till' & pts_10cm$irrigated_vs_dryfarm=='irrigated' & pts_10cm$compost_added=='yes'& pts_10cm$cluster_9==6)], na.rm=TRUE), mean(pts_10cm$kgOrg.m2_10cm[which(pts_10cm$tillage=='till' & pts_10cm$irrigated_vs_dryfarm=='dryfarm' & pts_10cm$compost_added=='yes' & pts_10cm$cluster_9==6)], na.rm=TRUE), mean(pts_10cm$kgOrg.m2_10cm[which(pts_10cm$tillage=='till' & pts_10cm$irrigated_vs_dryfarm=='irrigated' & pts_10cm$compost_added=='yes'& pts_10cm$cluster_9==5)], na.rm=TRUE), mean(pts_10cm$kgOrg.m2_10cm[which(pts_10cm$tillage=='no till' & pts_10cm$irrigated_vs_dryfarm=='irrigated' & pts_10cm$compost_added=='yes'& pts_10cm$cluster_9==9)], na.rm=TRUE)), sd=c(sd(pts_10cm$kgOrg.m2_10cm[which(pts_10cm$tillage=='till' & pts_10cm$irrigated_vs_dryfarm=='irrigated' & pts_10cm$compost_added=='yes'& pts_10cm$cluster_9==3)], na.rm=TRUE), sd(pts_10cm$kgOrg.m2_10cm[which(pts_10cm$tillage=='till' & pts_10cm$irrigated_vs_dryfarm=='irrigated' & pts_10cm$compost_added=='yes'& pts_10cm$cluster_9==6)], na.rm=TRUE), sd(pts_10cm$kgOrg.m2_10cm[which(pts_10cm$tillage=='no till' & pts_10cm$irrigated_vs_dryfarm=='irrigated' & pts_10cm$compost_added=='yes'& pts_10cm$cluster_9==6)], na.rm=TRUE), sd(pts_10cm$kgOrg.m2_10cm[which(pts_10cm$tillage=='till' & pts_10cm$irrigated_vs_dryfarm=='dryfarm' & pts_10cm$compost_added=='yes' & pts_10cm$cluster_9==6)], na.rm=TRUE), sd(pts_10cm$kgOrg.m2_10cm[which(pts_10cm$tillage=='till' & pts_10cm$irrigated_vs_dryfarm=='irrigated' & pts_10cm$compost_added=='yes'& pts_10cm$cluster_9==5)], na.rm=TRUE), sd(pts_10cm$kgOrg.m2_10cm[which(pts_10cm$tillage=='no till' & pts_10cm$irrigated_vs_dryfarm=='irrigated' & pts_10cm$compost_added=='yes'& pts_10cm$cluster_9==9)], na.rm=TRUE)), n=c(sum(!is.na(pts_10cm$kgOrg.m2_10cm[which(pts_10cm$tillage=='till' & pts_10cm$irrigated_vs_dryfarm=='irrigated' & pts_10cm$compost_added=='yes'& pts_10cm$cluster_9==3)])), sum(!is.na(pts_10cm$kgOrg.m2_10cm[which(pts_10cm$tillage=='till' & pts_10cm$irrigated_vs_dryfarm=='irrigated' & pts_10cm$compost_added=='yes'& pts_10cm$cluster_9==6)])), sum(!is.na(pts_10cm$kgOrg.m2_10cm[which(pts_10cm$tillage=='no till' & pts_10cm$irrigated_vs_dryfarm=='irrigated' & pts_10cm$compost_added=='yes'& pts_10cm$cluster_9==6)])), sum(!is.na(pts_10cm$kgOrg.m2_10cm[which(pts_10cm$tillage=='till' & pts_10cm$irrigated_vs_dryfarm=='dryfarm' & pts_10cm$compost_added=='yes' & pts_10cm$cluster_9==6)])), sum(!is.na(pts_10cm$kgOrg.m2_10cm[which(pts_10cm$tillage=='till' & pts_10cm$irrigated_vs_dryfarm=='irrigated' & pts_10cm$compost_added=='yes'& pts_10cm$cluster_9==5)])), sum(!is.na(pts_10cm$kgOrg.m2_10cm[which(pts_10cm$tillage=='no till' & pts_10cm$irrigated_vs_dryfarm=='irrigated' & pts_10cm$compost_added=='yes'& pts_10cm$cluster_9==9)]))), row.names = c('2. Loams w/ no res. & mod OM-low SS', '3a. Loams w/ no res. & mod OM-mod SS', '3b. Loams w/ no res. & mod OM-mod SS: No-till', '3c. Loams w/ no res. & mod OM-mod SS: Dry farm', '4. Loams w/ res. & low OM', '5. Loams w/ res. & mod OM: No-till'))
+
+tiff(file = file.path(FiguresDir, 'v2', 'CDFA validation', 'CDFA_soilC_kg_0_10cm.tif'), pointsize = 11, family = 'Times New Roman', width = 4.5, height = 3, units = 'in', res=800, compression = 'lzw')
+par(mar=c(3, 4, 0.5, 0.5))
+barcenters_10cm <- barplot(height=kgOrgC_10cm_data$means, col=c('tan2', 'tan4', 'tan4', 'tan4', 'gold', 'firebrick3'), ylab='', names.arg=c('2', '3a', '3b', '3c', '4', '5'), ylim=c(0,3.9))
+mtext(text=expression('0-10 cm SOC (kg'~m^-2*')'), side = 2, line = 2.5)
+plot_da_error(1, barcenters_10cm, kgOrgC_10cm_data)
+plot_da_error(2, barcenters_10cm, kgOrgC_10cm_data)
+plot_da_error(3, barcenters_10cm, kgOrgC_10cm_data)
+plot_da_error(4, barcenters_10cm, kgOrgC_10cm_data)
+plot_da_error(5, barcenters_10cm, kgOrgC_10cm_data)
+plot_da_error(6, barcenters_10cm, kgOrgC_10cm_data)
+dev.off()
 
 #%C by tillage and all samples
 vioplot(pts_30cm$totC_30cm[pts_30cm$tillage=='till'], pts_30cm$totC_30cm[pts_30cm$tillage=='no till'], names = c('Tillage', 'No-till'))
