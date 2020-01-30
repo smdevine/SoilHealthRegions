@@ -4,7 +4,7 @@ library(vioplot)
 library(extrafont)
 library(extrafontdb)
 loadfonts(device = 'win')
-laptop <- TRUE
+laptop <- FALSE
 if (laptop) {
   mainDir <- 'C:/Users/smdevine/Desktop/post doc'
   dataDir <- 'C:/Users/smdevine/Desktop/post doc/soil health/summaries/valley_final' #was valley_trial
@@ -195,12 +195,14 @@ pts_10cm$tillage <- soil_data$till.or.no.till[match(pts_10cm$Concatenate, soil_d
 pts_10cm$compost_added <- soil_data$compost.added.[match(pts_10cm$Concatenate, soil_data$Concatenate)]
 pts_10cm$irrigated_vs_dryfarm <- soil_data$irrigated.vs.dryfarm[match(pts_10cm$Concatenate, soil_data$Concatenate)]
 pts_10cm$management_type <- soil_data$organic.vs.conventional.vs.biodynamic[match(pts_10cm$Concatenate, soil_data$Concatenate)]
+write.csv(pts_10cm, file.path(workDir, 'CDFA_samples_cluster_10cm.csv'), row.names = FALSE)
 
 #50 cm management info
 pts_50cm$tillage <- soil_data$till.or.no.till[match(pts_50cm$Concatenate, soil_data$Concatenate)]
 pts_50cm$compost_added <- soil_data$compost.added.[match(pts_50cm$Concatenate, soil_data$Concatenate)]
 pts_50cm$irrigated_vs_dryfarm <- soil_data$irrigated.vs.dryfarm[match(pts_50cm$Concatenate, soil_data$Concatenate)]
 pts_50cm$management_type <- soil_data$organic.vs.conventional.vs.biodynamic[match(pts_50cm$Concatenate, soil_data$Concatenate)]
+write.csv(pts_50cm, file.path(workDir, 'CDFA_samples_cluster_50cm.csv'), row.names = FALSE)
 
 #make vioplots
 order_lgnd_9 <- c(3,6,5,9,4,2) #reflecting the clusters that are missing
