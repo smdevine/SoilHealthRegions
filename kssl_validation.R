@@ -153,6 +153,38 @@ write.csv(kssl_ssurgo_30cm, file.path(ksslDir, 'kssl_pts_ssurgo_30cm_extract.csv
 
 kssl_points_30cm <- read.csv(file.path(ksslDir, 'kssl_cluster_30cm_NArm.csv'), stringsAsFactors = FALSE)
 
+dim(kssl_points_30cm)
+sum(!is.na(kssl_points_30cm$clay_30cm) & !is.na(kssl_points_30cm$oc_30cm) & !is.na(kssl_points_30cm$cec_7_30cm) & !is.na(kssl_points_30cm$bd_13b_30cm) & !is.na(kssl_points_30cm$ec_30cm) & !is.na(kssl_points_30cm$pH_H2O_30cm) & !is.na(kssl_points_30cm$lep_30cm) & !is.na(kssl_points_30cm$awc_30cm)) #only 60!
+lapply(kssl_points_30cm[,c('clay_30cm', 'oc_30cm', 'cec_7_30cm', 'bd_13b_30cm', 'ec_30cm', 'pH_H2O_30cm', 'lep_30cm', 'awc_30cm')], function(x) sum(!is.na(x)))
+
+clus_5_names <- c()
+clus_6_names <- c()
+clus_7_names <- c('3. Coarse w/pans', '6. Fine saline-sodic', '5. Coarse saline-sodic', '1. Coarse w/no restrictions', '7. Fine shrink-swell', '2. Loamy w/no restrictions', '4. Loamy w/pans')
+
+compare_region_means <- function(df, names, cluster_no, y) {
+  x <- names[match(df[[paste0('cluster_', cluster_no)]], 1:cluster_no)]
+  y <- df[[y]]
+  print(summary(aov(y ~ x)))
+  print(TukeyHSD(aov(y ~ x), ordered=TRUE))
+}
+compare_region_means(kssl_points_30cm, clus_7_names, 7, 'clay_30cm')
+compare_region_means(kssl_points_30cm, clus_7_names, 7, 'om_30cm')
+compare_region_means(kssl_points_30cm, clus_7_names, 7, 'lep_30cm')
+compare_region_means(kssl_points_30cm, clus_7_names, 7, 'lep_30cm')
+#analysis of variance by cluster
+summary(aov(clay_30cm ~ as.factor(cluster_2), kssl_points_30cm))
+summary(aov(clay_30cm ~ as.factor(cluster_3), kssl_points_30cm))
+summary(aov(clay_30cm ~ as.factor(cluster_4), kssl_points_30cm))
+summary(aov(clay_30cm ~ as.factor(cluster_5), kssl_points_30cm))
+TukeyHSD(aov(clay_30cm ~ as.factor(cluster_5), kssl_points_30cm), ordered=TRUE)
+summary(aov(clay_30cm ~ cluster_6, kssl_points_30cm))
+summary(aov(clay_30cm ~ cluster_7, kssl_points_30cm))
+TukeyHSD(aov(clay_30cm ~ as.factor(cluster_7), kssl_points_30cm), ordered=TRUE)
+summary(aov(clay_30cm ~ cluster_8, kssl_points_30cm))
+summary(aov(clay_30cm ~ cluster_9, kssl_points_30cm))
+
+
+
 order_lgnd_9 <- c(1,3,6,5,9,7,8,2)
 vioplot_kssl_clus9 <- function(df, varname, ylim_vioplot, plot_order, labnames, ylab, fname, mar, group_names) {
   plot_order2 <- (1:9)[plot_order]
