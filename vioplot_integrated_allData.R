@@ -38,14 +38,14 @@ order_lgnd_6 <- c(3,6,5,4,1,2)
 order_lgnd_5 <- c(2,1,5,4,3)
 clus_5_colors <- c('tan4', 'lightgoldenrod', 'violetred', 'lightblue1', 'firebrick3')
 kssl_points_30cm <- read.csv(file.path(ksslDir, 'kssl_cluster_30cm_NArm.csv'), stringsAsFactors = FALSE)
-kssl_points_30cm$xdim_vioplot <- match(kssl_points_30cm$cluster_9, order_lgnd_9)
+kssl_points_30cm$xdim_vioplot9 <- match(kssl_points_30cm$cluster_9, order_lgnd_9)
 kssl_points_30cm$xdim_vioplot7 <- match(kssl_points_30cm$cluster_7, order_lgnd_7)
 kssl_points_30cm$xdim_vioplot6 <- match(kssl_points_30cm$cluster_6, order_lgnd_6)
 kssl_points_30cm$xdim_vioplot5 <- match(kssl_points_30cm$cluster_5, order_lgnd_5)
 kssl_points_30cm$lep_30cm <- kssl_points_30cm$lep_30cm*100 #to match SSURGO scale
 
 kerri_points_30cm <- read.csv(file.path(kerriDir, 'CDFA_samples_cluster_30cm.csv'), stringsAsFactors = FALSE)
-kerri_points_30cm$xdim_vioplot <- match(kerri_points_30cm$cluster_9, order_lgnd_9)
+kerri_points_30cm$xdim_vioplot9 <- match(kerri_points_30cm$cluster_9, order_lgnd_9)
 kerri_points_30cm$xdim_vioplot7 <- match(kerri_points_30cm$cluster_7, order_lgnd_7)
 kerri_points_30cm$xdim_vioplot6 <- match(kerri_points_30cm$cluster_6, order_lgnd_6)
 kerri_points_30cm$xdim_vioplot5 <- match(kerri_points_30cm$cluster_5, order_lgnd_5)
@@ -59,11 +59,11 @@ vioplot_mod_clus9_validation <- function(df, varname, ylim_vioplot, plot_order, 
   par(mar=mar)
   vioplot(rep(df[[varname]][df$cluster_9==plot_order2[1]], times=round(df$area_ac[df$cluster_9==plot_order2[1]]/area_fact, 0)), rep(df[[varname]][df$cluster_9==plot_order2[2]], times=round(df$area_ac[df$cluster_9==plot_order2[2]]/area_fact, 0)), rep(df[[varname]][df$cluster_9==plot_order2[3]], times=round(df$area_ac[df$cluster_9==plot_order2[3]]/area_fact, 0)), rep(df[[varname]][df$cluster_9==plot_order2[4]], times=round(df$area_ac[df$cluster_9==plot_order2[4]]/area_fact, 0)), rep(df[[varname]][df$cluster_9==plot_order2[5]], times=round(df$area_ac[df$cluster_9==plot_order2[5]]/area_fact, 0)), rep(df[[varname]][df$cluster_9==plot_order2[6]], times=round(df$area_ac[df$cluster_9==plot_order2[6]]/area_fact, 0)), rep(df[[varname]][df$cluster_9==plot_order2[7]], times=round(df$area_ac[df$cluster_9==plot_order2[7]]/area_fact, 0)), rep(df[[varname]][df$cluster_9==plot_order2[8]], times=round(df$area_ac[df$cluster_9==plot_order2[8]]/area_fact, 0)), rep(df[[varname]][df$cluster_9==plot_order2[9]], times=round(df$area_ac[df$cluster_9==plot_order2[9]]/area_fact, 0)), col=c('lightgoldenrod', 'violetred', 'tan2', 'gray', 'gold', 'tan4', 'lightblue1', 'deepskyblue', 'firebrick3')[plot_order], rectCol = 'gray', ylim = ylim_vioplot, ylab = ylab)
   mtext('Soil health region', side = 1, line = 2.25)
-  points(x=kssl_df$xdim_vioplot[!is.na(kssl_df[[kssl_varname]])]-0.1, y=kssl_df[[kssl_varname]][!is.na(kssl_df[[kssl_varname]])]*if(kssl_varname=='totC_30cm'){1.72} else{1}, cex=0.7, pch=1, col='black')
+  points(x=kssl_df$xdim_vioplot9[!is.na(kssl_df[[kssl_varname]])]-0.1, y=kssl_df[[kssl_varname]][!is.na(kssl_df[[kssl_varname]])]*if(kssl_varname=='totC_30cm'){1.72} else{1}, cex=0.7, pch=1, col='black')
   kssl_means <- data.frame(mean=tapply(kssl_df[[kssl_varname]]*if(kssl_varname=='totC_30cm'){1.72} else{1}, kssl_df$cluster_9, mean, na.rm=TRUE))
   kssl_means$xdim_vioplot <- match(row.names(kssl_means), plot_order)
   points(x=kssl_means$xdim_vioplot-0.1, y=kssl_means$mean, pch=8, cex=0.9, col='orange')
-  points(x=cdfa_pts$xdim_vioplot[!is.na(cdfa_pts[[cdfa_varname]])]+0.1, y=cdfa_pts[[cdfa_varname]][!is.na(cdfa_pts[[cdfa_varname]])], cex=0.7, pch=4, col='black')
+  points(x=cdfa_pts$xdim_vioplot9[!is.na(cdfa_pts[[cdfa_varname]])]+0.1, y=cdfa_pts[[cdfa_varname]][!is.na(cdfa_pts[[cdfa_varname]])], cex=0.7, pch=4, col='black')
   cdfa_means <- data.frame(mean=tapply(cdfa_pts[[cdfa_varname]], cdfa_pts$cluster_9, mean, na.rm=TRUE))
   cdfa_means$xdim_vioplot <- match(row.names(cdfa_means), plot_order)
   points(x=cdfa_means$xdim_vioplot+0.1, y=cdfa_means$mean, pch=8, cex=0.9, col='darkblue')
@@ -87,7 +87,7 @@ vioplot_mod_clus9_KSSL_validation <- function(df, varname, ylim_vioplot, plot_or
   par(mar=mar)
   vioplot(rep(df[[varname]][df$cluster_9==plot_order2[1]], times=round(df$area_ac[df$cluster_9==plot_order2[1]]/area_fact, 0)), rep(df[[varname]][df$cluster_9==plot_order2[2]], times=round(df$area_ac[df$cluster_9==plot_order2[2]]/area_fact, 0)), rep(df[[varname]][df$cluster_9==plot_order2[3]], times=round(df$area_ac[df$cluster_9==plot_order2[3]]/area_fact, 0)), rep(df[[varname]][df$cluster_9==plot_order2[4]], times=round(df$area_ac[df$cluster_9==plot_order2[4]]/area_fact, 0)), rep(df[[varname]][df$cluster_9==plot_order2[5]], times=round(df$area_ac[df$cluster_9==plot_order2[5]]/area_fact, 0)), rep(df[[varname]][df$cluster_9==plot_order2[6]], times=round(df$area_ac[df$cluster_9==plot_order2[6]]/area_fact, 0)), rep(df[[varname]][df$cluster_9==plot_order2[7]], times=round(df$area_ac[df$cluster_9==plot_order2[7]]/area_fact, 0)), rep(df[[varname]][df$cluster_9==plot_order2[8]], times=round(df$area_ac[df$cluster_9==plot_order2[8]]/area_fact, 0)), rep(df[[varname]][df$cluster_9==plot_order2[9]], times=round(df$area_ac[df$cluster_9==plot_order2[9]]/area_fact, 0)), col=c('lightgoldenrod', 'violetred', 'tan2', 'gray', 'gold', 'tan4', 'lightblue1', 'deepskyblue', 'firebrick3')[plot_order], rectCol = 'gray', ylim = ylim_vioplot, ylab = ylab)
   mtext('Soil health region', side = 1, line = 2.25)
-  points(x=kssl_df$xdim_vioplot[!is.na(kssl_df[[kssl_varname]])]-0.1, y=kssl_df[[kssl_varname]][!is.na(kssl_df[[kssl_varname]])]*if(kssl_varname=='totC_30cm'){1.72} else{1}, cex=0.7, pch=1, col='black')
+  points(x=kssl_df$xdim_vioplot9[!is.na(kssl_df[[kssl_varname]])]-0.1, y=kssl_df[[kssl_varname]][!is.na(kssl_df[[kssl_varname]])]*if(kssl_varname=='totC_30cm'){1.72} else{1}, cex=0.7, pch=1, col='black')
   kssl_means <- data.frame(mean=tapply(kssl_df[[kssl_varname]]*if(kssl_varname=='totC_30cm'){1.72} else{1}, kssl_df$cluster_9, mean, na.rm=TRUE))
   kssl_means$xdim_vioplot <- match(row.names(kssl_means), plot_order)
   points(x=kssl_means$xdim_vioplot-0.1, y=kssl_means$mean, pch=8, cex=0.9, col='orange')
@@ -113,7 +113,7 @@ summary(valley30cm_by_mukey$ksat_30cm)
 kssl_points_30cm$logksat_30cm <- log(kssl_points_30cm$ksat_30cm_um_s)
 vioplot_mod_clus9_KSSL_validation(valley30cm_by_mukey, 'logks_30cm', ylim_vioplot = c(-4.58,5.85), plot_order = order_lgnd_9, area_fact = 10, ylab=expression('Saturated conductivity (log'[10]~mu*'m H'[2]*'O s'^-1*')'), fname='class9_logKs_vioplots.tif', mar=c(3.5, 4.25, 1, 1), kssl_df = kssl_points_30cm, legend_plot=FALSE, legendloc='topleft', legend_cex = 0.9 , kssl_varname = 'logksat_30cm') #resulting plot of KSSL does not have expected pattern
 
-#8-region plots
+#7-region plots
 table(kssl_points_30cm$cluster_8)
 
 vioplot_mod_clus7_validation <- function(df, varname, ylim_vioplot, plot_order, area_fact, labnames, ylab, fname, mar, kssl_df, kssl_varname, cdfa_pts, cdfa_varname, legend_plot, legendloc, legend_cex) {
@@ -172,7 +172,7 @@ vioplot_mod_clus7_KSSL_validation(valley30cm_by_mukey, 'lep_30cm', ylim_vioplot 
 #7-region plots
 table(kssl_points_30cm$cluster_7)
 
-vioplot_mod_clus7_validation <- function(df, varname, ylim_vioplot, plot_order, area_fact, labnames, ylab, fname, mar, kssl_df, kssl_varname, cdfa_pts, cdfa_varname, legend_plot, legendloc, legend_cex) {
+vioplot_mod_clus7_validation <- function(df, varname, ylim_vioplot, plot_order, area_fact, labnames, ylab, fname, mar, kssl_df, kssl_varname, cdfa_pts, cdfa_varname, legend_plot, legendloc, legend_cex, sig_labels) {
   plot_order2 <- (1:7)[plot_order]
   tiff(file = file.path(FiguresDir, 'v2', 'validation plots', '7 region', fname), family = 'Times New Roman', width = 6.5, height = 4.5, pointsize = 12, units = 'in', res=800, compression='lzw')
   par(mar=mar)
@@ -186,21 +186,22 @@ vioplot_mod_clus7_validation <- function(df, varname, ylim_vioplot, plot_order, 
   cdfa_means <- data.frame(mean=tapply(cdfa_pts[[cdfa_varname]], cdfa_pts$cluster_7, mean, na.rm=TRUE))
   cdfa_means$xdim_vioplot <- match(row.names(cdfa_means), plot_order)
   points(x=cdfa_means$xdim_vioplot+0.1, y=cdfa_means$mean, pch=8, cex=0.9, col='darkblue')
+  text(x=1:7, y=ylim_vioplot[1], labels = sig_labels, adj=0.5)
   if(legend_plot) {
     legend(x=legendloc, legend=c('SSURGO violin plots, area-weighted', 'KSSL data', 'KSSL mean', 'CDFA data', 'CDFA mean'), pch=c(NA,1,8,4,8), col = c(NA, 'black', 'orange', 'black', 'darkblue'), cex=legend_cex)
   }
   dev.off()
 }
-vioplot_mod_clus7_validation(valley30cm_by_mukey, 'clay_30cm', ylim_vioplot = c(0.5,80), plot_order = order_lgnd_7, area_fact = 10, ylab='Clay (%)', fname='class7_clay_vioplots_validation.tif', mar=c(3.5, 4.25, 1, 1), kssl_df = kssl_points_30cm, cdfa_pts=kerri_points_30cm, legend_plot=TRUE, legendloc='topleft', legend_cex = 0.9, kssl_varname = 'clay_30cm', cdfa_varname = 'clay_30cm')
+vioplot_mod_clus7_validation(valley30cm_by_mukey, 'clay_30cm', ylim_vioplot = c(-2.5,80), plot_order = order_lgnd_7, area_fact = 10, ylab='Clay (%)', fname='class7_clay_vioplots_validation.tif', mar=c(3.5, 4.25, 1, 1), kssl_df = kssl_points_30cm, cdfa_pts=kerri_points_30cm, legend_plot=TRUE, legendloc='topleft', legend_cex = 0.9, kssl_varname = 'clay_30cm', cdfa_varname = 'clay_30cm', sig_labels = c('A', 'B', 'A', 'AB', 'A', 'C', 'D'))
 
-vioplot_mod_clus7_validation(valley30cm_by_mukey, 'pH_30cm', ylim_vioplot = c(5.2,10.1), plot_order = order_lgnd_7, area_fact = 10, ylab='soil pH', fname='class7_pH_vioplots_validation.tif', mar=c(3.5, 4.25, 1, 1), kssl_df = kssl_points_30cm, cdfa_pts=kerri_points_30cm, legend_plot=FALSE, legendloc='topleft', legend_cex = 0.9 , kssl_varname = "pH_H2O_30cm", cdfa_varname = 'pH_H2O_30cm')
+vioplot_mod_clus7_validation(valley30cm_by_mukey, 'pH_30cm', ylim_vioplot = c(4.9,10.1), plot_order = order_lgnd_7, area_fact = 10, ylab=expression('Soil pH'[H2O]), fname='class7_pH_vioplots_validation.tif', mar=c(3.5, 4.25, 1, 1), kssl_df = kssl_points_30cm, cdfa_pts=kerri_points_30cm, legend_plot=FALSE, legendloc='topleft', legend_cex = 0.9 , kssl_varname = "pH_H2O_30cm", cdfa_varname = 'pH_H2O_30cm', sig_labels = c('CD', 'BC', 'A', 'AB', 'E', 'E', 'D'))
 
-vioplot_mod_clus7_validation(valley30cm_by_mukey, 'om_30cm', ylim_vioplot = c(0.1,12), plot_order = order_lgnd_7, area_fact = 10, ylab='Organic matter (%)', fname='class7_om_vioplots_validation.tif', mar=c(3.5, 4.25, 1, 1), kssl_df = kssl_points_30cm, cdfa_pts=kerri_points_30cm, legend_plot=FALSE, legendloc='topleft', legend_cex = 0.9 , kssl_varname = "om_30cm", cdfa_varname = 'totC_30cm')
+vioplot_mod_clus7_validation(valley30cm_by_mukey, 'om_30cm', ylim_vioplot = c(-0.2,12), plot_order = order_lgnd_7, area_fact = 10, ylab='Organic matter (%)', fname='class7_om_vioplots_validation.tif', mar=c(3.5, 4.25, 1, 1), kssl_df = kssl_points_30cm, cdfa_pts=kerri_points_30cm, legend_plot=FALSE, legendloc='topleft', legend_cex = 0.9 , kssl_varname = "om_30cm", cdfa_varname = 'totC_30cm', sig_labels = c('A', 'C', 'A', 'C', 'A', 'AB', 'BC'))
 
-vioplot_mod_clus7_validation(valley30cm_by_mukey, 'bd_30cm', ylim_vioplot = c(0.75,1.8), plot_order = order_lgnd_7, area_fact = 10, ylab=expression('Bulk density (g soil cm'^-3*'soil)'), fname='class7_bd_vioplots_validation.tif', mar=c(3.5, 4.25, 1, 1), kssl_df = kssl_points_30cm, cdfa_pts=kerri_points_30cm, legend_plot=FALSE, legendloc='topleft', legend_cex = 0.9 , kssl_varname = "bd_13b_30cm", cdfa_varname = 'bd_30cm')
+vioplot_mod_clus7_validation(valley30cm_by_mukey, 'bd_30cm', ylim_vioplot = c(0.79,1.85), plot_order = order_lgnd_7, area_fact = 10, ylab=expression('Bulk density (g soil cm'^-3*'soil)'), fname='class7_bd_vioplots_validation.tif', mar=c(3.5, 4.25, 1, 1), kssl_df = kssl_points_30cm, cdfa_pts=kerri_points_30cm, legend_plot=FALSE, legendloc='topleft', legend_cex = 0.9 , kssl_varname = "bd_13b_30cm", cdfa_varname = 'bd_30cm', sig_labels = c('ABC', 'AB', 'C', 'ABC', 'BC', 'A', 'AB'))
 
 #KSSL only validation for 7-region model
-vioplot_mod_clus7_KSSL_validation <- function(df, varname, ylim_vioplot, plot_order, area_fact, labnames, ylab, fname, mar, kssl_df, kssl_varname, legend_plot, legendloc, legend_cex) {
+vioplot_mod_clus7_KSSL_validation <- function(df, varname, ylim_vioplot, plot_order, area_fact, labnames, ylab, fname, mar, kssl_df, kssl_varname, legend_plot, legendloc, legend_cex, sig_labels) {
   plot_order2 <- (1:7)[plot_order]
   tiff(file = file.path(FiguresDir, 'v2', 'validation plots', '7 region', fname), family = 'Times New Roman', width = 6.5, height = 4.5, pointsize = 12, units = 'in', res=800, compression='lzw')
   par(mar=mar)
@@ -210,20 +211,21 @@ vioplot_mod_clus7_KSSL_validation <- function(df, varname, ylim_vioplot, plot_or
   kssl_means <- data.frame(mean=tapply(kssl_df[[kssl_varname]]*if(kssl_varname=='totC_30cm'){1.72} else{1}, kssl_df$cluster_7, mean, na.rm=TRUE))
   kssl_means$xdim_vioplot <- match(row.names(kssl_means), plot_order)
   points(x=kssl_means$xdim_vioplot-0.1, y=kssl_means$mean, pch=8, cex=0.9, col='orange')
+  text(x=1:7, y=ylim_vioplot[1], labels = sig_labels, adj=0.5)
   if(legend_plot) {
     legend(x=legendloc, legend=c('SSURGO violin plots, area-weighted', 'KSSL data', 'KSSL mean'), pch=c(NA,1,8), col = c(NA, 'black', 'orange'), cex=legend_cex)
   }
   dev.off()
 }
 
-vioplot_mod_clus7_KSSL_validation(valley30cm_by_mukey, 'cec_30cm', ylim_vioplot = c(0.5,60), plot_order = order_lgnd_7, area_fact = 10, ylab=expression('Cation exchange capacity (mEq 100g'^-1*')'), fname='class7_CEC_vioplots_KSSL_validation.tif', mar=c(3.5, 4.25, 1, 1), kssl_df = kssl_points_30cm, legend_plot=FALSE, legendloc='topleft', legend_cex = 0.9 , kssl_varname = 'cec_7_30cm')
+vioplot_mod_clus7_KSSL_validation(valley30cm_by_mukey, 'cec_30cm', ylim_vioplot = c(-1,60), plot_order = order_lgnd_7, area_fact = 10, ylab=expression('Cation exchange capacity (mEq 100 g'^-1*'soil)'), fname='class7_CEC_vioplots_KSSL_validation.tif', mar=c(3.5, 4.25, 1, 1), kssl_df = kssl_points_30cm, legend_plot=FALSE, legendloc='topleft', legend_cex = 0.9 , kssl_varname = 'cec_7_30cm', sig_labels = c('A', 'B', 'A', 'AB', 'A', 'C', 'C'))
 
-vioplot_mod_clus7_KSSL_validation(valley30cm_by_mukey, 'awc_30cm', ylim_vioplot = c(0.55,7.1), plot_order = order_lgnd_7, area_fact = 10, ylab=expression('Available water capacity (cm H'[2]*'O 30 cm'^-1~'soil)'), fname='class7_AWC_vioplots_KSSL_validation.tif', mar=c(3.5, 4.25, 1, 1), kssl_df = kssl_points_30cm, legend_plot=FALSE, legendloc='topleft', legend_cex = 0.9 , kssl_varname = 'awc_30cm')
+vioplot_mod_clus7_KSSL_validation(valley30cm_by_mukey, 'awc_30cm', ylim_vioplot = c(0.55,7.1), plot_order = order_lgnd_7, area_fact = 10, ylab=expression('Available water capacity (cm H'[2]*'O 30 cm'^-1~'soil)'), fname='class7_AWC_vioplots_KSSL_validation.tif', mar=c(3.5, 4.25, 1, 1), kssl_df = kssl_points_30cm, legend_plot=FALSE, legendloc='topleft', legend_cex = 0.9 , kssl_varname = 'awc_30cm', sig_labels = NA) #no significant contrasts
 
 
-vioplot_mod_clus7_KSSL_validation(valley30cm_by_mukey, 'ec_30cm', ylim_vioplot = c(0,50), plot_order = order_lgnd_7, area_fact = 10, ylab=expression('Electrical conductivity (mmhos cm'^-1*')'), fname='class7_EC_vioplots_KSSL_validation.tif', mar=c(3.5, 4.25, 1, 1), kssl_df = kssl_points_30cm, legend_plot=FALSE, legendloc='topleft', legend_cex = 0.9 , kssl_varname = 'ec_30cm')
+vioplot_mod_clus7_KSSL_validation(valley30cm_by_mukey, 'ec_30cm', ylim_vioplot = c(-2,50), plot_order = order_lgnd_7, area_fact = 10, ylab=expression('Electrical conductivity (mmho cm'^-1*')'), fname='class7_EC_vioplots_KSSL_validation.tif', mar=c(3.5, 4.25, 1, 1), kssl_df = kssl_points_30cm, legend_plot=FALSE, legendloc='topleft', legend_cex = 0.9 , kssl_varname = 'ec_30cm', sig_labels = c(rep('A', 5), 'B', 'A'))
 
-vioplot_mod_clus7_KSSL_validation(valley30cm_by_mukey, 'lep_30cm', ylim_vioplot = c(0,17), plot_order = order_lgnd_7, area_fact = 10, ylab='Linear extensibility (%)', fname='class5_lep_vioplots_KSSL_validation.tif', mar=c(3.5, 4.25, 1, 1), kssl_df = kssl_points_30cm, legend_plot=FALSE, legendloc='topleft', legend_cex = 0.9 , kssl_varname = 'lep_30cm')
+vioplot_mod_clus7_KSSL_validation(valley30cm_by_mukey, 'lep_30cm', ylim_vioplot = c(-0.5,17), plot_order = order_lgnd_7, area_fact = 10, ylab='Linear extensibility (%)', fname='class5_lep_vioplots_KSSL_validation.tif', mar=c(3.5, 4.25, 1, 1), kssl_df = kssl_points_30cm, legend_plot=FALSE, legendloc='topleft', legend_cex = 0.9 , kssl_varname = 'lep_30cm', sig_labels = c('A', 'B', 'A', 'AB', 'AB', 'C', 'C'))
 
 
 #5-region plots
