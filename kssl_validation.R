@@ -53,6 +53,11 @@ wtd.mean_v2 <- function(x, y) {
   m
 }
 
+kgOrgC_sum_v2 <- function(x, depth, rm.NAs=FALSE) {
+  thick <- x$hzn_bot - x$hzn_top
+  sum((thick / 10) * x$oc * x$db_13b * (1 - x$frags / 100), na.rm = rm.NAs)
+}
+
 awc_sum_v2 <- function(x, rm.NAs=FALSE) {
   thick <- x$hzn_bot - x$hzn_top
   sum(thick * x$whc, na.rm = rm.NAs)
@@ -74,9 +79,9 @@ horizon_to_comp_v2 <- function(horizon_SPC, depth, vars_of_interest = c('clay', 
     site(sliced_SPC) <- s
   }
   s <- site(sliced_SPC)
-  #s[[paste0('kgOrg.m2_', depth, 'cm')]] <- profileApply(sliced_SPC, FUN = kgOrgC_sum)
+  s[[paste0('kgOrg.m2_', depth, 'cm')]] <- profileApply(sliced_SPC, FUN = kgOrgC_sum_v2)
   s[[paste0('awc_', depth, 'cm')]] <- profileApply(sliced_SPC, FUN = awc_sum_v2, rm.NAs=FALSE) #was TRUE for SSURGO
-  columnames <- c(columnames, paste0('awc_', depth, 'cm')) 
+  #columnames <- c(columnames, paste0('awc_', depth, 'cm')) 
   rm(depth, envir = .GlobalEnv) #because we had to put it there earlier
   s
 }
