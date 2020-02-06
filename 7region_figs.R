@@ -33,15 +33,15 @@ radarchart_7 <- rbind(apply(cluster_7_df, 2, max), apply(cluster_7_df, 2, min), 
 clus_7_colors <- c('gold', 'deepskyblue', 'lightblue1', 'lightgoldenrod', 'violetred', 'tan4', 'firebrick3')
 order_lgnd_7 <- c(4,6,1,7,3,2,5)
 clus_7_lines <- c(3,2,2,1,2,1,3)
-clus_7_names <- c('3. Coarse w/pans', '6. Fine saline-sodic', '5. Coarse saline-sodic', '1. Coarse w/no restrictions', '7. Fine shrink-swell', '2. Loamy w/no restrictions', '4. Loamy w/pans')
+clus_7_names <- c('3. Coarse with pans', '6. Fine saline-sodic', '5. Coarse saline-sodic', '1. Coarse with no restrictions', '7. Fine shrink-swell', '2. Loamy with no restrictions', '4. Loamy with pans')
 #clus_7_names <- c('3. Very coarse w/pans', '6. Loamy saline-sodic', '5. Very coarse saline-sodic', '1. Very coarse w/no restrictions', '7. Loamy shrink-swell', '2. Coarse w/no resrictions', '4. Coarse w/pans') #this is v1
 clus_7_names[order_lgnd_7]
 fix_legend_columns <- function(x) {
   c(x[1:2], NA, x[3:4], NA, x[5:7])
 }
 fix_legend_columns(clus_7_names[order_lgnd_7])
-tiff(file = file.path(FiguresDir, 'v2', '7 region', 'valley_7_classes_spider.tif'), family = 'Times New Roman', width = 9, height = 6.5, pointsize = 11, units = 'in', res=800, compression = 'lzw')
-par(xpd=TRUE, mar=c(4, 0.1, 0.1, 0.1))
+tiff(file = file.path(FiguresDir, 'v2', '7 region', 'valley_7_classes_spider.tif'), family = 'Times New Roman', width = 9, height = 6, pointsize = 11, units = 'in', res=800, compression = 'lzw')
+par(xpd=TRUE, mar=c(2.5, 0.1, 0.1, 0.1))
 radarchart(radarchart_7[,c('clay_30cm', 'om_30cm', 'lep_30cm', 'cec_30cm', 'ec_30cm', 'pH_30cm',  "MnRs_dep", 'ksat_30cm', 'awc_30cm')], plty = clus_7_lines, pcol = clus_7_colors, vlabels=c('Clay', 'Organic\nmatter', ' Shrink-\n  swell', 'CEC', 'Salinity', 'pH',  "Depth to\nRestriction", expression('K'['s']), 'Available water\n   capacity'), maxmin = TRUE, plwd = 3)
 legend(x=-1.6, y=-1.2, legend = fix_legend_columns(clus_7_names[order_lgnd_7]), col=fix_legend_columns(clus_7_colors[order_lgnd_7]), lty=fix_legend_columns(clus_7_lines[order_lgnd_7]), lwd = 3, ncol = 3, bty='n')
 dev.off()
