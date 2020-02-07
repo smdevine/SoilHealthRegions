@@ -848,7 +848,7 @@ shapefile(valley_mu_shp_30cm, file.path(summaryDir, 'shapefiles with data', 'val
 #write 30 cm to csv
 valley_30cm <- as.data.frame(valley_mu_shp_30cm)
 # colnames(valley_30cm)
-write.csv(valley_30cm, file.path(summaryDir, 'valley_30cm_data_2.20.20.csv'), row.names = FALSE)
+write.csv(valley_30cm, file.path(summaryDir, 'valley_30cm_data_2.7.20.csv'), row.names = FALSE)
 # lapply(valley_30cm, function(x) sum(is.na(x)))
 
 #write 100 cm to csv
@@ -857,4 +857,4 @@ colnames(valley_100cm)
 write.csv(valley_100cm, file.path(summaryDir, 'valley_100cm_2.7.20.csv'), row.names = FALSE)
 plot(valley_100cm$aws100wta, valley_100cm$awc_100cm)
 sum(valley_100cm$awc_100cm  - valley_100cm$aws100wta > 0.2, na.rm = TRUE) #1210 polygons have slightly different AWC values; most likely due to the fact that I did not include minor components
-unique(valley_100cm$muname[which(valley_100cm$awc_100cm  - valley_100cm$aws100wta > 0.2)]) #73 unique map units
+unique(valley_100cm$muname[which(valley_100cm$awc_100cm  - valley_100cm$aws100wta > 0.2)]) #76 unique map units
