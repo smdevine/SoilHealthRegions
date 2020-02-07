@@ -5,7 +5,7 @@ library(vioplot)
 library(extrafont)
 library(extrafontdb)
 loadfonts(device = 'win')
-laptop <- TRUE
+laptop <- FALSE
 
 if (laptop) {
   mainDir <- 'C:/Users/smdevine/Desktop/post doc'
@@ -99,11 +99,21 @@ kssl_horizons[kssl_horizons$pedon_key==20886,] #94P02028
 kssl_horizons[kssl_horizons$pedon_key==20887,] #94P02038
 kssl_horizons[kssl_horizons$pedon_key==72040,] #15N01738, 15N01739
 kssl_horizons[kssl_horizons$pedon_key==17783,] #all problematic 91P02043, 91P02044, 91P02045
-horizons_to_exclude <- c('91P02043', '91P02044', '91P02045', '15N01738', '15N01739', '94P02038', '94P02028', '94P02018', '94P02019', '94P02020', '93P02017', '93P02018',  '91P04438', '91P04439', '91P04440', '91P04441', '91P04442', '91P04443', '91P04444', '91P04445', '88P01488', '85P05356', '79P01239', '79P01240', '79P01241', '79P01242', '79P01177', '79P00471', '79P00472', '40A22466', '40A22467', '40A22468')
+kssl_horizons[kssl_horizons$pedon_key==14162,]#87P02575,87P02577,87P02578,87P02583
+kssl_horizons[kssl_horizons$pedon_key==20635,] #94P00526, 94P00527, 94P00528, 94P00529 do not make sense in terms of depths
+kssl_horizons[kssl_horizons$pedon_key==10150,] #83P01308
+kssl_horizons[kssl_horizons$pedon_key==14771,] #88P01429
+kssl_horizons[kssl_horizons$pedon_key==2747,] #40A23004 but has gap between 91-110 cm
+kssl_horizons[kssl_horizons$pedon_key==19974,] #93P01981, 93P01982
+kssl_horizons[kssl_horizons$pedon_key==20636,] #missing 0-48 cm so remove entire pedon below
+kssl_horizons[kssl_horizons$pedon_key==14773,] #88P01449
+horizons_to_exclude <- c('91P02043', '91P02044', '91P02045', '15N01738', '15N01739', '94P02038', '94P02028', '94P02018', '94P02019', '94P02020', '93P02017', '93P02018',  '91P04438', '91P04439', '91P04440', '91P04441', '91P04442', '91P04443', '91P04444', '91P04445', '88P01488', '85P05356', '79P01239', '79P01240', '79P01241', '79P01242', '79P01177', '79P00471', '79P00472', '40A22466', '40A22467', '40A22468', '87P02575', '87P02577', '87P02578', '87P02583', '94P00526', '94P00527', '94P00528', '94P00529', '83P01308', '88P01429', '40A23004', '93P01981', '93P01982', '88P01449')
 kssl_horizons_subset <- kssl_horizons[kssl_horizons$pedon_key %in% kssl_ssurgo_30cm$pedon_key, ]
 # dim(kssl_horizons_subset)
 kssl_horizons_subset <- kssl_horizons_subset[!(kssl_horizons_subset$labsampnum %in% horizons_to_exclude), ]
 # dim(kssl_horizons_subset)
+kssl_horizons_subset <- kssl_horizons_subset[kssl_horizons_subset$pedon_key!=20636, ]
+
 depths(kssl_horizons_subset) <- pedon_key ~ hzn_top + hzn_bot
 # class(kssl_horizons_subset)
 # horizons(kssl_horizons_subset)[kssl_horizons_subset$pedon_key==73286,]
@@ -115,6 +125,9 @@ kssl_horizons_subset$soil_depth <- profileApply(kssl_horizons_subset, FUN = esti
 # head(test_hz_aggregation_v1)
 # kssl_horizons[kssl_horizons$pedon_key %in% c(165,166,204) & kssl_horizons$hzn_top <=30,]
 kssl_points_30cm <- horizon_to_comp_v2(horizon_SPC = kssl_horizons_subset, depth = 30)
+colnames(kssl_points_30cm)
+summary(kssl_points_30cm$kgOrg.m2_30cm)
+sum(!is.na(kssl_points_30cm$kgOrg.m2_30cm))
 dim(kssl_points_30cm)
 head(kssl_points_30cm)
 kssl_points_30cm[kssl_points_30cm$pedon_key==165,]
@@ -125,6 +138,8 @@ kssl_horizons[kssl_horizons$pedon_key==165 & kssl_horizons$hzn_top <=30,]
 12.5*0.5+21.3*0.5
 #oc check:0.77%
 1.13*0.5+0.41*0.5
+#kg OC check
+(15/10)*1.13*1.62+(15/10)*0.41*1.71
 kssl_points_30cm[kssl_points_30cm$pedon_key==73286,]
 kssl_horizons[kssl_horizons$pedon_key==73286 & kssl_horizons$hzn_top <=30,]
 kssl_points_30cm[185,]
@@ -154,6 +169,7 @@ write.csv(kssl_points_30cm, file.path(ksslDir, 'kssl_cluster_30cm_NArm.csv'), ro
 tapply(kssl_points_30cm$oc_30cm, kssl_points_30cm$cluster_9, summary)
 tapply(kssl_points_30cm$pH_H2O_30cm, kssl_points_30cm$cluster_9, summary)
 tapply(kssl_points_30cm$cec_7_30cm, kssl_points_30cm$cluster_9, summary)
+sum(!is.na(kssl_points_30cm$kgOrg.m2_30cm)) #106 of 370 have 0-30 cm content data
 write.csv(kssl_ssurgo_30cm, file.path(ksslDir, 'kssl_pts_ssurgo_30cm_extract.csv'), row.names = FALSE)
 
 kssl_points_30cm <- read.csv(file.path(ksslDir, 'kssl_cluster_30cm_NArm.csv'), stringsAsFactors = FALSE)
@@ -161,6 +177,25 @@ kssl_points_30cm <- read.csv(file.path(ksslDir, 'kssl_cluster_30cm_NArm.csv'), s
 dim(kssl_points_30cm)
 sum(!is.na(kssl_points_30cm$clay_30cm) & !is.na(kssl_points_30cm$oc_30cm) & !is.na(kssl_points_30cm$cec_7_30cm) & !is.na(kssl_points_30cm$bd_13b_30cm) & !is.na(kssl_points_30cm$ec_30cm) & !is.na(kssl_points_30cm$pH_H2O_30cm) & !is.na(kssl_points_30cm$lep_30cm) & !is.na(kssl_points_30cm$awc_30cm)) #only 60!
 lapply(kssl_points_30cm[,c('clay_30cm', 'oc_30cm', 'cec_7_30cm', 'bd_13b_30cm', 'ec_30cm', 'pH_H2O_30cm', 'lep_30cm', 'awc_30cm')], function(x) sum(!is.na(x)))
+
+#create 1 m soil property summary
+kssl_points_100cm <- horizon_to_comp_v2(horizon_SPC = kssl_horizons_subset, depth = 100)
+sum(kssl_points_100cm$soil_depth==0)
+kssl_points_100cm <- kssl_points_100cm[!(kssl_points_100cm$soil_depth==0), ]
+kssl_points_100cm$cluster_2 <- kssl_ssurgo_30cm$cluster_2[match(kssl_points_100cm$pedon_key, kssl_ssurgo_30cm$pedon_key)]
+kssl_points_100cm$cluster_3 <- kssl_ssurgo_30cm$cluster_3[match(kssl_points_100cm$pedon_key, kssl_ssurgo_30cm$pedon_key)]
+kssl_points_100cm$cluster_4 <- kssl_ssurgo_30cm$cluster_4[match(kssl_points_100cm$pedon_key, kssl_ssurgo_30cm$pedon_key)]
+kssl_points_100cm$cluster_5 <- kssl_ssurgo_30cm$cluster_5[match(kssl_points_100cm$pedon_key, kssl_ssurgo_30cm$pedon_key)]
+kssl_points_100cm$cluster_6 <- kssl_ssurgo_30cm$cluster_6[match(kssl_points_100cm$pedon_key, kssl_ssurgo_30cm$pedon_key)]
+kssl_points_100cm$cluster_7 <- kssl_ssurgo_30cm$cluster_7[match(kssl_points_100cm$pedon_key, kssl_ssurgo_30cm$pedon_key)]
+kssl_points_100cm$cluster_8 <- kssl_ssurgo_30cm$cluster_8[match(kssl_points_100cm$pedon_key, kssl_ssurgo_30cm$pedon_key)]
+kssl_points_100cm$cluster_9 <- kssl_ssurgo_30cm$cluster_9[match(kssl_points_100cm$pedon_key, kssl_ssurgo_30cm$pedon_key)]
+kssl_points_100cm$cluster_10 <- kssl_ssurgo_30cm$cluster_10[match(kssl_points_100cm$pedon_key, kssl_ssurgo_30cm$pedon_key)]
+kssl_points_100cm$cluster_11 <- kssl_ssurgo_30cm$cluster_11[match(kssl_points_100cm$pedon_key, kssl_ssurgo_30cm$pedon_key)]
+kssl_points_100cm$cluster_12 <- kssl_ssurgo_30cm$cluster_12[match(kssl_points_100cm$pedon_key, kssl_ssurgo_30cm$pedon_key)]
+sum(is.na(kssl_points_100cm$cluster_7))
+sum(!is.na(kssl_points_100cm$kgOrg.m2_100cm)) #only 79 of 369 have complete content data
+write.csv(kssl_points_100cm, file.path(ksslDir, 'kssl_cluster_100cm_NArm.csv'), row.names = FALSE)
 
 clus_5_names <- c()
 clus_6_names <- c()
