@@ -24,7 +24,7 @@ ssurgoDir <- file.path(mainDir, 'soil health/ssurgo_data')
 cropsDir <- file.path(mainDir, 'soil health/crops')
 summaryDir <- file.path(mainDir, 'soil health/summaries/valley_final')
 # FiguresDir <- file.path(mainDir, 'soil health/Figures/ag_land')
-cropsCRS <- crs('+proj=aea +lat_1=34 +lat_2=40.5 +lat_0=0 +lon_0=-120 +x_0=0 +y_0=-4000000 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs')
+# cropsCRS <- crs('+proj=aea +lat_1=34 +lat_2=40.5 +lat_0=0 +lon_0=-120 +x_0=0 +y_0=-4000000 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs')
 # res_plots <- 150
 CAcountiesDir <- 'C:/Users/smdevine/Desktop/SpatialData/CA_counties/government_units'
 list.files(summaryDir)
@@ -32,6 +32,9 @@ list.files(ssurgoDir)
 
 #define an assumption for classification exercise
 assumed_depth <- 200
+
+#define an assumption for rock fragments
+rockNA_to_0 <- TRUE #if true, then horizon data with NA rock fragments are converted to zero for purpose of estimating SOC in units of kg m^-2
 
 #define some functions
 min_modified <- function(x) {
@@ -70,7 +73,7 @@ wtd.mean <- function(x, y) {
   m
 }
 
-kgOrgC_sum <- function(x, slice_it=FALSE, depth, rm.NAs=TRUE, om_to_c=1.72) {
+kgOrgC_sum <- function(x, slice_it=FALSE, depth, rm.NAs=FALSE, om_to_c=1.72) {
   if (slice_it) {
     x <- horizons(x)[1:depth, ]
     depths(x) <- cokey ~ hzdept_r + hzdepb_r
@@ -388,6 +391,11 @@ sum(is.na(storie_mean_by_mukey$storiemn)) #922 are NA
 #read in horizon data
 horizon_data <- read.csv(file.path(ssurgoDir, 'ca_horizon_data.csv'), stringsAsFactors = FALSE)
 horizon_data_valley <- horizon_data[horizon_data$cokey %in% comp_data_valley$cokey,]
+#fix horizonation problems
+horizon_data_valley[horizon_data_valley$cokey==16387801,]
+horizon_data_valley[horizon_data_valley$cokey==16387801 & horizon_data_valley$hzname=='Ck','hzdept_r'] <- 114 #to fix horizonation to something acceptable
+horizon_data_valley[horizon_data_valley$cokey==16597708, ] #same issue as above
+horizon_data_valley[horizon_data_valley$cokey==16597708 & horizon_data_valley$hzname=='Ck','hzdept_r'] <- 114
 # dim(horizon_data_valley) #25685 horizons
 # unique(horizon_data_valley$hzname)
 horizon_data_valley$majcompflag <- comp_data_valley$majcompflag[match(horizon_data_valley$cokey, comp_data_valley$cokey)]
@@ -398,6 +406,11 @@ head(horizon_data_valley[horizon_data_valley$majcompflag=='No ', ], 100)
 
 #convert to Soil Profile collection class with no minor comps per filtering above
 horizons_valley_majcomps <- horizon_data_valley[horizon_data_valley$majcompflag=='Yes', ]
+sum(is.na(horizons_valley_majcomps$fragvol_r_sum))
+if(rockNA_to_0) {
+  horizons_valley_majcomps$fragvol_r_sum[is.na(horizons_valley_majcomps$fragvol_r_sum)] <- 0
+}
+sum(is.na(horizons_valley_majcomps$fragvol_r_sum))
 # dim(horizons_valley_majcomps) #21313 horizons
 # length(unique(horizons_valley_majcomps$cokey)) #6030 profiles (e.g. unique cokeys)
 # length(unique(horizons_valley_majcomps$mukey)) #4897 after getting rid of minor components
@@ -432,24 +445,27 @@ horizons_valley_majcomps$soil_depth <- profileApply(horizons_valley_majcomps, FU
 #test with slab
 # slab_results <- slab(horizons_valley_majcomps, fm = cokey ~ claytotal_r, slab.structure = c(0,10), slab.fun = mean) #+ silttotal_r + sandtotal_r + ksat_r + kwfact + ph1to1h2o_r + sar_r + caco3_r + gypsum_r + lep_r
 
-
-
 #100 cm dataset
 #Error: bad horizonation in IDs:16387801, 16597708 when running 100 cm aggregation
-# comp_valley_100cm <- horizon_to_comp(horizon_SPC = horizons_valley_majcomps, depth = 100, comp_df = comp_data_valley)
+comp_valley_100cm <- horizon_to_comp(horizon_SPC = horizons_valley_majcomps, depth = 100, comp_df = comp_data_valley)
 # head(comp_valley_100cm)
+write.csv(comp_valley_100cm, file.path(summaryDir, 'comp_valley_100cm_2.7.20.csv'), row.names = FALSE)
+
 
 #30 cm dataset
 test_hz_aggregation <- horizon_to_comp(horizon_SPC = horizons_valley_majcomps[4], depth = 30, comp_df = comp_data_valley)
 test_hz_aggregation
 horizon_data_valley[horizon_data_valley$cokey==16264388,]
+
 #om test: 1.791667 
 2*25/30+0.75*5/30
 #awc test: 4.75 cm
 0.16*25 + 0.15*5
+#kg SOC m^-2 test
+(25/10)*(2/1.72)*1.35*(1-2/100)+(5/10)*(0.75/1.72)*1.35*(1-7/100)
 
 comp_valley_30cm <- horizon_to_comp(horizon_SPC = horizons_valley_majcomps, depth = 30, comp_df = comp_data_valley)
-write.csv(comp_valley_30cm, file.path(summaryDir, 'comp_valley_30cm_10.28.19.csv'), row.names = FALSE)
+write.csv(comp_valley_30cm, file.path(summaryDir, 'comp_valley_30cm_2.7.20.csv'), row.names = FALSE) #latest version fixed kg SOC m^-2 (assuming 0 for NA frags and, where there are NAs for BD or OM in slice of interest, results are NA for SOC content)
 head(comp_valley_30cm)
 dim(comp_valley_30cm) #6030
 colnames(comp_valley_30cm)
@@ -457,12 +473,12 @@ lapply(comp_valley_30cm[ ,2:ncol(comp_valley_30cm)], summary)
 lapply(comp_valley_30cm[,2:ncol(comp_valley_30cm)], function(x) unique(comp_valley_30cm$compname[is.na(x)]))
 problematic_compnames <- unique(unlist(lapply(comp_valley_30cm[,c('compname', 'clay_30cm', 'om_30cm', 'cec_30cm', 'ksat_30cm', 'awc_30cm')], function(x) unique(comp_valley_30cm$compname[x==0]))))
 problematic_compnames <- data.frame(compname=problematic_compnames[order(problematic_compnames)], stringsAsFactors = FALSE)
-write.csv(problematic_compnames, file.path(summaryDir, 'problematic_compnames_10.28.19.csv'), row.names = FALSE)
+write.csv(problematic_compnames, file.path(summaryDir, 'problematic_compnames_2.7.20.csv'), row.names = FALSE)
 unique(comp_valley_30cm$compname[which(comp_valley_30cm$om_30cm==0)])
 zero_om_cokeys <- unique(comp_valley_30cm$cokey[which(comp_valley_30cm$om_30cm==0)])
 horizon_data_zero_om <- horizon_data_valley[horizon_data_valley$cokey %in% zero_om_cokeys,]
 horizon_data_zero_om$compname <- comp_valley_30cm$compname[match(horizon_data_zero_om$cokey, comp_valley_30cm$cokey)]
-write.csv(horizon_data_zero_om, file.path(summaryDir, 'horizon_data_zero_om_10.28.19.csv'), row.names=FALSE)
+write.csv(horizon_data_zero_om, file.path(summaryDir, 'horizon_data_zero_om_2.20.20.csv'), row.names=FALSE)
 
 #convert zeroes for some variables (OM, CEC, Ks, AWC) to NA
 #om
@@ -811,13 +827,14 @@ valley_mu_shp$MnRs_dep <- apply(as.data.frame(valley_mu_shp)[ ,c('Lthc_dep', 'Pl
 # dim(valley_10cm_muagg)
 # lapply(valley_10cm_muagg, class)
 colnames(comp_valley_30cm)[5:21]
+colnames(comp_valley_100cm)[5:21]
 valley_30cm_muagg <- MUAggregate_wrapper(df1=comp_valley_30cm, varnames = colnames(comp_valley_30cm)[5:21])
-# valley_100cm_muagg <- MUAggregate_wrapper(df1=comp_valley_100cm, varnames = colnames(comp_valley_100cm)[5:ncol(comp_valley_100cm)])
+valley_100cm_muagg <- MUAggregate_wrapper(df1=comp_valley_100cm, varnames = colnames(comp_valley_100cm)[5:21])
 
 # names(valley_mu_shp)
 # valley_mu_shp_10cm <- merge(valley_mu_shp, valley_10cm_muagg, by = 'mukey')
 valley_mu_shp_30cm <- merge(valley_mu_shp, valley_30cm_muagg, by = 'mukey')
-# valley_mu_shp_100cm <- merge(valley_mu_shp, valley_100cm_muagg, by = 'mukey')
+valley_mu_shp_100cm <- merge(valley_mu_shp, valley_100cm_muagg, by = 'mukey')
 
 #write 30cm to shapefile for cluster analysis
 shapefile(valley_mu_shp_30cm, file.path(summaryDir, 'shapefiles with data', 'valley_30cm.shp'), overwrite=TRUE)
@@ -831,22 +848,13 @@ shapefile(valley_mu_shp_30cm, file.path(summaryDir, 'shapefiles with data', 'val
 #write 30 cm to csv
 valley_30cm <- as.data.frame(valley_mu_shp_30cm)
 # colnames(valley_30cm)
-write.csv(valley_30cm, file.path(summaryDir, 'valley_30cm_data_10.29.19.csv'), row.names = FALSE)
+write.csv(valley_30cm, file.path(summaryDir, 'valley_30cm_data_2.20.20.csv'), row.names = FALSE)
 # lapply(valley_30cm, function(x) sum(is.na(x)))
 
 #write 100 cm to csv
-# valley_100cm <- as.data.frame(valley_mu_shp_100cm)
-# colnames(valley_100cm)
-# write.csv(valley_100cm, file.path(summaryDir, 'valley_100cm_test.csv'), row.names = FALSE)
-# plot(valley_100cm$aws100wta, valley_100cm$awc_100cm)
-# sum(valley_100cm$awc_100cm  - valley_100cm$aws100wta > 0.2, na.rm = TRUE) #163 polygons have slightly different AWC values; most likely due to the fact that I did not include minor components
-# unique(valley_100cm$muname[which(valley_100cm$awc_100cm  - valley_100cm$aws100wta > 0.2)])
-
-#previous beginning of crops investigation
-crops_fresno <- crop(crops, fresno_area_aea)
-#shapefile(crops_fresno, file.path(cropsDir, 'fresno_only', 'crops_fresno.shp'))
-unique(crops_fresno$Crop2014)
-sum(crops_fresno$Acres) #1,718.419 acres, so 52% of total area
-crop_acreage_fresno <- data.frame(crop=row.names(tapply(crops_fresno$Acres, crops_fresno$Crop2014, function(x) sum(x))), acres=as.numeric(tapply(crops_fresno$Acres, crops_fresno$Crop2014, function(x) sum(x))))
-crop_acreage_fresno <- crop_acreage_fresno[order(crop_acreage_fresno$acres, decreasing = TRUE), ]
-#write.csv(crop_acreage_fresno, file.path(summaryDir, 'crop_acreage_DWR14.csv'), row.names = FALSE)
+valley_100cm <- as.data.frame(valley_mu_shp_100cm)
+colnames(valley_100cm)
+write.csv(valley_100cm, file.path(summaryDir, 'valley_100cm_2.7.20.csv'), row.names = FALSE)
+plot(valley_100cm$aws100wta, valley_100cm$awc_100cm)
+sum(valley_100cm$awc_100cm  - valley_100cm$aws100wta > 0.2, na.rm = TRUE) #1210 polygons have slightly different AWC values; most likely due to the fact that I did not include minor components
+unique(valley_100cm$muname[which(valley_100cm$awc_100cm  - valley_100cm$aws100wta > 0.2)]) #73 unique map units
