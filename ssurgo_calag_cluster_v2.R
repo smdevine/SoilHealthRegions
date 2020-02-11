@@ -30,10 +30,10 @@ if (laptop) {
 }
 mar_settings <- c(4, 4.5, 1, 1)
 ec_zero_rule <- 1.5
-list.files(dataDir)
+list.files(file.path(dataDir, 'for cluster analysis'))
 # valley_mu_shp_30cm <- shapefile(file.path(dataDir, 'shapefiles with data', 'valley_30cm.shp'))
 # names(valley_mu_shp_30cm)
-valley30cm_by_mukey <- read.csv(file.path(dataDir, 'for cluster analysis', 'valley30cm_by_mukey_final.csv'), stringsAsFactors = FALSE)
+valley30cm_by_mukey <- read.csv(file.path(dataDir, 'for cluster analysis', 'valley30cm_by_mukey_final_v2.csv'), stringsAsFactors = FALSE)
 
 
 #create data.frame for cluster analysis
@@ -200,10 +200,15 @@ valley30cm_by_mukey$cluster_9 <- cluster_9$cluster[match(valley30cm_by_mukey$muk
 valley30cm_by_mukey$cluster_10 <- cluster_10$cluster[match(valley30cm_by_mukey$mukey, names(cluster_10$cluster))]
 valley30cm_by_mukey$cluster_11 <- cluster_11$cluster[match(valley30cm_by_mukey$mukey, names(cluster_11$cluster))]
 valley30cm_by_mukey$cluster_12 <- cluster_12$cluster[match(valley30cm_by_mukey$mukey, names(cluster_12$cluster))]
-# write.csv(valley30cm_by_mukey, file.path(dataDir, 'v2 results', 'valley30cm_by_mukey_cluster.csv'), row.names = FALSE)
+write.csv(valley30cm_by_mukey, file.path(dataDir, 'v2 results', 'valley30cm_by_mukey_cluster_v2.csv'), row.names = FALSE) #this produced a different order of cluster labels even with setting seed--perhaps because R version has changed since last run?
 
 #read in cluster valley file by mukey with cluster info
-# valley30cm_by_mukey <- read.csv(file.path(dataDir, 'valley30cm_by_mukey_cluster.csv'), stringsAsFactors = FALSE)
+valley30cm_by_mukey_orig <- read.csv(file.path(dataDir, 'v2 results', 'valley30cm_by_mukey_cluster.csv'), stringsAsFactors = FALSE)
+all(valley30cm_by_mukey_orig$mukey==valley30cm_by_mukey$mukey) #it's in same order
+colnames(valley30cm_by_mukey)[74:84]
+colnames(valley30cm_by_mukey_orig)[74:84]
+valley30cm_by_mukey[,74:84] <- valley30cm_by_mukey_orig[,74:84]
+write.csv(valley30cm_by_mukey, file.path(dataDir, 'v2 results', 'valley30cm_by_mukey_cluster_v2.csv'), row.names = FALSE)
 
 #add cluster info to shapefile
 valley_mu_shp_30cm$cluster_2 <- valley30cm_by_mukey$cluster_2[match(valley_mu_shp_30cm$mukey, valley30cm_by_mukey$mukey)]
