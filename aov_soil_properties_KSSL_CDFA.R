@@ -28,11 +28,24 @@ if (laptop) {
   kerriDir <- 'C:/Users/smdevine/Desktop/PostDoc/soil health/kerri data'
 }
 om_to_oc <- 1.72
-
-valley30cm_by_mukey <- read.csv(file.path(dataDir, 'v2 results', 'valley30cm_by_mukey_cluster.csv'), stringsAsFactors = FALSE)
+clus_7_names <- c('3. Coarse w/pans', '6. Fine saline-sodic', '5. Coarse saline-sodic', '1. Coarse w/no restrictions', '7. Fine shrink-swell', '2. Loamy w/no restrictions', '4. Loamy w/pans')
+valley30cm_by_mukey <- read.csv(file.path(dataDir, 'v2 results', 'valley30cm_by_mukey_cluster_v2.csv'), stringsAsFactors = FALSE)
 
 kssl_points_30cm <- read.csv(file.path(ksslDir, 'kssl_cluster_30cm_NArm.csv'), stringsAsFactors = FALSE)
 colnames(kssl_points_30cm)
+dim(kssl_points_30cm)
+sum(is.na(kssl_points_30cm$clay_30cm))
+sum(is.na(kssl_points_30cm$cluster_7))
+sampnumbers_kgOrgC <- table(kssl_points_30cm$cluster_7[!is.na(kssl_points_30cm$kgOrg.m2_30cm)])
+names(sampnumbers_kgOrgC) <- clus_7_names
+
+kssl_points_100cm <- read.csv(file.path(ksslDir, 'kssl_cluster_100cm_NArm.csv'), stringsAsFactors = FALSE)
+colnames(kssl_points_100cm)
+table(kssl_points_100cm$cluster_7[!is.na(kssl_points_100cm$kgOrg.m2_100cm)])
+test <- table(kssl_points_100cm$cluster_7[!is.na(kssl_points_100cm$kgOrg.m2_100cm)])
+names(test) <- clus_7_names
+test
+
 df_combined1 <-  kssl_points_30cm[ ,c('clay_30cm', 'om_30cm', 'bd_13b_30cm', 'pH_H2O_30cm', colnames(kssl_points_30cm)[grepl('cluster_', colnames(kssl_points_30cm))])]
 dim(df_combined1) #370 rows
 colnames(df_combined1)[3] <- 'bd_30cm'
@@ -50,8 +63,6 @@ df_combined <- rbind(df_combined1, df_combined2)
 clus_9_names <- c('1. Very coarse w/no restrictions', '9. Fine shrink-swell', '2. Coarse w/no restrictions',  '6. Loamy w/pans (high OM)',  '4. Coarse w/pans', '3. Loamy w/no restrictions', '7. Coarse saline-sodic',  '8. Fine saline-sodic', '5. Loamy w/pans')
 
 clus_8_names <- c('5. Loamy w/pans', '1. Very coarse w/no restrictions', '7. Fine saline-sodic', '4. Coarse w/pans', '2. Coarse w/no restrictions',  '6. Coarse saline-sodic', '3. Loamy w/no restrictions', '8. Fine shrink-swell')
-
-clus_7_names <- c('3. Coarse w/pans', '6. Fine saline-sodic', '5. Coarse saline-sodic', '1. Coarse w/no restrictions', '7. Fine shrink-swell', '2. Loamy w/no restrictions', '4. Loamy w/pans')
 
 clus_6_names <- c('5. Fine saline-sodic', '6. Fine shrink-swell', '1. Coarse w/no restrictions', '4. Loamy w/pans', '3. Coarse w/pans', '2. Loamy w/no restrictions')
 
@@ -108,12 +119,18 @@ compare_region_means(df=kssl_points_30cm, names=clus_7_names, cluster_no=7, y='c
 compare_region_means(df=kssl_points_30cm, names=clus_7_names, cluster_no=7, y='lep_30cm', alpha = 0.05)
 compare_region_means(df=kssl_points_30cm, names=clus_7_names, cluster_no=7, y='ec_30cm', alpha = 0.05)
 compare_region_means(df=kssl_points_30cm, names=clus_7_names, cluster_no=7, y='awc_30cm', alpha = 0.05)
+compare_region_means(df=kssl_points_30cm, names=clus_7_names, cluster_no=7, y='kgOrg.m2_30cm', alpha = 0.05)
+compare_region_means(df=kssl_points_100cm, names=clus_7_names, cluster_no=7, y='kgOrg.m2_100cm', alpha = 0.05)
+
 
 meanclay_clus7 <- tapply(df_combined$clay_30cm, clus_7_names[match(df_combined$cluster_7, 1:7)], mean, na.rm=TRUE)
 meanclay_clus7[order(meanclay_clus7)]
 
 meanOM_clus7 <- tapply(df_combined$om_30cm, clus_7_names[match(df_combined$cluster_7, 1:7)], mean, na.rm=TRUE)
 meanOM_clus7[order(meanOM_clus7)]
+
+meanBD_clus7 <- tapply(df_combined$bd_30cm, clus_7_names[match(df_combined$cluster_7, 1:7)], mean, na.rm=TRUE)
+meanBD_clus7[order(meanBD_clus7)]
 
 meanpH_clus7 <- tapply(df_combined$pH_H2O_30cm, clus_7_names[match(df_combined$cluster_7, 1:7)], mean, na.rm=TRUE)
 meanpH_clus7[order(meanpH_clus7)]
@@ -129,6 +146,9 @@ meanEC_clus7[order(meanEC_clus7)]
 
 meanAWC_clus7 <- tapply(kssl_points_30cm$awc_30cm, clus_7_names[match(kssl_points_30cm$cluster_7, 1:7)], mean, na.rm=TRUE)
 meanAWC_clus7[order(meanAWC_clus7)]
+
+meankgOC_clus7 <- tapply(kssl_points_30cm$kgOrg.m2_30cm, clus_7_names[match(kssl_points_30cm$cluster_7, 1:7)], mean, na.rm=TRUE)
+meankgOC_clus7[order(meankgOC_clus7)]
 
 #6 region
 compare_region_means(df=df_combined, names=clus_6_names, cluster_no=6, y='clay_30cm', alpha = 0.05)
@@ -192,7 +212,7 @@ compare_region_means(df=kssl_points_30cm, names=clus_3_names, cluster_no=3, y='e
 compare_region_means(df=kssl_points_30cm, names=clus_3_names, cluster_no=3, y='awc_30cm', alpha = 0.05)
 
 #make group contrast by cluster figure
-contrast_summary <- data.frame(cluster_no=3:9, contrast_no=c(3,6,10,15,21,28,36), clay=c(3,5,7,9,14,17,19), om=c(2,4,6,9,11,11,15), bd=c(1,1,2,2,4,6,5), pH=c(2,6,9,11,16,17,17), cec=c(3,5,8,10,13,16,16), lep=c(2,5,8,9,12,13,13), ec=c(1,3,2,1,6,7,7))
+contrast_summary <- data.frame(cluster_no=3:9, contrast_no=c(3,6,10,15,21,28,36), clay=c(3,5,7,8,14,17,19), om=c(2,4,6,9,11,13,18), bd=c(0,0,2,2,2,3,2), pH=c(2,6,9,12,16,18,18), cec=c(3,5,8,9,13,16,16), lep=c(2,3,6,7,11,11,11), ec=c(1,3,2,1,5,6,6))
 
 tiff(file = file.path(FiguresDir, 'v2', 'validation plots', 'sig_group_contrasts_3to9.tif'), family = 'Times New Roman', width = 6.5, height = 5, pointsize = 11, units = 'in', res=800, compression = 'lzw')
 plot(x=3:9, y=100*contrast_summary$clay/contrast_summary$contrast_no, xlab='', ylab='', type='b', col='grey', ylim=c(0,100), pch=21, bg='grey')
