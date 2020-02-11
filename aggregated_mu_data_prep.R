@@ -18,12 +18,13 @@ min_modified <- function(x) {
 }
 comp_data <- read.csv(file.path(ssurgoDir, 'component_data', 'ca_component_data.csv'), stringsAsFactors = FALSE, na.strings = c('', ' '))
 horizon_data <- read.csv(file.path(ssurgoDir, 'ca_horizon_data.csv'), stringsAsFactors = FALSE)
-valley30cm <- read.csv(file.path(dataDir, 'valley_30cm_data_10.29.19.csv'), stringsAsFactors = FALSE)
+valley30cm <- read.csv(file.path(dataDir, 'valley_30cm_data_2.7.20.csv'), stringsAsFactors = FALSE) #'valley_30cm_data_10.29.19.csv'
 acres_by_mukey <- aggregate(area_ac ~ mukey, data = valley30cm, sum)
 valley30cm_by_mukey <- valley30cm[!duplicated(valley30cm$mukey), ]
 valley30cm_by_mukey$area_ac <- acres_by_mukey$area_ac[match(valley30cm_by_mukey$mukey, acres_by_mukey$mukey)]
 
 #new checks based on meeting minimum data requirement for at least the dominant component percentage
+c('MnRs_dep', 'clay_30cm', 'om_30cm', 'cec_30cm', 'bd_30cm', 'ec_30cm', 'pH_30cm', 'lep_30cm', 'ksat_30cm', 'awc_30cm', 'area_ac', 'muname', 'mjcmpnms', 'compct_om', 'compct_cec', 'compct_ksat', 'compct_awc', 'compct_clay', 'compct_bd', 'compct_pH', 'compct_lep', 'dmcmp_pct', 'mukey', 'complex', 'associan') %in% colnames(valley30cm_by_mukey)
 analysis_dataset <- valley30cm_by_mukey[ ,c('MnRs_dep', 'clay_30cm', 'om_30cm', 'cec_30cm', 'bd_30cm', 'ec_30cm', 'pH_30cm', 'lep_30cm', 'ksat_30cm', 'awc_30cm', 'area_ac', 'muname', 'mjcmpnms', 'compct_om', 'compct_cec', 'compct_ksat', 'compct_awc', 'compct_clay', 'compct_bd', 'compct_pH', 'compct_lep', 'dmcmp_pct', 'mukey', 'complex', 'associan')] #don't include compct_ec because of rule below
 analysis_dataset$count_NAs <- apply(analysis_dataset[,1:10], 1, function(x) sum(is.na(x)))
 tapply(analysis_dataset$area_ac, analysis_dataset$count_NAs, sum) #0 NAs are 13,134,775 acres
@@ -129,4 +130,4 @@ valley30cm_by_mukey_final <- valley30cm_by_mukey[valley30cm_by_mukey$mukey %in% 
 sum(valley30cm_by_mukey_final$area_ac) #13034096 acres
 sum(is.na(valley30cm_by_mukey_final$ec_30cm))
 valley30cm_by_mukey_final$ec_30cm[is.na(valley30cm_by_mukey_final$ec_30cm)] <- 0
-write.csv(valley30cm_by_mukey_final, file.path(dataDir, 'for cluster analysis', 'valley30cm_by_mukey_final.csv'), row.names = FALSE)
+write.csv(valley30cm_by_mukey_final, file.path(dataDir, 'for cluster analysis', 'valley30cm_by_mukey_final_v2.csv'), row.names = FALSE) #only change in v2 is updated kg SOC m^-2 data
