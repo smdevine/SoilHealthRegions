@@ -5,7 +5,7 @@ library(vioplot)
 library(extrafont)
 library(extrafontdb)
 loadfonts(device = 'win')
-laptop <- FALSE
+laptop <- TRUE
 
 if (laptop) {
   mainDir <- 'C:/Users/smdevine/Desktop/post doc'
