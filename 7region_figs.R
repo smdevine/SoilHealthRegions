@@ -117,7 +117,7 @@ points(notill_irr_clus6$C_means, -depths_cm, type='b', pch=23, bg='tan4', col='b
 points(till_irr_clus4$C_means, -depths_cm, type = 'b', pch=24, bg='tan2', col='black')
 points(till_irr_clus5$C_means, -depths_cm, type = 'b', pch=24, bg='gold', col='black')
 points(notill_irr_clus7$C_means, -depths_cm, type='b', pch=23, bg='firebrick3', col='black')
-legend('bottomright', legend=c('1. Coarse w/no restrictions', '2a. Loamy w/no resrictions', '2b. Loamy w/no restrictions: No-till', '2c. Loamy w/no restrictions: Dry farm', '3. Coarse w/pans', '4. Loamy w/pans: No-till'), pch=c(24,24,23,24,24,23), lty=c(1,1,1,2,1,1), pt.bg=c('tan2', 'tan4', 'tan4', 'tan4', 'gold', 'firebrick3'), col='black')
+legend('bottomright', legend=c('1. Coarse w/no restrictions', '2a. Loamy w/no restrictions', '2b. Loamy w/no restrictions: No-till', '2c. Loamy w/no restrictions: Dry farm', '3. Coarse w/pans', '4. Loamy w/pans: No-till'), pch=c(24,24,23,24,24,23), lty=c(1,1,1,2,1,1), pt.bg=c('tan2', 'tan4', 'tan4', 'tan4', 'gold', 'firebrick3'), col='black')
 dev.off()
 #option 2 names: c('1. Very coarse w/no restrictions', '2a. Coarse w/no resrictions', '2b. Coarse w/no resrictions: No-till', '2c. Coarse w/no resrictions: Dry farm', '3. Very coarse w/pans', '4. Coarse w/pans: No-till')
 
@@ -152,9 +152,10 @@ plot_da_error(3, barcenters_50cm, kgOrgC_50cm_data)
 plot_da_error(4, barcenters_50cm, kgOrgC_50cm_data)
 plot_da_error(5, barcenters_50cm, kgOrgC_50cm_data)
 plot_da_error(6, barcenters_50cm, kgOrgC_50cm_data)
+text(x=barcenters_50cm, y=1, labels = c('A', 'BC', 'BC', 'C', 'AB', 'BC'), adj=0.5)
 dev.off()
 
-#plot 50 cm C contents
+#plot 10 cm C contents
 kgOrgC_10cm_data <- data.frame(means=c(mean(pts_10cm$kgOrg.m2_10cm[which(pts_10cm$tillage=='till' & pts_10cm$irrigated_vs_dryfarm=='irrigated' & pts_10cm$compost_added=='yes'& pts_10cm$cluster_7==4)], na.rm=TRUE), mean(pts_10cm$kgOrg.m2_10cm[which(pts_10cm$tillage=='till' & pts_10cm$irrigated_vs_dryfarm=='irrigated' & pts_10cm$compost_added=='yes'& pts_10cm$cluster_7==6)], na.rm=TRUE), mean(pts_10cm$kgOrg.m2_10cm[which(pts_10cm$tillage=='no till' & pts_10cm$irrigated_vs_dryfarm=='irrigated' & pts_10cm$compost_added=='yes'& pts_10cm$cluster_7==6)], na.rm=TRUE), mean(pts_10cm$kgOrg.m2_10cm[which(pts_10cm$tillage=='till' & pts_10cm$irrigated_vs_dryfarm=='dryfarm' & pts_10cm$compost_added=='yes' & pts_10cm$cluster_7==6)], na.rm=TRUE), mean(pts_10cm$kgOrg.m2_10cm[which(pts_10cm$tillage=='till' & pts_10cm$irrigated_vs_dryfarm=='irrigated' & pts_10cm$compost_added=='yes'& pts_10cm$cluster_7==1)], na.rm=TRUE), mean(pts_10cm$kgOrg.m2_10cm[which(pts_10cm$tillage=='no till' & pts_10cm$irrigated_vs_dryfarm=='irrigated' & pts_10cm$compost_added=='yes'& pts_10cm$cluster_7==7)], na.rm=TRUE)), sd=c(sd(pts_10cm$kgOrg.m2_10cm[which(pts_10cm$tillage=='till' & pts_10cm$irrigated_vs_dryfarm=='irrigated' & pts_10cm$compost_added=='yes'& pts_10cm$cluster_7==4)], na.rm=TRUE), sd(pts_10cm$kgOrg.m2_10cm[which(pts_10cm$tillage=='till' & pts_10cm$irrigated_vs_dryfarm=='irrigated' & pts_10cm$compost_added=='yes'& pts_10cm$cluster_7==6)], na.rm=TRUE), sd(pts_10cm$kgOrg.m2_10cm[which(pts_10cm$tillage=='no till' & pts_10cm$irrigated_vs_dryfarm=='irrigated' & pts_10cm$compost_added=='yes'& pts_10cm$cluster_7==6)], na.rm=TRUE), sd(pts_10cm$kgOrg.m2_10cm[which(pts_10cm$tillage=='till' & pts_10cm$irrigated_vs_dryfarm=='dryfarm' & pts_10cm$compost_added=='yes' & pts_10cm$cluster_7==6)], na.rm=TRUE), sd(pts_10cm$kgOrg.m2_10cm[which(pts_10cm$tillage=='till' & pts_10cm$irrigated_vs_dryfarm=='irrigated' & pts_10cm$compost_added=='yes'& pts_10cm$cluster_7==1)], na.rm=TRUE), sd(pts_10cm$kgOrg.m2_10cm[which(pts_10cm$tillage=='no till' & pts_10cm$irrigated_vs_dryfarm=='irrigated' & pts_10cm$compost_added=='yes'& pts_10cm$cluster_7==7)], na.rm=TRUE)), n=c(sum(!is.na(pts_10cm$kgOrg.m2_10cm[which(pts_10cm$tillage=='till' & pts_10cm$irrigated_vs_dryfarm=='irrigated' & pts_10cm$compost_added=='yes'& pts_10cm$cluster_7==4)])), sum(!is.na(pts_10cm$kgOrg.m2_10cm[which(pts_10cm$tillage=='till' & pts_10cm$irrigated_vs_dryfarm=='irrigated' & pts_10cm$compost_added=='yes'& pts_10cm$cluster_7==6)])), sum(!is.na(pts_10cm$kgOrg.m2_10cm[which(pts_10cm$tillage=='no till' & pts_10cm$irrigated_vs_dryfarm=='irrigated' & pts_10cm$compost_added=='yes'& pts_10cm$cluster_7==6)])), sum(!is.na(pts_10cm$kgOrg.m2_10cm[which(pts_10cm$tillage=='till' & pts_10cm$irrigated_vs_dryfarm=='dryfarm' & pts_10cm$compost_added=='yes' & pts_10cm$cluster_7==6)])), sum(!is.na(pts_10cm$kgOrg.m2_10cm[which(pts_10cm$tillage=='till' & pts_10cm$irrigated_vs_dryfarm=='irrigated' & pts_10cm$compost_added=='yes'& pts_10cm$cluster_7==1)])), sum(!is.na(pts_10cm$kgOrg.m2_10cm[which(pts_10cm$tillage=='no till' & pts_10cm$irrigated_vs_dryfarm=='irrigated' & pts_10cm$compost_added=='yes'& pts_10cm$cluster_7==7)]))), row.names = c('1. Coarse w/no restrictions', '2a. Loamy w/no resrictions', '2b. Loamy w/no restrictions: No-till', '2c. Loamy w/no restrictions: Dry farm', '3. Coarse w/pans', '4. Loamy w/pans: No-till'))
 
 tiff(file = file.path(FiguresDir, 'v2', 'CDFA validation', '7 region', 'CDFA_soilC_kg_0_10cm.tif'), pointsize = 11, family = 'Times New Roman', width = 4.5, height = 3, units = 'in', res=800, compression = 'lzw')
@@ -167,4 +168,22 @@ plot_da_error(3, barcenters_10cm, kgOrgC_10cm_data)
 plot_da_error(4, barcenters_10cm, kgOrgC_10cm_data)
 plot_da_error(5, barcenters_10cm, kgOrgC_10cm_data)
 plot_da_error(6, barcenters_10cm, kgOrgC_10cm_data)
+text(x=barcenters_10cm, y=0.2, labels = c('A', 'ABC', 'BC', 'C', 'AB', 'BC'), adj=0.5)
 dev.off()
+
+
+#analysis of variance
+pts_50cm$aov_code <- ifelse(pts_50cm$tillage=='till' & pts_50cm$irrigated_vs_dryfarm=='irrigated' & pts_50cm$compost_added=='yes'& pts_50cm$cluster_7==4, 'Coarse w/no restrictions', ifelse(pts_50cm$tillage=='till' & pts_50cm$irrigated_vs_dryfarm=='irrigated' & pts_50cm$compost_added=='yes'& pts_50cm$cluster_7==6, 'Loamy w/no restrictions', ifelse(pts_50cm$tillage=='no till' & pts_50cm$irrigated_vs_dryfarm=='irrigated' & pts_50cm$compost_added=='yes'& pts_50cm$cluster_7==6, 'Loamy w/no restrictions: no-till', ifelse(pts_50cm$tillage=='till' & pts_50cm$irrigated_vs_dryfarm=='dryfarm' & pts_50cm$compost_added=='yes' & pts_50cm$cluster_7==6, 'Loamy w/no restrictions: dry farm', ifelse(pts_50cm$tillage=='till' & pts_50cm$irrigated_vs_dryfarm=='irrigated' & pts_50cm$compost_added=='yes'& pts_50cm$cluster_7==1, 'Coarse w/pans', ifelse(pts_50cm$tillage=='no till' & pts_50cm$irrigated_vs_dryfarm=='irrigated' & pts_50cm$compost_added=='yes'& pts_50cm$cluster_7==7, 'Loamy w/pans: no-till', NA))))))
+
+tapply(pts_50cm$kgOrg.m2_50cm, pts_50cm$aov_code, mean, na.rm=TRUE)
+kgOrgC_50cm_data
+summary(aov(kgOrg.m2_50cm ~ aov_code, data=pts_50cm))
+TukeyHSD(aov(kgOrg.m2_50cm ~ aov_code, data=pts_50cm))
+
+#10 cm test
+pts_10cm$aov_code <- ifelse(pts_10cm$tillage=='till' & pts_10cm$irrigated_vs_dryfarm=='irrigated' & pts_10cm$compost_added=='yes'& pts_10cm$cluster_7==4, 'Coarse w/no restrictions', ifelse(pts_10cm$tillage=='till' & pts_10cm$irrigated_vs_dryfarm=='irrigated' & pts_10cm$compost_added=='yes'& pts_10cm$cluster_7==6, 'Loamy w/no restrictions', ifelse(pts_10cm$tillage=='no till' & pts_10cm$irrigated_vs_dryfarm=='irrigated' & pts_10cm$compost_added=='yes'& pts_10cm$cluster_7==6, 'Loamy w/no restrictions: no-till', ifelse(pts_10cm$tillage=='till' & pts_10cm$irrigated_vs_dryfarm=='dryfarm' & pts_10cm$compost_added=='yes' & pts_10cm$cluster_7==6, 'Loamy w/no restrictions: dry farm', ifelse(pts_10cm$tillage=='till' & pts_10cm$irrigated_vs_dryfarm=='irrigated' & pts_10cm$compost_added=='yes'& pts_10cm$cluster_7==1, 'Coarse w/pans', ifelse(pts_10cm$tillage=='no till' & pts_10cm$irrigated_vs_dryfarm=='irrigated' & pts_10cm$compost_added=='yes'& pts_10cm$cluster_7==7, 'Loamy w/pans: no-till', NA))))))
+
+tapply(pts_10cm$kgOrg.m2_10cm, pts_10cm$aov_code, mean, na.rm=TRUE)
+kgOrgC_10cm_data
+summary(aov(kgOrg.m2_10cm ~ aov_code, data=pts_10cm))
+TukeyHSD(aov(kgOrg.m2_10cm ~ aov_code, data=pts_10cm))
