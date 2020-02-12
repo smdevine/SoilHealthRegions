@@ -44,6 +44,9 @@ kssl_ssurgo_30cm$labsampnum <- kssl_shp$pdlbsmp[kssl_ssurgo_30cm$point.ID]
 # colnames(kssl_ssurgo_30cm)
 
 kssl_horizons <- read.csv(file.path(ksslDir, 'ca_kssl_horizons.csv'), stringsAsFactors = FALSE)
+sum(is.na(kssl_horizons$oc) & !is.na(kssl_horizons$c_tot))
+sum(is.na(kssl_horizons$oc) & !is.na(kssl_horizons$c_tot) & kssl_horizons$ph_h2o < 7.8, na.rm = TRUE)
+
 
 wtd.mean_v2 <- function(x, y) {
   # use horizon thickness as a weight
@@ -53,9 +56,13 @@ wtd.mean_v2 <- function(x, y) {
   m
 }
 
-kgOrgC_sum_v2 <- function(x, depth, rm.NAs=FALSE) {
+kgOrgC_sum_v2 <- function(x, depth, rm.NAs=FALSE, crit_pH=7.8) {
   thick <- x$hzn_bot - x$hzn_top
-  sum((thick / 10) * x$oc * x$db_13b * (1 - x$frags / 100), na.rm = rm.NAs)
+  if(any(is.na(x$oc)) & all(!is.na(x$ph_h2o))) {
+    if (all(x$ph_h2o < crit_pH)) {
+      sum((thick / 10) * x$c_tot * x$db_13b * (1 - x$frags / 100), na.rm = rm.NAs)
+    } else {NA}
+  } else {sum((thick / 10) * x$oc * x$db_13b * (1 - x$frags / 100), na.rm = rm.NAs)}
 }
 
 awc_sum_v2 <- function(x, rm.NAs=FALSE) {
@@ -66,7 +73,7 @@ awc_sum_v2 <- function(x, rm.NAs=FALSE) {
 # depth <- 30
 # vars_of_interest <- c('clay')
 # varnames <- 'clay'
-horizon_to_comp_v2 <- function(horizon_SPC, depth, vars_of_interest = c('clay', 'silt', 'sand', 'oc', 'estimated_om', 'cec7', 'cec82', 'db_13b', 'db_od', 'frags', 'ec_12pre', 'ph_h2o', 'ph_cacl2', 'sar', 'caco3', 'gypl20', 'COLEws', 'whc', 'w3cld', 'w15l2', 'Ks'), varnames = c('clay', 'silt', 'sand', 'oc', 'om', 'cec_7', 'cec_8.2', 'bd_13b', 'bd_od', 'frags', 'ec', 'pH_H2O', 'pH_CaCl2', 'sar', 'caco3', 'gyp', 'lep', 'awc', 'w3cld', 'w15l2', 'ksat')) { #lep is linear extensibility
+horizon_to_comp_v2 <- function(horizon_SPC, depth, vars_of_interest = c('clay', 'silt', 'sand', 'oc', 'c_tot', 'estimated_om', 'cec7', 'cec82', 'db_13b', 'db_od', 'frags', 'ec_12pre', 'ph_h2o', 'ph_cacl2', 'sar', 'caco3', 'gypl20', 'COLEws', 'whc', 'w3cld', 'w15l2', 'Ks'), varnames = c('clay', 'silt', 'sand', 'oc', 'c_tot', 'om', 'cec_7', 'cec_8.2', 'bd_13b', 'bd_od', 'frags', 'ec', 'pH_H2O', 'pH_CaCl2', 'sar', 'caco3', 'gyp', 'lep', 'awc', 'w3cld', 'w15l2', 'ksat')) { #lep is linear extensibility
   columnames <- paste0(varnames, '_', depth, 'cm')
   print(cbind(vars_of_interest, columnames)) #show that it's all lined up
   assign("depth", depth, envir = .GlobalEnv) #this necessary because slice can't find the variable otherwise
@@ -126,10 +133,7 @@ kssl_horizons_subset$soil_depth <- profileApply(kssl_horizons_subset, FUN = esti
 # kssl_horizons[kssl_horizons$pedon_key %in% c(165,166,204) & kssl_horizons$hzn_top <=30,]
 kssl_points_30cm <- horizon_to_comp_v2(horizon_SPC = kssl_horizons_subset, depth = 30)
 colnames(kssl_points_30cm)
-summary(kssl_points_30cm$kgOrg.m2_30cm)
-sum(!is.na(kssl_points_30cm$kgOrg.m2_30cm))
-dim(kssl_points_30cm)
-head(kssl_points_30cm)
+
 kssl_points_30cm[kssl_points_30cm$pedon_key==165,]
 kssl_horizons[kssl_horizons$pedon_key==165 & kssl_horizons$hzn_top <=30,]
 #awc check: 3.3 cm
@@ -163,16 +167,22 @@ kssl_points_30cm$cluster_9 <- kssl_ssurgo_30cm$cluster_9[match(kssl_points_30cm$
 kssl_points_30cm$cluster_10 <- kssl_ssurgo_30cm$cluster_10[match(kssl_points_30cm$pedon_key, kssl_ssurgo_30cm$pedon_key)]
 kssl_points_30cm$cluster_11 <- kssl_ssurgo_30cm$cluster_11[match(kssl_points_30cm$pedon_key, kssl_ssurgo_30cm$pedon_key)]
 kssl_points_30cm$cluster_12 <- kssl_ssurgo_30cm$cluster_12[match(kssl_points_30cm$pedon_key, kssl_ssurgo_30cm$pedon_key)]
+sum(is.na(kssl_points_30cm$cluster_7))
+dim(kssl_points_30cm) #369 kssl points
+summary(kssl_points_30cm$kgOrg.m2_30cm)
+sum(!is.na(kssl_points_30cm$oc_30cm))
+sum(is.na(kssl_points_30cm$oc_30cm) & !is.na(kssl_points_30cm$c_tot_30cm))
+sum(is.na(kssl_points_30cm$oc_30cm) & !is.na(kssl_points_30cm$c_tot_30cm) & kssl_points_30cm$pH_H2O_30cm <= 8.2, na.rm = TRUE) #39 points have total C but not organic C; 31 have pH <= 7.5; 32 have pH <= 7.8; 34 have pH <= 8.0
 
-write.csv(kssl_points_30cm, file.path(ksslDir, 'kssl_cluster_30cm_NArm.csv'), row.names = FALSE)
+write.csv(kssl_points_30cm, file.path(ksslDir, 'kssl_cluster_30cm_NArm_v2.csv'), row.names = FALSE)
 
 tapply(kssl_points_30cm$oc_30cm, kssl_points_30cm$cluster_9, summary)
 tapply(kssl_points_30cm$pH_H2O_30cm, kssl_points_30cm$cluster_9, summary)
 tapply(kssl_points_30cm$cec_7_30cm, kssl_points_30cm$cluster_9, summary)
-sum(!is.na(kssl_points_30cm$kgOrg.m2_30cm)) #106 of 370 have 0-30 cm content data
+sum(!is.na(kssl_points_30cm$kgOrg.m2_30cm)) #120 of 370 have 0-30 cm content data (was 106)
 write.csv(kssl_ssurgo_30cm, file.path(ksslDir, 'kssl_pts_ssurgo_30cm_extract.csv'), row.names = FALSE)
 
-kssl_points_30cm <- read.csv(file.path(ksslDir, 'kssl_cluster_30cm_NArm.csv'), stringsAsFactors = FALSE)
+# kssl_points_30cm <- read.csv(file.path(ksslDir, 'kssl_cluster_30cm_NArm.csv'), stringsAsFactors = FALSE)
 
 dim(kssl_points_30cm)
 sum(!is.na(kssl_points_30cm$clay_30cm) & !is.na(kssl_points_30cm$oc_30cm) & !is.na(kssl_points_30cm$cec_7_30cm) & !is.na(kssl_points_30cm$bd_13b_30cm) & !is.na(kssl_points_30cm$ec_30cm) & !is.na(kssl_points_30cm$pH_H2O_30cm) & !is.na(kssl_points_30cm$lep_30cm) & !is.na(kssl_points_30cm$awc_30cm)) #only 60!
@@ -194,8 +204,8 @@ kssl_points_100cm$cluster_10 <- kssl_ssurgo_30cm$cluster_10[match(kssl_points_10
 kssl_points_100cm$cluster_11 <- kssl_ssurgo_30cm$cluster_11[match(kssl_points_100cm$pedon_key, kssl_ssurgo_30cm$pedon_key)]
 kssl_points_100cm$cluster_12 <- kssl_ssurgo_30cm$cluster_12[match(kssl_points_100cm$pedon_key, kssl_ssurgo_30cm$pedon_key)]
 sum(is.na(kssl_points_100cm$cluster_7))
-sum(!is.na(kssl_points_100cm$kgOrg.m2_100cm)) #only 79 of 369 have complete content data
-write.csv(kssl_points_100cm, file.path(ksslDir, 'kssl_cluster_100cm_NArm.csv'), row.names = FALSE)
+sum(!is.na(kssl_points_100cm$kgOrg.m2_100cm)) #only 84 of 369 have complete content data (was 79 before)
+write.csv(kssl_points_100cm, file.path(ksslDir, 'kssl_cluster_100cm_NArm_v2.csv'), row.names = FALSE)
 
 clus_5_names <- c()
 clus_6_names <- c()
