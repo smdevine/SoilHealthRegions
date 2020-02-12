@@ -37,7 +37,13 @@ order_lgnd_7 <- c(4,6,1,7,3,2,5)
 # order_lgnd_6 <- c(3,6,5,4,1,2)
 # order_lgnd_5 <- c(2,1,5,4,3)
 # clus_5_colors <- c('tan4', 'lightgoldenrod', 'violetred', 'lightblue1', 'firebrick3')
-kssl_points_30cm <- read.csv(file.path(ksslDir, 'kssl_cluster_30cm_NArm.csv'), stringsAsFactors = FALSE)
+kssl_points_30cm <- read.csv(file.path(ksslDir, 'kssl_cluster_30cm_NArm_v2.csv'), stringsAsFactors = FALSE) #oc and kgSOC_m2 updated 2/11/20
+#replace OC with totC when pH sufficiently low
+kssl_points_30cm$oc_30cm[which(is.na(kssl_points_30cm$oc_30cm) & kssl_points_30cm$pH_H2O_30cm < crit_pH)] <- kssl_points_30cm$c_tot_30cm[which(is.na(kssl_points_30cm$oc_30cm) & kssl_points_30cm$pH_H2O_30cm < crit_pH)]
+sum(is.na(kssl_points_30cm$oc)) #NAs reduced from 88 to 56
+#replace estimated om with oc times assumption (see 'aov_soil_properties_KSSL_CDFA.R' for details comparing KSSL OM est with this)
+kssl_points_30cm$om_30cm <- kssl_points_30cm$oc_30cm * om_to_oc
+
 # kssl_points_30cm$xdim_vioplot9 <- match(kssl_points_30cm$cluster_9, order_lgnd_9)
 kssl_points_30cm$xdim_vioplot7 <- match(kssl_points_30cm$cluster_7, order_lgnd_7)
 # kssl_points_30cm$xdim_vioplot6 <- match(kssl_points_30cm$cluster_6, order_lgnd_6)
@@ -116,6 +122,8 @@ table(kerri_points_30cm$cluster_7)
 
 #7-region plots
 table(kssl_points_30cm$cluster_7)
+table(kssl_points_30cm$cluster_7[!is.na(kssl_points_30cm$kgOrg.m2_30cm)])
+table(kssl_points_30cm$cluster_7[!is.na(kssl_points_30cm$om_30cm)])
 plot(x=rep(1, length(kssl_points_30cm$pH_H2O_30cm[kssl_points_30cm$xdim_vioplot7==4])), y=kssl_points_30cm$pH_H2O_30cm[kssl_points_30cm$xdim_vioplot7==4])
 
 vioplot_mod_clus7_validation <- function(df, varname, ylim_vioplot, plot_order, area_fact, labnames, ylab, fname, mar, kssl_df, kssl_varname, cdfa_pts, cdfa_varname, legend_plot, legendloc, legend_cex, sig_labels) {
@@ -146,7 +154,7 @@ vioplot_mod_clus7_validation(valley30cm_by_mukey, 'om_30cm', ylim_vioplot = c(-0
 
 vioplot_mod_clus7_validation(valley30cm_by_mukey, 'bd_30cm', ylim_vioplot = c(0.79,1.85), plot_order = order_lgnd_7, area_fact = 10, ylab=expression('Bulk density (g soil cm'^-3*'soil)'), fname='class7_bd_vioplots_validation.tif', mar=c(3.5, 4.25, 1, 1), kssl_df = kssl_points_30cm, cdfa_pts=kerri_points_30cm, legend_plot=FALSE, legendloc='topleft', legend_cex = 0.9 , kssl_varname = "bd_13b_30cm", cdfa_varname = 'bd_30cm', sig_labels = c('AB', 'A', 'B', 'AB', 'AB', 'AB', 'A'))
 
-vioplot_mod_clus7_validation(valley30cm_by_mukey, 'kgOrg.m2_30cm', ylim_vioplot = c(0,12), plot_order = order_lgnd_7, area_fact = 10, ylab=expression('0-30 cm SOC (kg m'^-2*')'), fname='class7_kgSOC_0_30cm_vioplots_validation.tif', mar=c(3.5, 4.25, 1, 1), kssl_df = kssl_points_30cm, cdfa_pts=kerri_points_30cm, legend_plot=FALSE, legendloc='topleft', legend_cex = 0.9 , kssl_varname = "kgOrg.m2_30cm", cdfa_varname = 'kgOrg.m2_30cm', sig_labels = NA)
+vioplot_mod_clus7_validation(valley30cm_by_mukey, 'kgOrg.m2_30cm', ylim_vioplot = c(-0.15,12), plot_order = order_lgnd_7, area_fact = 10, ylab=expression('0-30 cm SOC (kg m'^-2*')'), fname='class7_kgSOC_0_30cm_vioplots_validation.tif', mar=c(3.5, 4.25, 1, 1), kssl_df = kssl_points_30cm, cdfa_pts=kerri_points_30cm, legend_plot=FALSE, legendloc='topleft', legend_cex = 0.9 , kssl_varname = "kgOrg.m2_30cm", cdfa_varname = 'kgOrg.m2_30cm', sig_labels = c('A', 'C', 'A', 'C', 'A', 'AB', 'BC'))
 
 #KSSL only validation for 7-region model
 vioplot_mod_clus7_KSSL_validation <- function(df, varname, ylim_vioplot, plot_order, area_fact, labnames, ylab, fname, mar, kssl_df, kssl_varname, legend_plot, legendloc, legend_cex, sig_labels) {
