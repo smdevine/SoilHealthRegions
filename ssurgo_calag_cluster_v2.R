@@ -205,6 +205,13 @@ write.csv(valley30cm_by_mukey, file.path(dataDir, 'v2 results', 'valley30cm_by_m
 #read in cluster valley file by mukey with cluster info
 valley30cm_by_mukey_orig <- read.csv(file.path(dataDir, 'v2 results', 'valley30cm_by_mukey_cluster.csv'), stringsAsFactors = FALSE)
 all(valley30cm_by_mukey_orig$mukey==valley30cm_by_mukey$mukey) #it's in same order
+head(cbind(valley30cm_by_mukey$cluster_7, valley30cm_by_mukey_orig$cluster_7), 20)
+sum(3!=valley30cm_by_mukey$cluster_7[valley30cm_by_mukey_orig$cluster_7==7]) #14 are different
+sum(5!=valley30cm_by_mukey$cluster_7[valley30cm_by_mukey_orig$cluster_7==6]) #2 are different
+sum(2!=valley30cm_by_mukey$cluster_7[valley30cm_by_mukey_orig$cluster_7==1]) #3 are different
+sum(4!=valley30cm_by_mukey$cluster_7[valley30cm_by_mukey_orig$cluster_7==4]) #0 are different
+
+#conclusion: there was a change in the set.seed as a result of updating R version
 colnames(valley30cm_by_mukey)[74:84]
 colnames(valley30cm_by_mukey_orig)[74:84]
 valley30cm_by_mukey[,74:84] <- valley30cm_by_mukey_orig[,74:84]
