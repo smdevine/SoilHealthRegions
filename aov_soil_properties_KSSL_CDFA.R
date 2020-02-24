@@ -99,7 +99,7 @@ compare_region_means <- function(df, names, cluster_no, y, alpha) {
   y_vector <- df[[y]]
   print(paste(sum(TukeyHSD(aov(y_vector ~ x))[[1]][,4] <= alpha), 'out of ', length(TukeyHSD(aov(y_vector ~ x))[[1]][,4]), 'are significant.'))
   # print(paste0(y, '_cluster_', as.character(cluster_no), '_aov_results.txt'))
-  sink(file=file.path(resultsDir, paste(as.character(cluster_no), 'region'), paste0(y, '_cluster_', as.character(cluster_no), '_aov_results.txt')))
+  sink(file=file.path(resultsDir, paste(as.character(cluster_no), 'region'), paste0(y, '_cluster_', as.character(cluster_no), '_aov_results_TEST.txt')))
   print(paste('ANOVA and Tukey HSD results for', y, 'and', cluster_no, '-region model:'))
   print(paste(sum(TukeyHSD(aov(y_vector ~ x))[[1]][,4] <= alpha), 'out of ', length(TukeyHSD(aov(y_vector ~ x))[[1]][,4]), 'are significant.'))
   print(paste0(y, '_cluster_', as.character(cluster_no), '_aov_results.txt'))
