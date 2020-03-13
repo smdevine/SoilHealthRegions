@@ -1,4 +1,4 @@
-laptop <- FALSE
+laptop <- TRUE
 library(vioplot)
 library(raster)
 library(extrafont)
@@ -31,6 +31,14 @@ colnames(valley30cm_by_mukey)
 sum(valley30cm_by_mukey$area_ac)
 unique(unlist(strsplit(unique(valley30cm_by_mukey$txorders), '-'))) #these orders are represented: "Alfisols" "Inceptisols" "Mollisols"  "Entisols"    "Vertisols" Ultisols" "Aridisols" "Andisols"
 sum(valley30cm_by_mukey$area_ac[is.na(valley30cm_by_mukey$txorders)]) #only 3391.2 acres missing soil order
+unique(unlist(strsplit(valley30cm_by_mukey$mjcmpnms, '-')))
+unique_majcomps_by_SHR <- tapply(valley30cm_by_mukey$mjcmpnms, valley30cm_by_mukey$cluster_7, function(x) unique(unlist(strsplit(x, '-'))))
+names(unique_majcomps_by_SHR) <- clus_7_names
+unique_majcomps_by_SHR <- unique_majcomps_by_SHR[order(clus_7_names)]
+sapply(unique_majcomps_by_SHR, length)
+mean(sapply(unique_majcomps_by_SHR, length))
+
+valley30cm_by_mukey$clus7_name <- clus_7_names[valley30cm_by_mukey$cluster_7]
 
 comp_data <- read.csv(file.path(mainDir, 'soil health/ssurgo_data/component_data', 'ca_component_data.csv'), stringsAsFactors = FALSE, na.strings = c('', ' ')) #treat blanks or a space as a NA)
 colnames(comp_data)
@@ -94,15 +102,22 @@ tapply(valley30cm_by_mukey$om_30cm, valley30cm_by_mukey$dom_order, function(x) m
 
 #TO-DO
 #dominant soil order summary
-DomSoilOrder_summary <- as.data.frame(lapply(c('Alfisols', 'Andisols', 'Aridisols', 'Entisols', 'Inceptisols', 'Mollisols', 'Ultisols', 'Vertisols'), function(x) {
-  tapply(valley30cm_by_mukey[[paste0(x, '_ac')]], clus_7_names[match(valley30cm_by_mukey$cluster_7, 1:7)], sum)
+sumDomOrderArea <- function(x, y) {
+  data.frame(Alfisols=sum(valley30cm_by_mukey$area_ac[which(valley30cm_by_mukey$cluster_7==x & valley30cm_by_mukey$dom_order=='Alfisols')]), Andisols=sum(valley30cm_by_mukey$area_ac[which(valley30cm_by_mukey$cluster_7==x & valley30cm_by_mukey$dom_order=='Andisols')]), Aridisols=sum(valley30cm_by_mukey$area_ac[which(valley30cm_by_mukey$cluster_7==x & valley30cm_by_mukey$dom_order=='Aridisols')]), Entisols=sum(valley30cm_by_mukey$area_ac[which(valley30cm_by_mukey$cluster_7==x & valley30cm_by_mukey$dom_order=='Entisols')]), Inceptisols=sum(valley30cm_by_mukey$area_ac[which(valley30cm_by_mukey$cluster_7==x & valley30cm_by_mukey$dom_order=='Inceptisols')]), Mollisols=sum(valley30cm_by_mukey$area_ac[which(valley30cm_by_mukey$cluster_7==x & valley30cm_by_mukey$dom_order=='Mollisols')]), Ultisols=sum(valley30cm_by_mukey$area_ac[which(valley30cm_by_mukey$cluster_7==x & valley30cm_by_mukey$dom_order=='Ultisols')]), Vertisols=sum(valley30cm_by_mukey$area_ac[which(valley30cm_by_mukey$cluster_7==x & valley30cm_by_mukey$dom_order=='Vertisols')]), CoDominantOrders=sum(valley30cm_by_mukey$area_ac[which(valley30cm_by_mukey$cluster_7==x & valley30cm_by_mukey$dom_orders>1)]), row.names = y)
 }
-), row.names = clus_7_names[order(clus_7_names)], col.names = c('Alfisols', 'Andisols', 'Aridisols', 'Entisols', 'Inceptisols', 'Mollisols', 'Ultisols', 'Vertisols'))
-SoilOrder_summary
-sum(valley30cm_by_mukey$area_ac) - sum(SoilOrder_summary) #95225.92 acres off
-SoilOrder_summary$TOTAL <- tapply(valley30cm_by_mukey$area_ac, clus_7_names[match(valley30cm_by_mukey$cluster_7, 1:7)], sum)
+sumDomOrderArea(x=1, y=clus_7_names[1])
+DomSoilOrder_summary <- rbind(sumDomOrderArea(1, clus_7_names[1]), sumDomOrderArea(2, clus_7_names[2]), sumDomOrderArea(3, clus_7_names[3]), sumDomOrderArea(4, clus_7_names[4]), sumDomOrderArea(5, clus_7_names[5]), sumDomOrderArea(6, clus_7_names[6]), sumDomOrderArea(7, clus_7_names[7]))[order(clus_7_names),]
+DomSoilOrder_summary$TOTAL <- tapply(valley30cm_by_mukey$area_ac, clus_7_names[match(valley30cm_by_mukey$cluster_7, 1:7)], sum)
 
-write.csv(SoilOrder_summary, file.path(dataDir, 'soil survey facts', 'DominantSoilOrders_by_SHR7.csv'), row.names=TRUE)
+write.csv(DomSoilOrder_summary, file.path(dataDir, 'soil survey facts', 'DominantSoilOrders_by_SHR7.csv'), row.names=TRUE)
+tapply(valley30cm_by_mukey$area_ac[valley30cm_by_mukey$cluster_7==1], valley30cm_by_mukey$dom_order[valley30cm_by_mukey$cluster_7==1], function(x) as.integer(sum(x)))
+tapply(valley30cm_by_mukey$area_ac[valley30cm_by_mukey$cluster_7==2], valley30cm_by_mukey$dom_order[valley30cm_by_mukey$cluster_7==2], function(x) as.integer(sum(x)))
+tapply(valley30cm_by_mukey$area_ac[valley30cm_by_mukey$cluster_7==3], valley30cm_by_mukey$dom_order[valley30cm_by_mukey$cluster_7==3], function(x) as.integer(sum(x)))
+tapply(valley30cm_by_mukey$area_ac[valley30cm_by_mukey$cluster_7==4], valley30cm_by_mukey$dom_order[valley30cm_by_mukey$cluster_7==4], function(x) as.integer(sum(x)))
+tapply(valley30cm_by_mukey$area_ac[valley30cm_by_mukey$cluster_7==5], valley30cm_by_mukey$dom_order[valley30cm_by_mukey$cluster_7==5], function(x) as.integer(sum(x)))
+tapply(valley30cm_by_mukey$area_ac[valley30cm_by_mukey$cluster_7==6], valley30cm_by_mukey$dom_order[valley30cm_by_mukey$cluster_7==6], function(x) as.integer(sum(x)))
+tapply(valley30cm_by_mukey$area_ac[valley30cm_by_mukey$cluster_7==7], valley30cm_by_mukey$dom_order[valley30cm_by_mukey$cluster_7==7], function(x) as.integer(sum(x)))
+
 
 #make a violin plot by soil order
 #order: 
@@ -149,3 +164,75 @@ tapply(valley_mu_shp_30cm$area_ac, valley_mu_shp_30cm$dom_order, function(x) rou
 tapply(valley30cm_by_mukey$area_ac, valley30cm_by_mukey$dom_order, function(x) round(sum(x), 0))
 shapefile(valley_mu_shp_30cm, file.path(file.path(dataDir, 'shapefiles with data', 'valley_30cm_cluster_SoilOrder.shp')))
 
+#compname calc
+#df_comp will be valley30cm_by_mukey
+#df_comp2 will be comp_data
+CompnameArea_calc <- function(df_comp, df_comp2, SHR_name, fname) {
+  print(length(unique_majcomps_by_SHR[[match(SHR_name, clus_7_names[order(clus_7_names)])]]))
+  mukeys <- df_comp$mukey[df_comp$clus7_name==SHR_name]
+  df_comp3 <- df_comp2[df_comp2$mukey %in% mukeys & df_comp2$majcomp=='Yes',] #majcomp flags fixed above
+  df_comp3$mu_area_ac <- df_comp$area_ac[match(df_comp3$mukey, df_comp$mukey)]
+  df_comp3$mjcmp_pct <- df_comp$mjcmp_pct[match(df_comp3$mukey, df_comp$mukey)]
+  df_comp3$comp_area_ha <- df_comp3$mu_area_ac * (df_comp3$comppct_r / df_comp3$mjcmp_pct) / 2.47105
+  print(length(unique(df_comp3$compname)))
+  print(as.integer(sum(df_comp$area_ac[df_comp$clus7_name==SHR_name]) / 2.47105))
+  area_by_MajCompnames <- data.frame(compname=row.names(tapply(df_comp3$comp_area_ha, df_comp3$compname, sum)), area_ha=round(tapply(df_comp3$comp_area_ha, df_comp3$compname, sum), 1), row.names = seq_along(unique_majcomps_by_SHR[[match(SHR_name, clus_7_names[order(clus_7_names)])]]))
+  print(as.integer(sum(area_by_MajCompnames$area_ha)))
+  write.csv(area_by_MajCompnames, file.path(dataDir, 'soil survey facts', fname), row.names=FALSE)
+  area_by_MajCompnames
+}
+clus_7_names[order(clus_7_names)]
+coarse_w_no_res <- CompnameArea_calc(df_comp = valley30cm_by_mukey, df_comp2 = comp_data, SHR_name = "1. Coarse w/no restrictions", fname='coarse_w_no_res_MajCompnames_area.csv')
+loamy_w_no_res <- CompnameArea_calc(df_comp = valley30cm_by_mukey, df_comp2 = comp_data, SHR_name = "2. Loamy w/no restrictions", fname='loamy_w_no_res_MajCompnames_area.csv')
+coarse_w_pans <- CompnameArea_calc(df_comp = valley30cm_by_mukey, df_comp2 = comp_data, SHR_name = "3. Coarse w/pans", fname='coarse_w_pans_MajCompnames_area.csv')
+loamy_w_pans <- CompnameArea_calc(df_comp = valley30cm_by_mukey, df_comp2 = comp_data, SHR_name = "4. Loamy w/pans", fname='loamy_w_pans_MajCompnames_area.csv')
+coarse_saline_sodic <- CompnameArea_calc(df_comp = valley30cm_by_mukey, df_comp2 = comp_data, SHR_name = "5. Coarse saline-sodic", fname='coarse_saline_sodic_MajCompnames_area.csv')
+fine_saline_sodic <- CompnameArea_calc(df_comp = valley30cm_by_mukey, df_comp2 = comp_data, SHR_name = "6. Fine saline-sodic", fname='fine_saline_sodic_MajCompnames_area.csv')
+fine_shrink_swell <- CompnameArea_calc(df_comp = valley30cm_by_mukey, df_comp2 = comp_data, SHR_name = "7. Fine shrink-swell", fname='fine_shrink_swell_MajCompnames_area.csv')
+
+majcompnames_area_summary <- list(coarse_w_no_res, loamy_w_no_res, coarse_w_pans, loamy_w_pans, coarse_saline_sodic, fine_saline_sodic, fine_shrink_swell)
+names(majcompnames_area_summary) <- clus_7_names[order(clus_7_names)]
+top30_compnames_by_SHR <- do.call(cbind, lapply(majcompnames_area_summary, function(x) {head(x[order(x$area_ha, decreasing = TRUE), ], 30)}))
+write.csv(top30_compnames_by_SHR, file.path(dataDir, 'soil survey facts', 'top30_compnames_by_SHR.csv'), row.names = FALSE)
+lapply(majcompnames_area_summary, function(x) {'Hanford' %in% x$compname}) #in coarse w/pans and coarse w/restrictions
+lapply(majcompnames_area_summary, function(x) {'Panoche' %in% x$compname}) #in coarse w/pans and coarse w/restrictions
+lapply(majcompnames_area_summary, function(x) {'San Joaquin' %in% x$compname})
+lapply(majcompnames_area_summary, function(x) {'Flamen' %in% x$compname})
+lapply(majcompnames_area_summary, function(x) {'Fresno' %in% x$compname})
+lapply(majcompnames_area_summary, function(x) {'Calflax' %in% x$compname})
+lapply(majcompnames_area_summary, function(x) {'Capay' %in% x$compname})
+valley30cm_by_mukey$mukey[grepl('Capay', valley30cm_by_mukey$mjcmpnms) & valley30cm_by_mukey$clus7_name=='2. Loamy w/no restrictions']
+comp_data[comp_data$mukey %in% valley30cm_by_mukey$mukey[grepl('Capay', valley30cm_by_mukey$mjcmpnms) & valley30cm_by_mukey$clus7_name=='2. Loamy w/no restrictions'], ]
+comp_data[comp_data$mukey %in% valley30cm_by_mukey$mukey[grepl('Capay', valley30cm_by_mukey$mjcmpnms)], ]
+valley30cm_by_mukey[grepl('Capay', valley30cm_by_mukey$mjcmpnms) & valley30cm_by_mukey$clus7_name=='2. Loamy w/no restrictions', ]
+
+valley30cm_by_mukey[grepl('Capay', valley30cm_by_mukey$mjcmpnms), c(56:73, 103)]
+
+sum(fine_shrink_swell$compname %in% fine_saline_sodic$compname) #24
+fine_conflicts_majcompnames <- cbind(fine_shrink_swell[fine_shrink_swell$compname %in% fine_saline_sodic$compname,], fine_saline_sodic[fine_saline_sodic$compname %in% fine_shrink_swell$compname, ])
+colnames(fine_conflicts_majcompnames) <- c('fine_shrink_swell_compname', 'area_ha', 'fine_saline_sodic_compname', 'area_ha')
+write.csv(fine_conflicts_majcompnames, file.path(dataDir, 'soil survey facts', 'fine_conficts_majcompnames.csv'), row.names = FALSE)
+
+sum(coarse_saline_sodic$compname %in% fine_saline_sodic$compname) #29
+sum(coarse_w_no_res$compname %in% loamy_w_no_res$compname) #63
+sum(coarse_w_pans$compname %in% loamy_w_pans$compname) #86
+
+#find how many components make up a certain percentage of a SHR
+compname_n_percentage <- function(compnames, perc) {
+  compnames <- compnames[order(compnames$area_ha, decreasing = TRUE),]
+  print(nrow(compnames))
+  compnames$cumperc <- cumsum(compnames$area_ha) / sum(compnames$area_ha)
+  # abs(compnames$cumperc-perc)
+  compnames_trimmed <- compnames[1:which.min(abs(compnames$cumperc-perc)), ]
+  print(nrow(compnames_trimmed))
+  write.csv(compnames_trimmed, file.path(dataDir, 'soil survey facts', paste0(deparse(quote(compnames)), '_top', perc*100, '_areal_percentage.csv')), row.names = FALSE)
+}
+compname_n_percentage(coarse_w_no_res, 0.75)
+compname_n_percentage(loamy_w_no_res, 0.75)
+compname_n_percentage(coarse_w_pans, 0.75)
+compname_n_percentage(loamy_w_pans, 0.75)
+compname_n_percentage(coarse_saline_sodic, 0.75)
+compname_n_percentage(fine_saline_sodic, 0.75)
+compname_n_percentage(fine_shrink_swell, 0.75)
+
+tapply(valley30cm_by_mukey)
