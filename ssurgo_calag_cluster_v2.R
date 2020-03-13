@@ -28,7 +28,7 @@ if (laptop) {
   dataDir <- 'C:/Users/smdevine/Desktop/PostDoc/soil health/summaries/valley_final' #was valley_trial
   FiguresDir <- 'C:/Users/smdevine/Desktop/PostDoc/soil health/Figures/valley_final' #was valley_trial
 }
-mar_settings <- c(4, 4.5, 1, 1)
+mar_settings <- c(3.5, 4.5, 1, 1)
 ec_zero_rule <- 1.5
 list.files(file.path(dataDir, 'for cluster analysis'))
 # valley_mu_shp_30cm <- shapefile(file.path(dataDir, 'shapefiles with data', 'valley_30cm.shp'))
@@ -97,17 +97,18 @@ sum(df_exploration$area_ac[df_exploration$ec_30cm >= 8 & df_exploration$ec_30cm 
 sum(df_exploration$area_ac[df_exploration$ec_30cm >= 16]) / sum(df_exploration$area_ac) #1.2% strongly saline
 
 kmeans_test <- function(y, z) {sapply(1:y, function(x) {
-  result <- kmeans(z, centers = x, iter.max = 100, nstart = 25)
+  result <- kmeans(z, centers = x, iter.max = 200, nstart = 50)
   round(100 * result$betweenss / result$totss, 1)})
 }
-# results <- replicate(100, kmeans_test(20, df_for_clustering_scaled))
+results <- replicate(100, kmeans_test(20, df_for_clustering_scaled))
 # dim(results)
 # rowMeans(results)
 # apply(results, 1, sd)
-tiff(file = file.path(FiguresDir, 'v2', 'kmeans_comparison_10.30.19.tif'), family = 'Times New Roman', width = 6.5, height = 4.5, pointsize = 12, units = 'in', res=800, compression='lzw')
+tiff(file = file.path(FiguresDir, 'v2', 'validation plots', 'kmeans_comparison_3.2.20.tif'), family = 'Times New Roman', width = 6.5, height = 4.5, pointsize = 12, units = 'in', res=800, compression='lzw')
 par(mar=mar_settings)
-plot(1:20, rowMeans(results), type='b', xlab='Number of clusters', ylab='Soil variability captured by clustering (%)', cex=0.8, cex.axis=1, cex.lab=1)
-#text(1:12, rowMeans(results), labels=as.character(1:12), pos=1, offset=0.5)
+plot(1:20, rowMeans(results), type='b', xlab='', ylab='Overall soil property variability captured by clusters (%)', cex=0.8, cex.axis=1, cex.lab=1, ylim=c(0,80))
+mtext(text = 'Number of clusters', side=1, line=2.5)
+text(1:20, rowMeans(results), labels=as.character(1:20), pos=1, offset=0.5)
 dev.off()
 
 set.seed(11431030)
@@ -447,9 +448,12 @@ sum(grepl('Vertisols', valley30cm_by_mukey$txorders[valley30cm_by_mukey$cluster_
 
 
 #another way to get optimal number of clusters
-best_cluster <- kmeansruns(data = df_for_clustering_scaled, krange = 1:12, criterion = 'asw', iter.max = 200, runs = 100, nstart=50)
+best_cluster <- kmeansruns(data = df_for_clustering_scaled, krange = 1:20, criterion = 'asw', iter.max = 200, runs = 100, nstart=50)
 best_cluster
 best_cluster$bestk #2!!!
+best_cluster_ch <- kmeansruns(data = df_for_clustering_scaled, krange = 1:20, criterion = 'ch', iter.max = 200, runs = 100, nstart=50)
+best_cluster_ch
+best_cluster_ch$bestk
 
 km.boot_2 <- clusterboot(na.omit(df_for_clustering_scaled), B=500, bootmethod="boot", clustermethod=kmeansCBI, krange=2, runs=25) #runs is same as nstart
 km.boot_2
@@ -460,7 +464,7 @@ km.boot_4
 
 
 #find optimum number of clusters based on gap statistic
-gap_stats <- clusGap(df_for_clustering_scaled, FUN = kmeans, nstart = 50, K.max = 12, B = 500, iter.max = 200)
+gap_stats <- clusGap(df_for_clustering_scaled, FUN = kmeans, nstart = 50, K.max = 20, B = 500, iter.max = 200)
 fviz_gap_stat(gap_stats)
 
 #visualize stats by cluster using untransformed data
