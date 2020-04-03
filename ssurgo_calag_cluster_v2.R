@@ -104,11 +104,13 @@ results <- replicate(100, kmeans_test(20, df_for_clustering_scaled))
 # dim(results)
 # rowMeans(results)
 # apply(results, 1, sd)
-tiff(file = file.path(FiguresDir, 'v2', 'validation plots', 'kmeans_comparison_3.2.20.tif'), family = 'Times New Roman', width = 6.5, height = 4.5, pointsize = 12, units = 'in', res=800, compression='lzw')
-par(mar=mar_settings)
-plot(1:20, rowMeans(results), type='b', xlab='', ylab='Overall soil property variability captured by clusters (%)', cex=0.8, cex.axis=1, cex.lab=1, ylim=c(0,80))
-mtext(text = 'Number of clusters', side=1, line=2.5)
-text(1:20, rowMeans(results), labels=as.character(1:20), pos=1, offset=0.5)
+tiff(file = file.path(FiguresDir, 'v2', 'validation plots', 'kmeans_comparison_3.31.20.tif'), family = 'Times New Roman', width = 6.5, height = 3.5, pointsize = 11, units = 'in', res=800, compression='lzw')
+par(mar=c(2, 4, 0.5, 0.5))
+plot(1:20, rowMeans(results), type='b', xlab='', ylab='', cex=0.8, cex.axis=1, cex.lab=1, ylim=c(0,82), xaxt='n')
+mtext(text = 'Number of soil health regions (cluster size in conceptual model)', side=1, line=0.75)
+mtext(text = 'SSURGO variability captured by clusters (%)', side=2, line=2.5, at=35)
+text(1:20, rowMeans(results), labels=as.character(1:20), pos=3, offset=0.5)
+text(x=1, y=80, 'a', adj=c(0,0))
 dev.off()
 
 set.seed(11431030)
@@ -329,7 +331,7 @@ dev.off()
 #Loams w/no res could have mod OM-mod SS added
 col2rgb(clus_6_colors)
 
-#calc intra-cluster distances
+#calc intra-cluster distances for 7-region model
 compute_intra_clus_dist <- function(x, y) {
   dist(rbind(x, y), method = 'euclidean')
 }
@@ -470,16 +472,34 @@ fviz_gap_stat(gap_stats)
 #visualize stats by cluster using untransformed data
 
 #compare key properties across classes
-colnames(df_for_clustering)
-axis_labels <- c("Depth to\nRestriction", 'Clay', 'Organic\nmatter', 'CEC', 'Bulk \ndensity', 'Salinity', 'pH', 'Shrink-\n  swell', 'Saturated\nconductivity', 'Available water\n   capacity')
-cor_matrix <- cor(df_for_clustering)
-rownames(cor_matrix) <- axis_labels
-colnames(cor_matrix) <- axis_labels
-write.csv(cor_matrix, file.path(dataDir, 'v2 results', 'soil_property_correlations.csv'), row.names = FALSE)
-cor_matrix_pvals <- cor.mtest(cor_matrix)
+colnames(df_for_clustering_scaled)
+axis_labels <- c("Depth to Restriction", 'Clay', 'Organic matter', 'CEC', 'Bulk density', 'Salinity', 'pH', 'Shrink-swell', 'Saturated conductivity', 'Available water capacity')
+cor_matrix_pearson <- cor(df_for_clustering_scaled, method = 'pearson')
+rownames(cor_matrix_pearson) <- axis_labels
+colnames(cor_matrix_pearson) <- axis_labels
+write.csv(cor_matrix_pearson, file.path(dataDir, 'v2 results', 'soil property correlations', 'pearson_scaled.csv'), row.names = TRUE)
+cor_pearson_pvals <- cor.mtest(df_for_clustering_scaled, method='pearson')
+rownames(cor_pearson_pvals$p) <- axis_labels
+colnames(cor_pearson_pvals$p) <- axis_labels
+write.csv(cor_pearson_pvals$p, file.path(dataDir, 'v2 results', 'soil property correlations', 'pearson_pval_scaled.csv'), row.names = TRUE)
+
+cor_matrix_spearman <- cor(df_for_clustering_scaled, method = 'spearman')
+rownames(cor_matrix_spearman) <- axis_labels
+colnames(cor_matrix_spearman) <- axis_labels
+write.csv(cor_matrix_spearman, file.path(dataDir, 'v2 results', 'soil property correlations', 'spearman_scaled.csv'), row.names = TRUE)
+cor_spearman_pvals <- cor.mtest(cor_matrix_spearman)
+rownames(cor_spearman_pvals$p) <- axis_labels
+colnames(cor_spearman_pvals$p) <- axis_labels
+write.csv(cor_spearman_pvals$p, file.path(dataDir, 'v2 results', 'soil property correlations', 'spearman_pval_scaled.csv'), row.names = TRUE)
+cor.test(df_for_clustering_scaled$om_30cm, df_for_clustering_scaled$cec_30cm, method = 'pearson')
+
+
 cex.before <- par("cex") #saves current cex setting for plotting
 cex.reduced <- 0.5 #desired cex setting for plotting p-values
 mag.factor <- 2.5 #fudge factor to increase size of axis and legend text
+
+#produced
+axis_labels <- c("Depth to\nRestriction", 'Clay', 'Organic\nmatter', 'CEC', 'Bulk \ndensity', 'Salinity', 'pH', 'Shrink-\n  swell', 'Saturated\nconductivity', 'Available water\n   capacity')
 tiff(file = file.path(FiguresDir, 'v2', 'soil_property_corrplot_pvals.tif'), family = 'Times New Roman', width = 6.5, height = 6.5, pointsize = 12, units = 'in', res=800, compression='lzw')
 par(mar=c(0.1,0.1,0.1,0.1), cex = cex.reduced)
 corrplot(cor_matrix, p.mat = cor_matrix_pvals$p, insig = "p-value", sig.level = -1, tl.cex = par("cex") * mag.factor, cl.cex = par("cex") * mag.factor, tl.col = 'black')
