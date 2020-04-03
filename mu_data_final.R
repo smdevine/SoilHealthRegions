@@ -76,9 +76,6 @@ SoilOrder_summary$TOTAL <- tapply(valley30cm_by_mukey$area_ac, clus_7_names[matc
 
 write.csv(SoilOrder_summary, file.path(dataDir, 'soil survey facts', 'SoilOrders_by_SHR7.csv'), row.names=TRUE)
 
-
-test <- valley30cm_by_mukey$area_ac - apply(valley30cm_by_mukey[,grepl('s_ac', colnames(valley30cm_by_mukey))], 1, sum)
-which(test > 1)
 valley30cm_by_mukey[5,]
 comp_data[comp_data$mukey==461103,]
 
@@ -164,6 +161,26 @@ tapply(valley_mu_shp_30cm$area_ac, valley_mu_shp_30cm$dom_order, function(x) rou
 tapply(valley30cm_by_mukey$area_ac, valley30cm_by_mukey$dom_order, function(x) round(sum(x), 0))
 shapefile(valley_mu_shp_30cm, file.path(file.path(dataDir, 'shapefiles with data', 'valley_30cm_cluster_SoilOrder.shp')))
 
+
+#get overall area summary by name
+colnames(comp_data)
+compname_area <- comp_data[comp_data$mukey %in% valley30cm_by_mukey$mukey & comp_data$majcompflag=='Yes', c('mukey', 'compname', 'comppct_r', 'taxorder')]
+compname_area$mu_area_ac <- valley30cm_by_mukey$area_ac[match(compname_area$mukey, valley30cm_by_mukey$mukey)] 
+compname_area$mjcmp_pct <- valley30cm_by_mukey$mjcmp_pct[match(compname_area$mukey, valley30cm_by_mukey$mukey)]
+compname_area$comp_area_ha <- compname_area$mu_area_ac * (compname_area$comppct_r / compname_area$mjcmp_pct) / 2.47105
+area_by_compname <- data.frame(compname=row.names(tapply(compname_area$comp_area_ha, compname_area$compname, sum)), area_ha=round(tapply(compname_area$comp_area_ha, compname_area$compname, sum), 1))
+sum(area_by_compname$area_ha) #5274719
+sum(valley30cm_by_mukey$area_ac/2.47105) #5274720
+dim(area_by_compname)
+length(unique(area_by_compname$compname))
+area_by_compname$order <- compname_area$taxorder[match(area_by_compname$compname, compname_area$compname)]
+table(area_by_compname$order)
+sum(is.na(area_by_compname$order)) #13 NA
+area_by_compname$compname[is.na(area_by_compname$order)]
+unique(comp_data$taxorder[comp_data$compname=='Talus'])
+unique(comp_data$taxorder[comp_data$compname=='Riverwash'])
+write.csv(area_by_compname, file.path(dataDir, 'soil survey facts', 'area_taxorder_by_compname.csv'), row.names = FALSE)
+
 #compname calc
 #df_comp will be valley30cm_by_mukey
 #df_comp2 will be comp_data
@@ -218,21 +235,40 @@ sum(coarse_w_no_res$compname %in% loamy_w_no_res$compname) #63
 sum(coarse_w_pans$compname %in% loamy_w_pans$compname) #86
 
 #find how many components make up a certain percentage of a SHR
-compname_n_percentage <- function(compnames, perc) {
+compname_n_percentage <- function(compnames, fname, perc) {
   compnames <- compnames[order(compnames$area_ha, decreasing = TRUE),]
   print(nrow(compnames))
   compnames$cumperc <- cumsum(compnames$area_ha) / sum(compnames$area_ha)
+  compnames$tot_comp_area <- area_by_compname$area_ha[match(compnames$compname, area_by_compname$compname)]
+  compnames$SHR_purity_perc <- round(100* compnames$area_ha / compnames$tot_comp_area, 3)
+  compnames$taxorder <- area_by_compname$order[match(compnames$compname, area_by_compname$compname)]
   # abs(compnames$cumperc-perc)
-  compnames_trimmed <- compnames[1:which.min(abs(compnames$cumperc-perc)), ]
+  if (perc==1) {
+    compnames_trimmed <- compnames
+  } else {compnames_trimmed <- compnames[1:which.min(abs(compnames$cumperc-perc)), ]}
   print(nrow(compnames_trimmed))
-  write.csv(compnames_trimmed, file.path(dataDir, 'soil survey facts', paste0(deparse(quote(compnames)), '_top', perc*100, '_areal_percentage.csv')), row.names = FALSE)
+  write.csv(compnames_trimmed, file.path(dataDir, 'soil survey facts', fname, paste0(fname, '_top', perc*100, '_areal_percentage.csv')), row.names = FALSE)
 }
-compname_n_percentage(coarse_w_no_res, 0.75)
-compname_n_percentage(loamy_w_no_res, 0.75)
-compname_n_percentage(coarse_w_pans, 0.75)
-compname_n_percentage(loamy_w_pans, 0.75)
-compname_n_percentage(coarse_saline_sodic, 0.75)
-compname_n_percentage(fine_saline_sodic, 0.75)
-compname_n_percentage(fine_shrink_swell, 0.75)
+compname_n_percentage(coarse_w_no_res, 'Coarse_w_no_res', 1)
+compname_n_percentage(loamy_w_no_res, 'Loamy_w_no_res', 1)
+compname_n_percentage(coarse_w_pans, 'Coarse_w_res', 1)
+compname_n_percentage(loamy_w_pans, 'Loamy_w_res', 1)
+compname_n_percentage(coarse_saline_sodic, 'Coarse_saline_sodic', 1)
+compname_n_percentage(fine_saline_sodic, 'Fine_saline_sodic', 1)
+compname_n_percentage(fine_shrink_swell, 'Fine_shrink_swell', 1)
 
-tapply(valley30cm_by_mukey)
+compname_n_percentage(coarse_w_no_res, 'Coarse_w_no_res', 0.75)
+compname_n_percentage(loamy_w_no_res, 'Loamy_w_no_res', 0.75)
+compname_n_percentage(coarse_w_pans, 'Coarse_w_res', 0.75)
+compname_n_percentage(loamy_w_pans, 'Loamy_w_res', 0.75)
+compname_n_percentage(coarse_saline_sodic, 'Coarse_saline_sodic', 0.75)
+compname_n_percentage(fine_saline_sodic, 'Fine_saline_sodic', 0.75)
+compname_n_percentage(fine_shrink_swell, 'Fine_shrink_swell', 0.75)
+
+compname_n_percentage(coarse_w_no_res, 'Coarse_w_no_res', 0.5)
+compname_n_percentage(loamy_w_no_res, 'Loamy_w_no_res', 0.5)
+compname_n_percentage(coarse_w_pans, 'Coarse_w_res', 0.5)
+compname_n_percentage(loamy_w_pans, 'Loamy_w_res', 0.5)
+compname_n_percentage(coarse_saline_sodic, 'Coarse_saline_sodic', 0.5)
+compname_n_percentage(fine_saline_sodic, 'Fine_saline_sodic', 0.5)
+compname_n_percentage(fine_shrink_swell, 'Fine_shrink_swell', 0.5)
