@@ -1,4 +1,4 @@
-laptop <- FALSE
+laptop <- TRUE
 library(raster)
 library(rgeos)
 library(prism)
@@ -24,7 +24,10 @@ if (laptop) {
   ksslDir <- 'C:/Users/smdevine/Desktop/PostDoc/soil health/kssl'
   prismDir <- 'C:/Users/smdevine/Desktop/PostDoc/soil health/PRISM'
 }
-valley30cm_by_mukey <- read.csv(file.path(dataDir, 'for cluster analysis', 'valley30cm_by_mukey_final_v2.csv'), stringsAsFactors = FALSE)
+clus_7_colors <- c('gold', 'deepskyblue', 'lightblue1', 'lightgoldenrod', 'violetred', 'tan4', 'firebrick3')
+order_lgnd_7 <- c(4,6,1,7,3,2,5)
+#valley30cm_by_mukey <- read.csv(file.path(dataDir, 'for cluster analysis', 'valley30cm_by_mukey_final_v2.csv'), stringsAsFactors = FALSE)
+valley30cm_by_mukey <- read.csv(file.path(dataDir, 'v2 results', 'valley30cm_by_mukey_cluster_v2.csv'), stringsAsFactors = FALSE)
 sum(valley30cm_by_mukey$area_ac) #13034096
 valley_mu_shp_30cm <- shapefile(file.path(dataDir, 'shapefiles with data', 'valley_30cm_cluster.shp'))
 sum(valley_mu_shp_30cm$area_ac) #13873110 because some eliminated from analysis
@@ -49,8 +52,7 @@ centroids.sp.df_NAD83$annual.P <- extract(prism_ppt, centroids.sp.df_NAD83)
 centroids.sp.df_NAD83$annual.T <- extract(prism_tmean, centroids.sp.df_NAD83)
 
 valley30cm_climate_df <- as.data.frame(centroids.sp.df_NAD83)
-clus_7_colors <- c('gold', 'deepskyblue', 'lightblue1', 'lightgoldenrod', 'violetred', 'tan4', 'firebrick3')
-order_lgnd_7 <- c(4,6,1,7,3,2,5)
+
 test <- rep(valley30cm_climate_df$annual.P[valley30cm_climate_df$cluster_7==(1:7)[order_lgnd_7][7]], round(valley30cm_climate_df$area_ac[valley30cm_climate_df$cluster_7==(1:7)[order_lgnd_7][7]]/10, 0))
 
 vioplot_mod_clus7_climate <- function(df, varname, ylim_vioplot, plot_order, area_fact, labnames, ylab, fname, mar, kssl_df, kssl_varname, legend_plot, legendloc, legend_cex) {
@@ -92,3 +94,24 @@ vioplot_mod_clus7_climate(valley30cm_climate_df, 'annual.ETo', ylim_vioplot = c(
 
 #write climate results to file
 write.csv(valley30cm_climate_df[,c("mukey", "area_ac", "annual.P", "annual.T", "annual.ETo")], file.path(dataDir, 'valley30cm_climate_data.csv'), row.names = FALSE)
+
+valley30cm_climate_df <- read.csv(file.path(dataDir, 'valley30cm_climate_data.csv'), stringsAsFactors = FALSE)
+head(valley30cm_climate_df)
+length(unique(valley30cm_climate_df$mukey))#4595
+dim(valley30cm_climate_df) #91787
+length(unique(valley30cm_by_mukey$mukey)) #4595
+valley30cm_climate_df$mukey_area <- valley30cm_by_mukey$area_ac[match(valley30cm_climate_df$mukey, valley30cm_by_mukey$mukey)]
+valley30cm_climate_df$annual.P.wtd <- valley30cm_climate_df$annual.P * (valley30cm_climate_df$area_ac / valley30cm_climate_df$mukey_area)
+valley30cm_climate_df$annual.T.wtd <- valley30cm_climate_df$annual.T * (valley30cm_climate_df$area_ac / valley30cm_climate_df$mukey_area)
+precip_by_mukey <- data.frame(mukey=as.integer(row.names(tapply(valley30cm_climate_df$annual.P.wtd, valley30cm_climate_df$mukey, sum))), mean.wtd.P=tapply(valley30cm_climate_df$annual.P.wtd, valley30cm_climate_df$mukey, sum), row.names = NULL)
+temp_by_mukey <- data.frame(mukey=as.integer(row.names(tapply(valley30cm_climate_df$annual.T.wtd, valley30cm_climate_df$mukey, sum))), mean.wtd.T=tapply(valley30cm_climate_df$annual.T.wtd, valley30cm_climate_df$mukey, sum), row.names = NULL)
+hist(temp_by_mukey$mean.wtd.T)
+
+
+valley30cm_by_mukey$annual.P.wtd <- precip_by_mukey$mean.wtd.P[match(valley30cm_by_mukey$mukey, precip_by_mukey$mukey)] 
+valley30cm_by_mukey$annual.T.wtd <- temp_by_mukey$mean.wtd.T[match(valley30cm_by_mukey$mukey, temp_by_mukey$mukey)]
+
+lapply(1:7, function(x) plot(valley30cm_by_mukey$annual.T.wtd[valley30cm_by_mukey$cluster_7==x], valley30cm_by_mukey$annual.P.wtd[valley30cm_by_mukey$cluster_7==x], col=clus_7_colors[x], type='p', pch=1, cex=0.7))
+tiff(file = file.path(FiguresDir, 'v2', 'climate', 'meanP_vs_meanT.tif'), family = 'Times New Roman', width = 6.5, height = 4.5, pointsize = 12, units = 'in', res=800, compression='lzw')
+plot(valley30cm_by_mukey$annual.T.wtd, valley30cm_by_mukey$annual.P.wtd, col=clus_7_colors[valley30cm_by_mukey$cluster_7], type='p', pch=1, cex=0.7)
+dev.off()
