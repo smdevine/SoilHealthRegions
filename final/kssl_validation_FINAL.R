@@ -5,7 +5,7 @@ library(vioplot)
 library(extrafont)
 library(extrafontdb)
 loadfonts(device = 'win')
-laptop <- TRUE
+laptop <- FALSE
 
 if (laptop) {
   mainDir <- 'C:/Users/smdevine/Desktop/post doc'
@@ -174,13 +174,13 @@ sum(!is.na(kssl_points_30cm$oc_30cm))
 sum(is.na(kssl_points_30cm$oc_30cm) & !is.na(kssl_points_30cm$c_tot_30cm))
 sum(is.na(kssl_points_30cm$oc_30cm) & !is.na(kssl_points_30cm$c_tot_30cm) & kssl_points_30cm$pH_H2O_30cm <= 8.2, na.rm = TRUE) #39 points have total C but not organic C; 31 have pH <= 7.5; 32 have pH <= 7.8; 34 have pH <= 8.0
 
-write.csv(kssl_points_30cm, file.path(ksslDir, 'kssl_cluster_30cm_NArm_v2.csv'), row.names = FALSE)
+write.csv(kssl_points_30cm, file.path(ksslDir,  'kssl_cluster_30cm_FINAL.csv'), row.names = FALSE)
 
 tapply(kssl_points_30cm$oc_30cm, kssl_points_30cm$cluster_9, summary)
 tapply(kssl_points_30cm$pH_H2O_30cm, kssl_points_30cm$cluster_9, summary)
 tapply(kssl_points_30cm$cec_7_30cm, kssl_points_30cm$cluster_9, summary)
 sum(!is.na(kssl_points_30cm$kgOrg.m2_30cm)) #120 of 370 have 0-30 cm content data (was 106)
-write.csv(kssl_ssurgo_30cm, file.path(ksslDir, 'kssl_pts_ssurgo_30cm_extract.csv'), row.names = FALSE)
+write.csv(kssl_ssurgo_30cm, file.path(ksslDir, 'kssl_pts_ssurgo_30cm_extract_FINAL.csv'), row.names = FALSE)
 
 # kssl_points_30cm <- read.csv(file.path(ksslDir, 'kssl_cluster_30cm_NArm.csv'), stringsAsFactors = FALSE)
 
