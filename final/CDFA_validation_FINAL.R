@@ -27,11 +27,11 @@ soil_data_pts$Lat_WGS84 <- soil_data$GPS.N[match(soil_data_pts$ID, soil_data$Con
 soil_data_pts$Lon_WGS84 <- soil_data$GPS.W[match(soil_data_pts$ID, soil_data$Concatenate)]
 soil_data_pts <- SpatialPointsDataFrame(coords = soil_data_pts[,c('Lon_WGS84', 'Lat_WGS84')], data = soil_data_pts['ID'], proj4string = CRS(as.character("+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0")))
 # plot(soil_data_pts)
-valley_mu_shp_30cm <- shapefile(file.path(dataDir, 'shapefiles with data', 'valley_30cm_cluster.shp'))
+valley_mu_shp_30cm <- shapefile(file.path(dataDir, 'FINAL results', 'shapefiles with data', 'valley_30cm_cluster.shp'))
 crs(valley_mu_shp_30cm)
 pts_ssurgo_extract_30cm <- extract(valley_mu_shp_30cm, soil_data_pts, df=TRUE)
-table(pts_ssurgo_extract_30cm$cluster_9)
-sum(is.na(pts_ssurgo_extract_30cm$cluster_9))
+table(pts_ssurgo_extract_30cm$cluster_7)
+sum(is.na(pts_ssurgo_extract_30cm$cluster_7))
 pts_ssurgo_extract_30cm$Concatenate <- soil_data_pts$ID[pts_ssurgo_extract_30cm$point.ID] #point.ID is the row number
 pts_ssurgo_extract_30cm[which(pts_ssurgo_extract_30cm$cluster_9==2),]
 pts_ssurgo_extract_30cm[which(pts_ssurgo_extract_30cm$cluster_9==4),]
@@ -147,7 +147,7 @@ tapply(pts_30cm$clay_30cm, pts_30cm$cluster_9, summary)
 table(pts_30cm$cluster_9[!is.na(pts_30cm$clay_30cm)])
 tapply(pts_30cm$bd_30cm, pts_30cm$cluster_9, summary)
 tapply(pts_30cm$bd_30cm, pts_30cm$cluster_9, summary)
-# write.csv(pts_ssurgo_extract_30cm, file.path(workDir, 'CDFA_pts_ssurgo_30cm_extract.csv'), row.names = FALSE)
+write.csv(pts_ssurgo_extract_30cm, file.path(workDir, 'CDFA_pts_ssurgo_30cm_extract_FINAL.csv'), row.names = FALSE)
 
 # pts_ssurgo_extract_30cm <- read.csv(file.path(workDir, 'CDFA_pts_ssurgo_30cm_extract.csv'), stringsAsFactors = FALSE) 
 # pts_30cm <- read.csv(file.path(workDir, 'CDFA_samples_cluster_30cm.csv'), stringsAsFactors = FALSE)
@@ -188,21 +188,21 @@ pts_30cm$irrigated_vs_dryfarm <- soil_data$irrigated.vs.dryfarm[match(pts_30cm$C
 unique(soil_data$organic.vs.conventional.vs.biodynamic)
 soil_data$organic.vs.conventional.vs.biodynamic[which(soil_data$organic.vs.conventional.vs.biodynamic=='organic')] <- 'Organic'
 pts_30cm$management_type <- soil_data$organic.vs.conventional.vs.biodynamic[match(pts_30cm$Concatenate, soil_data$Concatenate)]
-write.csv(pts_30cm, file.path(workDir, 'CDFA_samples_cluster_30cm.csv'), row.names = FALSE)
+write.csv(pts_30cm, file.path(workDir, 'FINAL', 'CDFA_samples_cluster_30cm.csv'), row.names = FALSE)
 
 #10 cm management info
 pts_10cm$tillage <- soil_data$till.or.no.till[match(pts_10cm$Concatenate, soil_data$Concatenate)]
 pts_10cm$compost_added <- soil_data$compost.added.[match(pts_10cm$Concatenate, soil_data$Concatenate)]
 pts_10cm$irrigated_vs_dryfarm <- soil_data$irrigated.vs.dryfarm[match(pts_10cm$Concatenate, soil_data$Concatenate)]
 pts_10cm$management_type <- soil_data$organic.vs.conventional.vs.biodynamic[match(pts_10cm$Concatenate, soil_data$Concatenate)]
-write.csv(pts_10cm, file.path(workDir, 'CDFA_samples_cluster_10cm.csv'), row.names = FALSE)
+write.csv(pts_10cm, file.path(workDir, 'FINAL', 'CDFA_samples_cluster_10cm.csv'), row.names = FALSE)
 
 #50 cm management info
 pts_50cm$tillage <- soil_data$till.or.no.till[match(pts_50cm$Concatenate, soil_data$Concatenate)]
 pts_50cm$compost_added <- soil_data$compost.added.[match(pts_50cm$Concatenate, soil_data$Concatenate)]
 pts_50cm$irrigated_vs_dryfarm <- soil_data$irrigated.vs.dryfarm[match(pts_50cm$Concatenate, soil_data$Concatenate)]
 pts_50cm$management_type <- soil_data$organic.vs.conventional.vs.biodynamic[match(pts_50cm$Concatenate, soil_data$Concatenate)]
-write.csv(pts_50cm, file.path(workDir, 'CDFA_samples_cluster_50cm.csv'), row.names = FALSE)
+write.csv(pts_50cm, file.path(workDir, 'FINAL', 'CDFA_samples_cluster_50cm.csv'), row.names = FALSE)
 
 #make vioplots
 order_lgnd_9 <- c(3,6,5,9,4,2) #reflecting the clusters that are missing
