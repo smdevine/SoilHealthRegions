@@ -31,10 +31,16 @@ om_to_oc <- 1.72
 crit_pH <- 7.8
 clus_7_names <- c('6. Fine saline-sodic', '3. Coarse-loamy & restrictive layers', '4. Loamy & restrictive layers', '1. Coarse & no restrictions', '2. Loamy & no restrictions', '7. Shrink-swell', '5. Coarse-loamy saline-sodic')
 valley30cm_by_mukey <- read.csv(file.path(dataDir, 'FINAL results', 'valley30cm_by_mukey_cluster_FINAL.csv'), stringsAsFactors = FALSE)
+dom_order_by_mukey <- read.csv(file.path(dataDir, 'FINAL results', "soil survey facts", 'dom_order_by_mukey.csv'), stringsAsFactors = FALSE)
 
+kssl_ssurgo_extract <- read.csv(file.path(ksslDir, 'kssl_pts_ssurgo_30cm_extract_FINAL.csv'), stringsAsFactors = FALSE)
 kssl_points_30cm <- read.csv(file.path(ksslDir, 'kssl_cluster_30cm_FINAL.csv'), stringsAsFactors = FALSE) #updated 2/11/20 to consider total C when org C not available but soil pH sufficiently low for calculating SOC content
 colnames(kssl_points_30cm)
 dim(kssl_points_30cm)
+kssl_points_30cm$mukey <- kssl_ssurgo_extract$mukey[match(kssl_points_30cm$pedon_key, kssl_ssurgo_extract$pedon_key)]
+kssl_points_30cm$dom_order <- dom_order_by_mukey$dom_order[match(kssl_points_30cm$mukey, dom_order_by_mukey$mukey)]
+tapply(kssl_points_30cm$om_30cm, kssl_points_30cm$dom_order, summary)
+table(kssl_points_30cm$dom_order)
 sum(is.na(kssl_points_30cm$clay_30cm)) #55 are NA
 sum(is.na(kssl_points_30cm$oc_30cm)) #88 are NA
 sum(is.na(kssl_points_30cm$cluster_7))
@@ -58,6 +64,8 @@ sum(is.na(kssl_points_30cm$om_30cm))
 kssl_points_30cm$om_30cm <- kssl_points_30cm$om_30cm_v2
 kssl_points_30cm$om_30cm_v2 <- NULL
 
+
+
 # kssl_points_100cm <- read.csv(file.path(ksslDir, 'kssl_cluster_100cm_NArm.csv'), stringsAsFactors = FALSE)
 # colnames(kssl_points_100cm)
 # table(kssl_points_100cm$cluster_7[!is.na(kssl_points_100cm$kgOrg.m2_100cm)])
@@ -65,7 +73,7 @@ kssl_points_30cm$om_30cm_v2 <- NULL
 # names(test) <- clus_7_names
 # test
 
-df_combined1 <-  kssl_points_30cm[ ,c('clay_30cm', 'om_30cm', 'bd_13b_30cm', 'pH_H2O_30cm', 'kgOrg.m2_30cm', colnames(kssl_points_30cm)[grepl('cluster_', colnames(kssl_points_30cm))])]
+df_combined1 <-  kssl_points_30cm[ ,c('clay_30cm', 'om_30cm', 'bd_13b_30cm', 'pH_H2O_30cm', 'kgOrg.m2_30cm', colnames(kssl_points_30cm)[grepl('cluster_', colnames(kssl_points_30cm))], 'dom_order')]
 dim(df_combined1) #369 rows
 colnames(df_combined1)[3] <- 'bd_30cm'
 df_combined1$source <- 'KSSL'
@@ -73,7 +81,13 @@ df_combined1$source <- 'KSSL'
 kerri_points_30cm <- read.csv(file.path(kerriDir, 'FINAL', 'CDFA_samples_cluster_30cm.csv'), stringsAsFactors = FALSE)
 colnames(kerri_points_30cm)
 kerri_points_30cm$om_30cm <- kerri_points_30cm$totC_30cm * om_to_oc
-df_combined2 <- kerri_points_30cm[!is.na(kerri_points_30cm$cluster_7), c('clay_30cm', 'om_30cm', 'bd_30cm', 'pH_H2O_30cm', 'kgOrg.m2_30cm', colnames(kerri_points_30cm)[grepl('cluster_', colnames(kerri_points_30cm))])]
+kerri_ssurgo_extract <- read.csv(file.path(kerriDir, 'FINAL', 'CDFA_pts_ssurgo_30cm_extract_FINAL.csv'), stringsAsFactors = FALSE)
+kerri_points_30cm$mukey <- kerri_ssurgo_extract$mukey[match(kerri_points_30cm$Concatenate, kerri_ssurgo_extract$Concatenate)]
+kerri_points_30cm$dom_order <- dom_order_by_mukey$dom_order[match(kerri_points_30cm$mukey, dom_order_by_mukey$mukey)]
+tapply(kerri_points_30cm$om_30cm, kerri_points_30cm$dom_order, summary)
+table(kerri_points_30cm$dom_order)
+
+df_combined2 <- kerri_points_30cm[!is.na(kerri_points_30cm$cluster_7), c('clay_30cm', 'om_30cm', 'bd_30cm', 'pH_H2O_30cm', 'kgOrg.m2_30cm', colnames(kerri_points_30cm)[grepl('cluster_', colnames(kerri_points_30cm))], 'dom_order')]
 dim(df_combined2) #103 rows
 df_combined2$source <- 'CDFA'
 
@@ -295,3 +309,30 @@ dev.off()
 # text(x=9, y=95, 'b')
 # # legend(x=3.75,y=128.5, legend = c('pH', 'Clay', 'CEC', 'LEP', 'OM (%)', expression('OC (kg m'^-2*')'), 'EC', 'BD', 'Null'), col=c('red3', 'grey', 'blue', 'darkviolet', 'black', 'chocolate4', 'darkorange', 'brown1', 'black'), lty=c(rep(1, 8), 2), pch=c(rep(21, 8), NA), pt.bg=c('red3', 'grey', 'blue', 'darkviolet', 'black', 'chocolate4', 'darkorange', 'brown1', 'black', NA), ncol = 3, xpd=TRUE)
 # dev.off()
+
+#compare order means
+TukeyHSD()
+compare_SoilOrder_means <- function(df, y, alpha) {
+  y_vector <- df[[y]]
+  x <- df[['dom_order']]
+  print(paste(sum(TukeyHSD(aov(y_vector ~ x))[[1]][,4] <= alpha), 'out of ', length(TukeyHSD(aov(y_vector ~ x))[[1]][,4]), 'are significant.'))
+  sink(file=file.path(resultsDir, 'SoilOrders', paste0(y, '_SoilOrder_aov_results.txt')))
+  print(paste('ANOVA and Tukey HSD results for', y, 'and soil orders'))
+  print(paste(sum(TukeyHSD(aov(y_vector ~ x))[[1]][,4] <= alpha), 'out of ', length(TukeyHSD(aov(y_vector ~ x))[[1]][,4]), 'are significant.'))
+  print(paste0(y, '_SoilOrder_aov_results.txt'))
+  print(summary(aov(y_vector ~ x)))
+  print(TukeyHSD(aov(y_vector ~ x), ordered=FALSE))
+  sink()
+  #plot(TukeyHSD(aov(y_vector ~ x), ordered=FALSE))
+  # model.tables(aov(y_vector ~ x))
+}
+
+compare_SoilOrder_means(df=df_combined, y='clay_30cm', alpha = 0.05)
+compare_SoilOrder_means(df=df_combined, y='om_30cm', alpha = 0.05)
+compare_SoilOrder_means(df=df_combined, y='bd_30cm', alpha = 0.05)
+compare_SoilOrder_means(df=df_combined, y='pH_H2O_30cm', alpha = 0.05) #verified that re-aggregation on 2/11/20 did not change soil pH results (only OM and kg SOC)
+compare_SoilOrder_means(df=kssl_points_30cm, y='cec_7_30cm', alpha = 0.05)
+compare_SoilOrder_means(df=kssl_points_30cm, y='lep_30cm', alpha = 0.05)
+compare_SoilOrder_means(df=kssl_points_30cm, y='ec_30cm', alpha = 0.05)
+compare_SoilOrder_means(df=kssl_points_30cm, y='awc_30cm', alpha = 0.05)
+compare_SoilOrder_means(df=df_combined, y='kgOrg.m2_30cm', alpha = 0.05)
