@@ -31,6 +31,7 @@ om_to_oc <- 1.72
 crit_pH <- 7.8
 #produced in ssurgo_calag_cluster_FINAL.R
 valley30cm_by_mukey <- read.csv(file.path(dataDir, 'FINAL results', 'valley30cm_by_mukey_cluster_FINAL.csv'), stringsAsFactors = FALSE)
+
 #updated 4/7/20 b/c of set.seed issue
 clus_7_colors <- c('deepskyblue', 'gold', 'firebrick3', 'lightgoldenrod', 'tan4', 'violetred', 'lightblue1')
 order_lgnd_7 <- c(4,5,2,3,7,1,6)
