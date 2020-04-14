@@ -147,7 +147,7 @@ tapply(pts_30cm$clay_30cm, pts_30cm$cluster_9, summary)
 table(pts_30cm$cluster_9[!is.na(pts_30cm$clay_30cm)])
 tapply(pts_30cm$bd_30cm, pts_30cm$cluster_9, summary)
 tapply(pts_30cm$bd_30cm, pts_30cm$cluster_9, summary)
-write.csv(pts_ssurgo_extract_30cm, file.path(workDir, 'CDFA_pts_ssurgo_30cm_extract_FINAL.csv'), row.names = FALSE)
+write.csv(pts_ssurgo_extract_30cm, file.path(workDir, 'FINAL', 'CDFA_pts_ssurgo_30cm_extract_FINAL.csv'), row.names = FALSE)
 
 # pts_ssurgo_extract_30cm <- read.csv(file.path(workDir, 'CDFA_pts_ssurgo_30cm_extract.csv'), stringsAsFactors = FALSE) 
 # pts_30cm <- read.csv(file.path(workDir, 'CDFA_samples_cluster_30cm.csv'), stringsAsFactors = FALSE)
