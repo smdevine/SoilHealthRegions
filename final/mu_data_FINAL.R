@@ -23,9 +23,9 @@ if (laptop) {
 }
 mar_settings <- c(4, 4.5, 1, 1)
 om_to_oc <- 1.72
-valley_mu_shp_30cm <- shapefile(file.path(dataDir, 'FINAL results', 'shapefiles with data', 'valley_30cm_cluster.shp'))
+# valley_mu_shp_30cm <- shapefile(file.path(dataDir, 'FINAL results', 'shapefiles with data', 'valley_30cm_cluster.shp'))
 clus_7_names <- c('6. Fine saline-sodic', '3. Coarse-loamy & restrictive layers', '4. Loamy & restrictive layers', '1. Coarse & no restrictions', '2. Loamy & no restrictions', '7. Shrink-swell', '5. Coarse-loamy saline-sodic')
-#produced in ssurgo_calag_cluster_v2.R
+#produced in ssurgo_calag_cluster_FINAL.R
 valley30cm_by_mukey <- read.csv(file.path(dataDir, 'FINAL results', 'valley30cm_by_mukey_cluster_FINAL.csv'), stringsAsFactors = FALSE)
 colnames(valley30cm_by_mukey)
 sum(valley30cm_by_mukey$area_ac) #13034096
@@ -43,7 +43,7 @@ valley30cm_by_mukey$clus7_name <- clus_7_names[valley30cm_by_mukey$cluster_7]
 comp_data <- read.csv(file.path(mainDir, 'soil health/ssurgo_data/component_data', 'ca_component_data.csv'), stringsAsFactors = FALSE, na.strings = c('', ' ')) #treat blanks or a space as a NA)
 colnames(comp_data)
 
-#fix a few majcompflag errors as in original data prep
+#fix a few majcompflag errors as done in original data prep
 comp_data$majcompflag[comp_data$majcompflag=='No ' & comp_data$comppct_r>=15 & !is.na(comp_data$castorieindex)] <- 'Yes'
 comp_data$majcompflag[comp_data$majcompflag=='Yes' & comp_data$comppct_r < 15] <- 'No '
 comp_data[comp_data$majcompflag=='Yes' & is.na(comp_data$taxorder) & comp_data$mukey %in% valley30cm_by_mukey$mukey,]
@@ -94,8 +94,11 @@ table(valley30cm_by_mukey$dom_orders)
 valley30cm_by_mukey$dom_order <- apply(valley30cm_by_mukey[ ,colnames(valley30cm_by_mukey)[grepl('sols_pct', colnames(valley30cm_by_mukey))]], 1, function(x) c('Ultisols', 'Vertisols', 'Mollisols',  'Inceptisols', 'Entisols', 'Aridisols', 'Andisols', 'Alfisols')[which.max(x)])
 table(valley30cm_by_mukey$dom_order)
 valley30cm_by_mukey$dom_order[valley30cm_by_mukey$dom_orders>1] <- NA
-tapply(valley30cm_by_mukey$area_ac, valley30cm_by_mukey$dom_order, function(x) round(sum(x), 0))
+tapply(valley30cm_by_mukey$area_ac, valley30cm_by_mukey$dom_order, function(x) round(sum(x) / 2.47105, 0))
 tapply(valley30cm_by_mukey$om_30cm, valley30cm_by_mukey$dom_order, function(x) mean(x, na.rm = TRUE))
+dom_order_by_mukey <- valley30cm_by_mukey[,c('mukey', 'dom_order')]
+write.csv(dom_order_by_mukey, file.path(dataDir, 'FINAL results', 'soil survey facts', 'dom_order_by_mukey.csv'), row.names=FALSE)
+
 
 #TO-DO
 #dominant soil order summary
