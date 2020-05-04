@@ -66,24 +66,24 @@ valley30cm_by_mukey <- SoilOrderArea_calc(valley30cm_by_mukey, comp_data, 'Aridi
 valley30cm_by_mukey <- SoilOrderArea_calc(valley30cm_by_mukey, comp_data, 'Andisols')
 valley30cm_by_mukey <- SoilOrderArea_calc(valley30cm_by_mukey, comp_data, 'Alfisols')
 
-SoilOrder_summary <- as.data.frame(lapply(c('Alfisols', 'Andisols', 'Aridisols', 'Entisols', 'Inceptisols', 'Mollisols', 'Ultisols', 'Vertisols'), function(x) {
-  tapply(valley30cm_by_mukey[[paste0(x, '_ac')]], clus_7_names[match(valley30cm_by_mukey$cluster_7, 1:7)], sum)
-  }
-), row.names = clus_7_names[order(clus_7_names)], col.names = c('Alfisols', 'Andisols', 'Aridisols', 'Entisols', 'Inceptisols', 'Mollisols', 'Ultisols', 'Vertisols'))
-SoilOrder_summary
-sum(valley30cm_by_mukey$area_ac) - sum(SoilOrder_summary) #95225.92 acres off
-SoilOrder_summary$TOTAL <- tapply(valley30cm_by_mukey$area_ac, clus_7_names[match(valley30cm_by_mukey$cluster_7, 1:7)], sum)
-
-write.csv(SoilOrder_summary, file.path(dataDir, 'FINAL results', 'soil survey facts', 'SoilOrders_by_SHR7.csv'), row.names=TRUE)
-
-valley30cm_by_mukey[5,]
-comp_data[comp_data$mukey==461103,]
-
-valley30cm_by_mukey[71,]
-comp_data[comp_data$mukey==459435,]
-
-valley30cm_by_mukey[80,]
-comp_data[comp_data$mukey==459458,]
+# SoilOrder_summary <- as.data.frame(lapply(c('Alfisols', 'Andisols', 'Aridisols', 'Entisols', 'Inceptisols', 'Mollisols', 'Ultisols', 'Vertisols'), function(x) {
+#   tapply(valley30cm_by_mukey[[paste0(x, '_ac')]], clus_7_names[match(valley30cm_by_mukey$cluster_7, 1:7)], sum)
+#   }
+# ), row.names = clus_7_names[order(clus_7_names)], col.names = c('Alfisols', 'Andisols', 'Aridisols', 'Entisols', 'Inceptisols', 'Mollisols', 'Ultisols', 'Vertisols'))
+# SoilOrder_summary
+# sum(valley30cm_by_mukey$area_ac) - sum(SoilOrder_summary) #95225.92 acres off
+# SoilOrder_summary$TOTAL <- tapply(valley30cm_by_mukey$area_ac, clus_7_names[match(valley30cm_by_mukey$cluster_7, 1:7)], sum)
+# 
+# write.csv(SoilOrder_summary, file.path(dataDir, 'FINAL results', 'soil survey facts', 'SoilOrders_by_SHR7.csv'), row.names=TRUE)
+# 
+# valley30cm_by_mukey[5,]
+# comp_data[comp_data$mukey==461103,]
+# 
+# valley30cm_by_mukey[71,]
+# comp_data[comp_data$mukey==459435,]
+# 
+# valley30cm_by_mukey[80,]
+# comp_data[comp_data$mukey==459458,]
 
 #calculate area
 length(unique(valley30cm_by_mukey$muname)) #3942 unique map unit names
@@ -108,7 +108,7 @@ sumDomOrderArea <- function(x, y) {
 sumDomOrderArea(x=1, y=clus_7_names[1])
 DomSoilOrder_summary <- rbind(sumDomOrderArea(1, clus_7_names[1]), sumDomOrderArea(2, clus_7_names[2]), sumDomOrderArea(3, clus_7_names[3]), sumDomOrderArea(4, clus_7_names[4]), sumDomOrderArea(5, clus_7_names[5]), sumDomOrderArea(6, clus_7_names[6]), sumDomOrderArea(7, clus_7_names[7]))[order(clus_7_names),]
 DomSoilOrder_summary$TOTAL <- tapply(valley30cm_by_mukey$area_ac, clus_7_names[match(valley30cm_by_mukey$cluster_7, 1:7)], sum)
-
+DomSoilOrder_summary
 write.csv(DomSoilOrder_summary, file.path(dataDir, 'FINAL results', 'soil survey facts', 'DominantSoilOrders_by_SHR7.csv'), row.names=TRUE)
 tapply(valley30cm_by_mukey$area_ac[valley30cm_by_mukey$cluster_7==1], valley30cm_by_mukey$dom_order[valley30cm_by_mukey$cluster_7==1], function(x) as.integer(sum(x)))
 tapply(valley30cm_by_mukey$area_ac[valley30cm_by_mukey$cluster_7==2], valley30cm_by_mukey$dom_order[valley30cm_by_mukey$cluster_7==2], function(x) as.integer(sum(x)))
@@ -119,36 +119,6 @@ tapply(valley30cm_by_mukey$area_ac[valley30cm_by_mukey$cluster_7==6], valley30cm
 tapply(valley30cm_by_mukey$area_ac[valley30cm_by_mukey$cluster_7==7], valley30cm_by_mukey$dom_order[valley30cm_by_mukey$cluster_7==7], function(x) as.integer(sum(x)))
 
 
-#make a violin plot by soil order
-#order: 
-clus_7_colors <- c('gold', 'deepskyblue', 'lightblue1', 'lightgoldenrod', 'violetred', 'tan4', 'firebrick3')
-color_by_soil_order <- c('lightgoldenrod', 'tan4', 'gold', 'firebrick3', 'black', 'lightblue1', 'deepskyblue', 'violetred')
-col2rgb(color_by_soil_order)
-soil_order_logic <- c('Entisols', 'Mollisols', 'Alfisols', 'Ultisols', 'Andisols', 'Inceptisols', 'Aridisols', 'Vertisols')
-cbind(color_by_soil_order, soil_order_logic, t(col2rgb(color_by_soil_order)))
-vioplot_mod_SoilOrder_validation <- function(df, varname, ylim_vioplot, area_fact, labnames, ylab, fname, mar) {
-  tiff(file = file.path(FiguresDir, 'v2', 'soil order', fname), family = 'Times New Roman', width = 6.5, height = 4.5, pointsize = 12, units = 'in', res=800, compression='lzw')
-  par(mar=mar)
-  vioplot(rep(df[[varname]][which(df$dom_order=='Entisols')], times=round(df$area_ac[which(df$dom_order=='Entisols')]/area_fact, 0)), rep(df[[varname]][which(df$dom_order=='Mollisols')], times=round(df$area_ac[which(df$dom_order=='Mollisols')]/area_fact, 0)), rep(df[[varname]][which(df$dom_order=='Alfisols')], times=round(df$area_ac[which(df$dom_order=='Alfisols')]/area_fact, 0)), rep(df[[varname]][which(df$dom_order=='Ultisols')], times=round(df$area_ac[which(df$dom_order=='Ultisols')]/area_fact, 0)), rep(df[[varname]][which(df$dom_order=='Andisols')], times=round(df$area_ac[which(df$dom_order=='Andisols')]/area_fact, 0)), rep(df[[varname]][which(df$dom_order=='Inceptisols')], times=round(df$area_ac[which(df$dom_order=='Inceptisols')]/area_fact, 0)), rep(df[[varname]][which(df$dom_order=='Aridisols')], times=round(df$area_ac[which(df$dom_order=='Aridisols')]/area_fact, 0)), rep(df[[varname]][which(df$dom_order=='Vertisols')], times=round(df$area_ac[which(df$dom_order=='Vertisols')]/area_fact, 0)), col = color_by_soil_order, rectCol = 'gray', ylim = ylim_vioplot, ylab = ylab) #col
-  mtext('Soil orders (USDA-NRCS soil taxonomy)', side = 1, line = 2.25)
-  # points(x=kssl_df$xdim_vioplot7[!is.na(kssl_df[[kssl_varname]])]-0.1, y=kssl_df[[kssl_varname]][!is.na(kssl_df[[kssl_varname]])]*if(kssl_varname=='totC_30cm'){1.72} else{1}, cex=0.7, pch=1, col='black')
-  # kssl_means <- data.frame(mean=tapply(kssl_df[[kssl_varname]]*if(kssl_varname=='totC_30cm'){1.72} else{1}, kssl_df$cluster_7, mean, na.rm=TRUE))
-  # kssl_means$xdim_vioplot <- match(row.names(kssl_means), plot_order)
-  # points(x=kssl_means$xdim_vioplot-0.1, y=kssl_means$mean, pch=8, cex=0.9, col='orange')
-  # points(x=cdfa_pts$xdim_vioplot7[!is.na(cdfa_pts[[cdfa_varname]])]+0.1, y=cdfa_pts[[cdfa_varname]][!is.na(cdfa_pts[[cdfa_varname]])], cex=0.7, pch=4, col='black')
-  # cdfa_means <- data.frame(mean=tapply(cdfa_pts[[cdfa_varname]], cdfa_pts$cluster_7, mean, na.rm=TRUE))
-  # cdfa_means$xdim_vioplot <- match(row.names(cdfa_means), plot_order)
-  # points(x=cdfa_means$xdim_vioplot+0.1, y=cdfa_means$mean, pch=8, cex=0.9, col='darkblue')
-  # text(x=1:7, y=ylim_vioplot[1], labels = sig_labels, adj=0.5)
-  # if(legend_plot) {
-    # legend(x=legendloc, legend=c('SSURGO violin plots, area-weighted', 'KSSL data', 'KSSL mean', 'CDFA data', 'CDFA mean'), pch=c(NA,1,8,4,8), col = c(NA, 'black', 'orange', 'black', 'darkblue'), cex=legend_cex)
-  # }
-  dev.off()
-}
-vioplot_mod_SoilOrder_validation(valley30cm_by_mukey, 'om_30cm', ylim_vioplot = c(-0.2,12), area_fact = 10, ylab='Organic matter (%)', fname='SoilOrder_om_vioplots_validation.tif', mar=c(3.5, 4.25, 1, 1))
-#additional function arguments kssl_df, kssl_varname, cdfa_pts, cdfa_varname, legend_plot, legendloc, legend_cex, sig_labels
-summary(valley30cm_by_mukey$om_30cm[valley30cm_by_mukey$dom_order=='Aridisols'])
-valley30cm_by_mukey[which(valley30cm_by_mukey$om_30cm>10 & valley30cm_by_mukey$dom_order=='Aridisols'),]
 
 
 #add Order info to shapefile
