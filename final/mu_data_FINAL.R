@@ -229,3 +229,9 @@ compname_n_percentage(coarse_saline_sodic, 'Coarse_saline_sodic', 0.5)
 compname_n_percentage(fine_saline_sodic, 'Fine_saline_sodic', 0.5)
 compname_n_percentage(fine_shrink_swell, 'Fine_shrink_swell', 0.5)
 
+#look at clear lake data
+valley30cm_by_mukey$mukey[valley30cm_by_mukey$cluster_7==5 & grepl("Clear Lake", valley30cm_by_mukey$mjcmpnms)]
+valley30cm_by_mukey$clay_30cm[valley30cm_by_mukey$cluster_7==5 & grepl("Clear Lake", valley30cm_by_mukey$mjcmpnms)]
+sum(valley30cm_by_mukey$area_ac[valley30cm_by_mukey$cluster_7==5 & grepl("Clear Lake", valley30cm_by_mukey$mjcmpnms)])
+valley30cm_by_mukey$ksat_30cm[valley30cm_by_mukey$cluster_7==5 & grepl("Clear Lake", valley30cm_by_mukey$mjcmpnms)]
+sum(valley30cm_by_mukey$area_ac[valley30cm_by_mukey$cluster_7==6 & grepl("Clear Lake", valley30cm_by_mukey$mjcmpnms)]) #194388.7
