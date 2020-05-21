@@ -29,6 +29,10 @@ clus_7_names <- c('6. Fine saline-sodic', '3. Coarse-loamy & restrictive layers'
 valley30cm_by_mukey <- read.csv(file.path(dataDir, 'FINAL results', 'valley30cm_by_mukey_cluster_FINAL.csv'), stringsAsFactors = FALSE)
 colnames(valley30cm_by_mukey)
 sum(valley30cm_by_mukey$area_ac) #13034096
+valley30cm_by_mukey$clus7_name <- clus_7_names[valley30cm_by_mukey$cluster_7]
+SHR7area <- tapply(valley30cm_by_mukey$area_ac, valley30cm_by_mukey$clus7_name, sum)
+valley30cm_by_mukey$wtd_mn_par <- as.numeric(valley30cm_by_mukey$area_ac / SHR7area[match(valley30cm_by_mukey$clus7_name, names(SHR7area))])
+
 unique(unlist(strsplit(unique(valley30cm_by_mukey$txorders), '-'))) #these orders are represented: "Alfisols" "Inceptisols" "Mollisols"  "Entisols"    "Vertisols" Ultisols" "Aridisols" "Andisols"
 sum(valley30cm_by_mukey$area_ac[is.na(valley30cm_by_mukey$txorders)]) #only 3391.2 acres missing soil order
 unique(unlist(strsplit(valley30cm_by_mukey$mjcmpnms, '-')))
@@ -38,7 +42,6 @@ unique_majcomps_by_SHR <- unique_majcomps_by_SHR[order(clus_7_names)]
 sapply(unique_majcomps_by_SHR, length)
 mean(sapply(unique_majcomps_by_SHR, length))
 
-valley30cm_by_mukey$clus7_name <- clus_7_names[valley30cm_by_mukey$cluster_7]
 
 comp_data <- read.csv(file.path(mainDir, 'soil health/ssurgo_data/component_data', 'ca_component_data.csv'), stringsAsFactors = FALSE, na.strings = c('', ' ')) #treat blanks or a space as a NA)
 colnames(comp_data)
@@ -235,3 +238,37 @@ valley30cm_by_mukey$clay_30cm[valley30cm_by_mukey$cluster_7==5 & grepl("Clear La
 sum(valley30cm_by_mukey$area_ac[valley30cm_by_mukey$cluster_7==5 & grepl("Clear Lake", valley30cm_by_mukey$mjcmpnms)])
 valley30cm_by_mukey$ksat_30cm[valley30cm_by_mukey$cluster_7==5 & grepl("Clear Lake", valley30cm_by_mukey$mjcmpnms)]
 sum(valley30cm_by_mukey$area_ac[valley30cm_by_mukey$cluster_7==6 & grepl("Clear Lake", valley30cm_by_mukey$mjcmpnms)]) #194388.7
+
+#get soil property stats (area-weighted)
+property_stats <- function(df, var) {
+  print(names(SHR7area))
+  result <- data.frame(SHR=names(SHR7area), low90=NA, q1=NA, q2=NA, wtd.mean=NA, q3=NA, high90=NA)
+  for(i in seq_along(names(SHR7area))) {
+    df_trim <- data.frame(data=df[[var]][df$clus7_name==names(SHR7area)[i]], area_prop=df$wtd_mn_par[df$clus7_name==names(SHR7area)[i]])
+    df_trim <- df_trim[order(df_trim$data),]
+    df_trim$area_prop_sum <- cumsum(df_trim$area_prop)
+    result[i,'low90'] <- df_trim$data[which.min(abs(df_trim$area_prop_sum-0.05))]
+    result[i,'q1'] <- df_trim$data[which.min(abs(df_trim$area_prop_sum-0.25))]
+    result[i, 'q2'] <- df_trim$data[which.min(abs(df_trim$area_prop_sum-0.5))]
+    result[i, 'wtd.mean'] <- sum(df_trim$data*df_trim$area_prop)
+    result[i, 'q3'] <- df_trim$data[which.min(abs(df_trim$area_prop_sum-0.75))]
+    result[i,'high90'] <- df_trim$data[which.min(abs(df_trim$area_prop_sum-0.95))]
+  }
+  print(result)
+  write.csv(result, file.path(dataDir, 'FINAL results', 'soil properties', paste0(var, '_stats.csv')), row.names = FALSE)
+}
+property_stats(valley30cm_by_mukey, 'clay_30cm')
+property_stats(valley30cm_by_mukey, 'om_30cm')
+property_stats(valley30cm_by_mukey, 'cec_30cm')
+property_stats(valley30cm_by_mukey, 'bd_30cm')
+property_stats(valley30cm_by_mukey, 'pH_30cm')
+property_stats(valley30cm_by_mukey, 'ksat_30cm')
+property_stats(valley30cm_by_mukey, 'lep_30cm')
+property_stats(valley30cm_by_mukey, 'ec_30cm')
+property_stats(valley30cm_by_mukey, 'awc_30cm')
+property_stats(valley30cm_by_mukey, 'MnRs_dep')
+property_stats(valley30cm_by_mukey, 'sand_30cm')
+property_stats(valley30cm_by_mukey, 'silt_30cm')
+property_stats(valley30cm_by_mukey, 'sar_30cm')
+property_stats(valley30cm_by_mukey, 'kwf_30cm')
+property_stats(valley30cm_by_mukey, 'frags_30cm')
