@@ -24,12 +24,13 @@ if (laptop) {
   ksslDir <- 'C:/Users/smdevine/Desktop/PostDoc/soil health/kssl'
   prismDir <- 'C:/Users/smdevine/Desktop/PostDoc/soil health/PRISM'
 }
-clus_7_colors <- c('gold', 'deepskyblue', 'lightblue1', 'lightgoldenrod', 'violetred', 'tan4', 'firebrick3')
-order_lgnd_7 <- c(4,6,1,7,3,2,5)
-#valley30cm_by_mukey <- read.csv(file.path(dataDir, 'for cluster analysis', 'valley30cm_by_mukey_final_v2.csv'), stringsAsFactors = FALSE)
-valley30cm_by_mukey <- read.csv(file.path(dataDir, 'v2 results', 'valley30cm_by_mukey_cluster_v2.csv'), stringsAsFactors = FALSE)
+#updated 4/7/20 b/c of set.seed issue
+clus_7_colors <- c('deepskyblue', 'gold', 'firebrick3', 'lightgoldenrod', 'tan4', 'violetred', 'lightblue1')
+order_lgnd_7 <- c(4,5,2,3,7,1,6)
+clus_7_names <- c('6. Fine saline-sodic', '3. Coarse-loamy & restrictive layers', '4. Loamy & restrictive layers', '1. Coarse & no restrictions', '2. Loamy & no restrictions', '7. Shrink-swell', '5. Coarse-loamy saline-sodic')
+valley30cm_by_mukey <- read.csv(file.path(dataDir, 'FINAL results', 'valley30cm_by_mukey_cluster_FINAL.csv'), stringsAsFactors = FALSE)
 sum(valley30cm_by_mukey$area_ac) #13034096
-valley_mu_shp_30cm <- shapefile(file.path(dataDir, 'shapefiles with data', 'valley_30cm_cluster.shp'))
+valley_mu_shp_30cm <- shapefile(file.path(dataDir, 'FINAL results', 'shapefiles with data', 'valley_30cm_cluster.shp'))
 sum(valley_mu_shp_30cm$area_ac) #13873110 because some eliminated from analysis
 sum(valley_mu_shp_30cm$area_ac[is.na(valley_mu_shp_30cm$cluster_7)]) #839014.1 acres
 centroids_mu <- gCentroid(valley_mu_shp_30cm, byid = TRUE)
@@ -100,6 +101,56 @@ head(valley30cm_climate_df)
 length(unique(valley30cm_climate_df$mukey))#4595
 dim(valley30cm_climate_df) #91787
 length(unique(valley30cm_by_mukey$mukey)) #4595
+sum(valley30cm_climate_df$area_ac)
+sum(valley30cm_by_mukey$area_ac)
+valley30cm_climate_df$cluster_7 <- valley30cm_by_mukey$cluster_7[match(valley30cm_climate_df$mukey, valley30cm_by_mukey$mukey)]
+valley30cm_climate_df$SHR7name <- clus_7_names[valley30cm_climate_df$cluster_7]
+valley30cm_climate_df$P_to_ET <- valley30cm_climate_df$annual.P / valley30cm_climate_df$annual.ETo
+SHR7area <- tapply(valley30cm_by_mukey$area_ac, valley30cm_by_mukey$clus7_name, sum)
+
+valley30cm_climate_df$wtd_mn_par <- as.numeric(valley30cm_climate_df$area_ac / SHR7area[match(valley30cm_climate_df$SHR7name, names(SHR7area))])
+tapply(valley30cm_climate_df$annual.ETo, valley30cm_climate_df$SHR7name, mean)
+tapply(valley30cm_climate_df$annual.P, valley30cm_climate_df$SHR7name, mean)
+tapply(valley30cm_climate_df$annual.T, valley30cm_climate_df$SHR7name, mean)
+tapply(valley30cm_climate_df$P_to_ET, valley30cm_climate_df$SHR7name, mean)
+wtd_climate_means <- function(df, var) {
+  c(sum(df[[var]][df$SHR7name=="1. Coarse & no restrictions"]*df$wtd_mn_par[df$SHR7name=="1. Coarse & no restrictions"]), sum(df[[var]][df$SHR7name=="2. Loamy & no restrictions"]*df$wtd_mn_par[df$SHR7name=="2. Loamy & no restrictions"]), sum(df[[var]][df$SHR7name=="3. Coarse-loamy & restrictive layers"]*df$wtd_mn_par[df$SHR7name=="3. Coarse-loamy & restrictive layers"]), sum(df[[var]][df$SHR7name=="4. Loamy & restrictive layers"]*df$wtd_mn_par[df$SHR7name=="4. Loamy & restrictive layers"]), sum(df[[var]][df$SHR7name=="5. Coarse-loamy saline-sodic"]*df$wtd_mn_par[df$SHR7name=="5. Coarse-loamy saline-sodic"]), sum(df[[var]][df$SHR7name=="6. Fine saline-sodic"]*df$wtd_mn_par[df$SHR7name=="6. Fine saline-sodic"]), sum(df[[var]][df$SHR7name=="7. Shrink-swell"]*df$wtd_mn_par[df$SHR7name=="7. Shrink-swell"]))
+}
+annualP_SHR7 <- wtd_climate_means(valley30cm_climate_df, 'annual.P')
+annualETo_SHR7 <- wtd_climate_means(valley30cm_climate_df, 'annual.ETo')
+annualT_SHR7 <- wtd_climate_means(valley30cm_climate_df, 'annual.T')
+annualAridity_SHR7 <- wtd_climate_means(valley30cm_climate_df, 'P_to_ET')
+climate_summary <- data.frame(SHR7_name=names(SHR7area), annual_P=annualP_SHR7, annual_ETo=annualETo_SHR7, annual_T=annualT_SHR7, AridityIndex=annualAridity_SHR7)
+write.csv(climate_summary, file.path(dataDir, 'FINAL results', 'climate', 'climate_summary_wtd_means.csv'), row.names = FALSE)
+
+
+test <- data.frame(annualP=valley30cm_climate_df$annual.P[valley30cm_climate_df$SHR7name=="1. Coarse & no restrictions"], area_prop=valley30cm_climate_df$wtd_mn_par[valley30cm_climate_df$SHR7name=="1. Coarse & no restrictions"])
+test <- test[order(test$annualP),]
+test$area_prop_sum <- cumsum(test$area_prop)
+test[which.min(abs(test$area_prop_sum-0.25)),]
+test[which.min(abs(test$area_prop_sum-0.5)),]
+test[which.min(abs(test$area_prop_sum-0.75)),]
+
+climate_quartiles <- function(df, var) {
+  print(names(SHR7area))
+  result <- data.frame(SHR=names(SHR7area), q1=NA, q2=NA, q3=NA)
+  for(i in seq_along(names(SHR7area))) {
+    df_trim <- data.frame(data=df[[var]][df$SHR7name==names(SHR7area)[i]], area_prop=df$wtd_mn_par[df$SHR7name==names(SHR7area)[i]])
+    df_trim <- df_trim[order(df_trim$data),]
+    df_trim$area_prop_sum <- cumsum(df_trim$area_prop)
+    result[i,'q1'] <- df_trim$data[which.min(abs(df_trim$area_prop_sum-0.25))]
+    result[i, 'q2'] <- df_trim$data[which.min(abs(df_trim$area_prop_sum-0.5))]
+    result[i, 'q3'] <- df_trim$data[which.min(abs(df_trim$area_prop_sum-0.75))]
+  }
+  result
+  write.csv(result, file.path(dataDir, 'FINAL results', 'climate', paste0(var, '_quartiles.csv')), row.names = FALSE)
+}
+annualP_quartiles <- climate_quartiles(valley30cm_climate_df, 'annual.P')
+annualETo_quartiles <- climate_quartiles(valley30cm_climate_df, 'annual.ETo')
+annualT_quartiles <- climate_quartiles(valley30cm_climate_df, 'annual.T')
+aridity_quartiles <- climate_quartiles(valley30cm_climate_df, 'P_to_ET')
+
+#summary by unique mukey
 valley30cm_climate_df$mukey_area <- valley30cm_by_mukey$area_ac[match(valley30cm_climate_df$mukey, valley30cm_by_mukey$mukey)]
 valley30cm_climate_df$annual.P.wtd <- valley30cm_climate_df$annual.P * (valley30cm_climate_df$area_ac / valley30cm_climate_df$mukey_area)
 valley30cm_climate_df$annual.T.wtd <- valley30cm_climate_df$annual.T * (valley30cm_climate_df$area_ac / valley30cm_climate_df$mukey_area)
