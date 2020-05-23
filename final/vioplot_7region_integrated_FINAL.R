@@ -144,10 +144,22 @@ vioplot_mod_clus7 <- function(df, varname, ylim_vioplot, plot_order, area_fact, 
   legend('topright', fig_label, bty='n', inset=0.005)
   dev.off()
 }
+df2 <- valley30cm_by_mukey[!is.na(valley30cm_by_mukey$storiemn),]
+
+test <- vioplot(rep(df2[['storiemn']][df2$cluster_7==2], times=round(df2$area_ac[df2$cluster_7==2]/10, 0))) #6. Fine saline-sodic
+test$q1
+test$median
+test$q3
+
+test2 <- boxplot(rep(df2[['storiemn']][df2$cluster_7==2], times=round(df2$area_ac[df2$cluster_7==2]/10, 0))) #6. Fine saline-sodic
+test$q1
+test$median
+test$q3
+
 vioplot_mod_clus7(valley30cm_by_mukey, 'MnRs_dep', ylim_vioplot = c(0,200), plot_order = order_lgnd_7, area_fact = 10, ylab='Minimum depth to restrictive layer (cm)', fname='class7_MnRs_vioplots.tif', mar=c(3.5, 4.25, 1, 1), fig_label = 'j')
 valley30cm_by_mukey$logks_30cm <- log(valley30cm_by_mukey$ksat_30cm)
 vioplot_mod_clus7(valley30cm_by_mukey, 'logks_30cm', ylim_vioplot = c(-4.58,5.85), plot_order = order_lgnd_7, area_fact = 10, ylab=expression('Saturated conductivity (log'[10]~mu*'m H'[2]*'O s'^-1*')'), fname='class7_logKs_vioplots.tif', mar=c(3.5, 4.25, 1, 1), fig_label = 'i')
-vioplot_mod_clus7(valley30cm_by_mukey, 'storiemn', ylim_vioplot = c(0,100), plot_order = order_lgnd_7, area_fact = 10, ylab='Storie index', fname='class7_storie_vioplots.tif', mar=c(3.5, 4.25, 1, 1), fig_label = 'k')
+vioplot_mod_clus7(valley30cm_by_mukey, 'storiemn', ylim_vioplot = c(0,100), plot_order = order_lgnd_7, area_fact = 0.1, ylab='Storie index', fname='class7_storiemn_vioplots.tif', mar=c(3.5, 4.25, 1, 1), fig_label = 'k')
 
 #make a violin plot by soil order
 #order: 
