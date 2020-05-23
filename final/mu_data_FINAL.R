@@ -30,8 +30,16 @@ valley30cm_by_mukey <- read.csv(file.path(dataDir, 'FINAL results', 'valley30cm_
 colnames(valley30cm_by_mukey)
 sum(valley30cm_by_mukey$area_ac) #13034096
 valley30cm_by_mukey$clus7_name <- clus_7_names[valley30cm_by_mukey$cluster_7]
-SHR7area <- tapply(valley30cm_by_mukey$area_ac, valley30cm_by_mukey$clus7_name, sum)
-valley30cm_by_mukey$wtd_mn_par <- as.numeric(valley30cm_by_mukey$area_ac / SHR7area[match(valley30cm_by_mukey$clus7_name, names(SHR7area))])
+# SHR7area <- tapply(valley30cm_by_mukey$area_ac, valley30cm_by_mukey$clus7_name, sum)
+
+
+
+#produced in...
+dom_order_by_mukey <- read.csv(file.path(dataDir, 'FINAL results', "soil survey facts", 'dom_order_by_mukey.csv'), stringsAsFactors = FALSE)
+head(dom_order_by_mukey)
+valley30cm_by_mukey$dom_order <- dom_order_by_mukey$dom_order[match(valley30cm_by_mukey$mukey, dom_order_by_mukey$mukey)]
+# DomOrderArea <- tapply(valley30cm_by_mukey$area_ac, valley30cm_by_mukey$dom_order, sum)
+
 
 unique(unlist(strsplit(unique(valley30cm_by_mukey$txorders), '-'))) #these orders are represented: "Alfisols" "Inceptisols" "Mollisols"  "Entisols"    "Vertisols" Ultisols" "Aridisols" "Andisols"
 sum(valley30cm_by_mukey$area_ac[is.na(valley30cm_by_mukey$txorders)]) #only 3391.2 acres missing soil order
@@ -240,11 +248,22 @@ valley30cm_by_mukey$ksat_30cm[valley30cm_by_mukey$cluster_7==5 & grepl("Clear La
 sum(valley30cm_by_mukey$area_ac[valley30cm_by_mukey$cluster_7==6 & grepl("Clear Lake", valley30cm_by_mukey$mjcmpnms)]) #194388.7
 
 #get soil property stats (area-weighted)
-property_stats <- function(df, var) {
-  print(names(SHR7area))
-  result <- data.frame(SHR=names(SHR7area), low90=NA, q1=NA, q2=NA, wtd.mean=NA, q3=NA, high90=NA)
-  for(i in seq_along(names(SHR7area))) {
-    df_trim <- data.frame(data=df[[var]][df$clus7_name==names(SHR7area)[i]], area_prop=df$wtd_mn_par[df$clus7_name==names(SHR7area)[i]])
+#region_type='clus7_name'
+property_stats <- function(df, var, region_type) {
+  print(dim(df))
+  df <- df[!is.na(df[[region_type]]), ] #because some have undefined dom_order
+  df <- df[!is.na(df[[var]]),] #because some vars like storiemn and sar have NAs in this dataset since they weren't used as part of cluster analysis
+  region_area <- tapply(df$area_ac, df[[region_type]], sum)
+  print(region_area)
+  if (region_type=='dom_order') {
+    df <- df[df$dom_order!='Andisols', ]
+    region_area <- region_area[names(region_area)!='Andisols']
+  }
+  print(dim(df))
+  df$wtd_mn_par <- as.numeric(df$area_ac / region_area[match(df[[region_type]], names(region_area))])
+  result <- data.frame(SHR=names(region_area), low90=NA, q1=NA, q2=NA, wtd.mean=NA, q3=NA, high90=NA)
+  for(i in seq_along(names(region_area))) {
+    df_trim <- data.frame(data=df[[var]][df[[region_type]]==names(region_area)[i]], area_prop=df$wtd_mn_par[df[[region_type]]==names(region_area)[i]])
     df_trim <- df_trim[order(df_trim$data),]
     df_trim$area_prop_sum <- cumsum(df_trim$area_prop)
     result[i,'low90'] <- df_trim$data[which.min(abs(df_trim$area_prop_sum-0.05))]
@@ -255,20 +274,45 @@ property_stats <- function(df, var) {
     result[i,'high90'] <- df_trim$data[which.min(abs(df_trim$area_prop_sum-0.95))]
   }
   print(result)
-  write.csv(result, file.path(dataDir, 'FINAL results', 'soil properties', paste0(var, '_stats.csv')), row.names = FALSE)
+  if(region_type=='clus7_name') {
+    write.csv(result, file.path(dataDir, 'FINAL results', 'soil properties', paste0(var, '_stats.csv')), row.names = FALSE)
+  }
+  else if (region_type=='dom_order') {
+    write.csv(result, file.path(dataDir, 'FINAL results', 'soil properties', 'by soil order', paste0(var, '_stats_soil_order.csv')), row.names = FALSE)
+  }
 }
-property_stats(valley30cm_by_mukey, 'clay_30cm')
-property_stats(valley30cm_by_mukey, 'om_30cm')
-property_stats(valley30cm_by_mukey, 'cec_30cm')
-property_stats(valley30cm_by_mukey, 'bd_30cm')
-property_stats(valley30cm_by_mukey, 'pH_30cm')
-property_stats(valley30cm_by_mukey, 'ksat_30cm')
-property_stats(valley30cm_by_mukey, 'lep_30cm')
-property_stats(valley30cm_by_mukey, 'ec_30cm')
-property_stats(valley30cm_by_mukey, 'awc_30cm')
-property_stats(valley30cm_by_mukey, 'MnRs_dep')
-property_stats(valley30cm_by_mukey, 'sand_30cm')
-property_stats(valley30cm_by_mukey, 'silt_30cm')
-property_stats(valley30cm_by_mukey, 'sar_30cm')
-property_stats(valley30cm_by_mukey, 'kwf_30cm')
-property_stats(valley30cm_by_mukey, 'frags_30cm')
+property_stats(valley30cm_by_mukey, 'clay_30cm', SHR7area, 'clus7_name')
+property_stats(valley30cm_by_mukey, 'om_30cm', SHR7area, 'clus7_name')
+property_stats(valley30cm_by_mukey, 'cec_30cm', SHR7area, 'clus7_name')
+property_stats(valley30cm_by_mukey, 'bd_30cm', SHR7area, 'clus7_name')
+property_stats(valley30cm_by_mukey, 'pH_30cm', SHR7area, 'clus7_name')
+property_stats(valley30cm_by_mukey, 'ksat_30cm', SHR7area, 'clus7_name')
+property_stats(valley30cm_by_mukey, 'lep_30cm', SHR7area, 'clus7_name')
+property_stats(valley30cm_by_mukey, 'ec_30cm', SHR7area, 'clus7_name')
+property_stats(valley30cm_by_mukey, 'awc_30cm', SHR7area, 'clus7_name')
+property_stats(valley30cm_by_mukey, 'MnRs_dep', SHR7area, 'clus7_name')
+property_stats(valley30cm_by_mukey, 'sand_30cm', SHR7area, 'clus7_name')
+property_stats(valley30cm_by_mukey, 'silt_30cm', 'clus7_name')
+property_stats(valley30cm_by_mukey, 'sar_30cm', 'clus7_name')
+property_stats(valley30cm_by_mukey, 'kwf_30cm', 'clus7_name')
+property_stats(valley30cm_by_mukey, 'frags_30cm', 'clus7_name')
+property_stats(valley30cm_by_mukey, 'storiemn', 'clus7_name')
+
+property_stats(valley30cm_by_mukey, 'clay_30cm', DomOrderArea, 'dom_order')
+property_stats(valley30cm_by_mukey, 'om_30cm', DomOrderArea, 'dom_order')
+property_stats(valley30cm_by_mukey, 'cec_30cm', DomOrderArea, 'dom_order')
+property_stats(valley30cm_by_mukey, 'bd_30cm', DomOrderArea, 'dom_order')
+property_stats(valley30cm_by_mukey, 'pH_30cm', DomOrderArea, 'dom_order')
+property_stats(valley30cm_by_mukey, 'ksat_30cm', DomOrderArea, 'dom_order')
+property_stats(valley30cm_by_mukey, 'lep_30cm', DomOrderArea, 'dom_order')
+property_stats(valley30cm_by_mukey, 'ec_30cm', DomOrderArea, 'dom_order')
+property_stats(valley30cm_by_mukey, 'awc_30cm', DomOrderArea, 'dom_order')
+property_stats(valley30cm_by_mukey, 'MnRs_dep', DomOrderArea, 'dom_order')
+property_stats(valley30cm_by_mukey, 'sand_30cm', DomOrderArea, 'dom_order')
+property_stats(valley30cm_by_mukey, 'silt_30cm', DomOrderArea, 'dom_order')
+property_stats(valley30cm_by_mukey, 'sar_30cm', 'dom_order')
+property_stats(valley30cm_by_mukey, 'kwf_30cm', 'dom_order')
+property_stats(valley30cm_by_mukey, 'frags_30cm', 'dom_order')
+property_stats(valley30cm_by_mukey, 'storiemn', 'dom_order')
+tapply(valley30cm_by_mukey$storiemn, valley30cm_by_mukey$dom_order, function(x) sum(is.na(x))/length(x))
+
