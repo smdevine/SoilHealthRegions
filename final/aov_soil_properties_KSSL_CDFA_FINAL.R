@@ -386,3 +386,24 @@ om_by_order <- tapply(df_combined$om_30cm, df_combined$dom_order, mean, na.rm=TR
 om_by_order[order(om_by_order)]
 clay_by_order <- tapply(df_combined$clay_30cm, df_combined$dom_order, mean, na.rm=TRUE)
 clay_by_order[order(clay_by_order)]
+
+#check treatment types by soil health region
+dim(kerri_points_30cm)
+sum(is.na(kerri_points_30cm$cluster_7))
+napa_lodi_pts_30cm <- kerri_points_30cm[!is.na(kerri_points_30cm$cluster_7),]
+napa_lodi_pts_30cm$SHR7name <- clus_7_names[napa_lodi_pts_30cm$cluster_7]
+table(napa_lodi_pts_30cm$SHR7name)
+table(napa_lodi_pts_30cm$tillage)
+tapply(napa_lodi_pts_30cm$tillage, napa_lodi_pts_30cm$SHR7name, table)
+tapply(napa_lodi_pts_30cm$tillage, napa_lodi_pts_30cm$vineyard_region, table)
+table(napa_lodi_pts_30cm$irrigated_vs_dryfarm)
+tapply(napa_lodi_pts_30cm$irrigated_vs_dryfarm, napa_lodi_pts_30cm$SHR7name, table)
+tapply(napa_lodi_pts_30cm$irrigated_vs_dryfarm, napa_lodi_pts_30cm$vineyard_region, table)
+table(napa_lodi_pts_30cm$compost_added)
+tapply(napa_lodi_pts_30cm$compost_added, napa_lodi_pts_30cm$SHR7name, table)
+tapply(napa_lodi_pts_30cm$compost_added, napa_lodi_pts_30cm$vineyard_region, table)
+table(napa_lodi_pts_30cm$management_type)
+tapply(napa_lodi_pts_30cm$management_type, napa_lodi_pts_30cm$SHR7name, table)
+tapply(napa_lodi_pts_30cm$management_type, napa_lodi_pts_30cm$vineyard_region, table)
+table(napa_lodi_pts_30cm$vineyard_region)
+tapply(napa_lodi_pts_30cm$vineyard_region, napa_lodi_pts_30cm$SHR7name, table)
