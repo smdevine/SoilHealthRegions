@@ -21,7 +21,7 @@ if (laptop) {
   FiguresDir <- 'C:/Users/smdevine/Desktop/PostDoc/soil health/Figures/valley_final' #was valley_trial
   ksslDir <- 'C:/Users/smdevine/Desktop/PostDoc/soil health/kssl'
 }
-
+clus_7_names <- c('6. Fine saline-sodic', '3. Coarse-loamy & restrictive layers', '4. Loamy & restrictive layers', '1. Coarse & no restrictions', '2. Loamy & no restrictions', '7. Shrink-swell', '5. Coarse-loamy saline-sodic')
 list.files(ksslDir)
 kssl_shp <- shapefile(file.path(ksslDir, 'shapefiles', 'kssl_CA.shp'))
 crs(kssl_shp)
@@ -182,11 +182,24 @@ tapply(kssl_points_30cm$cec_7_30cm, kssl_points_30cm$cluster_9, summary)
 sum(!is.na(kssl_points_30cm$kgOrg.m2_30cm)) #120 of 370 have 0-30 cm content data (was 106)
 write.csv(kssl_ssurgo_30cm, file.path(ksslDir, 'kssl_pts_ssurgo_30cm_extract_FINAL.csv'), row.names = FALSE)
 
-# kssl_points_30cm <- read.csv(file.path(ksslDir, 'kssl_cluster_30cm_NArm.csv'), stringsAsFactors = FALSE)
+kssl_points_30cm <- read.csv(file.path(ksslDir, 'kssl_cluster_30cm_FINAL.csv'), stringsAsFactors = FALSE)
+kssl_points_30cm$SHR7name <- clus_7_names[kssl_points_30cm$cluster_7]
 
 dim(kssl_points_30cm)
 sum(!is.na(kssl_points_30cm$clay_30cm) & !is.na(kssl_points_30cm$oc_30cm) & !is.na(kssl_points_30cm$cec_7_30cm) & !is.na(kssl_points_30cm$bd_13b_30cm) & !is.na(kssl_points_30cm$ec_30cm) & !is.na(kssl_points_30cm$pH_H2O_30cm) & !is.na(kssl_points_30cm$lep_30cm) & !is.na(kssl_points_30cm$awc_30cm)) #only 60!
 lapply(kssl_points_30cm[,c('clay_30cm', 'oc_30cm', 'cec_7_30cm', 'bd_13b_30cm', 'ec_30cm', 'pH_H2O_30cm', 'lep_30cm', 'awc_30cm')], function(x) sum(!is.na(x)))
+
+#create KSSL shapefile that are within soil health regions
+sum(!is.na(kssl_points_30cm$cluster_7))
+kssl_points_30cm$pedon_key
+kssl_SHR_shp <- kssl_shp
+kssl_SHR_shp <- kssl_SHR_shp[kssl_SHR_shp$pedn_ky %in% kssl_points_30cm$pedon_key, ]
+kssl_SHR_shp$SHR7name  <- kssl_points_30cm$SHR7name[match(kssl_SHR_shp$pedn_ky, kssl_points_30cm$pedon_key)]
+# shapefile(kssl_SHR_shp, file.path(ksslDir, 'shapefiles', 'kssl_SHR7.shp'))
+kssl_SHR_UCD_shp <- kssl_SHR_shp
+kssl_SHR_UCD_shp <- kssl_SHR_UCD_shp[grepl('UCD', kssl_SHR_UCD_shp$pdlbsmp), ] #54
+# shapefile(kssl_SHR_UCD_shp, file.path(ksslDir, 'shapefiles', 'kssl_UCD_SHR7.shp'))
+table(kssl_SHR_UCD_shp$SHR7name)
 
 #create 1 m soil property summary
 kssl_points_100cm <- horizon_to_comp_v2(horizon_SPC = kssl_horizons_subset, depth = 100)
