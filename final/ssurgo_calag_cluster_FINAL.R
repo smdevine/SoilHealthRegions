@@ -4,7 +4,7 @@
 #(2) summarize classes for 4 and 5 
 #(3) log transform om and ksat [DONE]
 #(4) identify outliers
-laptop <- TRUE
+laptop <- FALSE
 library(vioplot)
 library(raster)
 library(corrplot)
@@ -31,7 +31,7 @@ if (laptop) {
 mar_settings <- c(3.5, 4.5, 1, 1)
 ec_zero_rule <- 1.5
 list.files(file.path(dataDir, 'for cluster analysis'))
-valley_mu_shp_30cm <- shapefile(file.path(dataDir, 'shapefiles with data', 'valley_30cm.shp'))
+# valley_mu_shp_30cm <- shapefile(file.path(dataDir, 'shapefiles with data', 'valley_30cm.shp'))
 # names(valley_mu_shp_30cm)
 valley30cm_by_mukey <- read.csv(file.path(dataDir, 'for cluster analysis', 'valley30cm_by_mukey_final_v2.csv'), stringsAsFactors = FALSE)
 
@@ -100,7 +100,13 @@ kmeans_test <- function(y, z) {sapply(1:y, function(x) {
   result <- kmeans(z, centers = x, iter.max = 200, nstart = 50)
   round(100 * result$betweenss / result$totss, 1)})
 }
+kmeans_test_tot.withinss <- function(y, z) {sapply(1:y, function(x) {
+  result <- kmeans(z, centers = x, iter.max = 200, nstart = 50)
+  result$tot.withinss})
+}
 results <- replicate(100, kmeans_test(20, df_for_clustering_scaled))
+results_tot.withinss <- replicate(100, kmeans_test_tot.withinss(20, df_for_clustering_scaled))
+
 # dim(results)
 # rowMeans(results)
 # apply(results, 1, sd)
@@ -453,9 +459,10 @@ sum(grepl('Vertisols', valley30cm_by_mukey$txorders[valley30cm_by_mukey$cluster_
 #another way to get optimal number of clusters
 best_cluster <- kmeansruns(data = df_for_clustering_scaled, krange = 1:20, criterion = 'asw', iter.max = 200, runs = 100, nstart=50)
 best_cluster
+best_cluster$crit
 best_cluster$bestk #2!!!
 best_cluster_ch <- kmeansruns(data = df_for_clustering_scaled, krange = 1:20, criterion = 'ch', iter.max = 200, runs = 100, nstart=50)
-best_cluster_ch
+best_cluster_ch$crit
 best_cluster_ch$bestk
 
 km.boot_2 <- clusterboot(na.omit(df_for_clustering_scaled), B=500, bootmethod="boot", clustermethod=kmeansCBI, krange=2, runs=25) #runs is same as nstart
@@ -467,9 +474,24 @@ km.boot_4
 
 
 #find optimum number of clusters based on gap statistic
-gap_stats <- clusGap(df_for_clustering_scaled, FUN = kmeans, nstart = 50, K.max = 20, B = 500, iter.max = 200)
+gap_stats <- clusGap(df_for_clustering_scaled, FUN = kmeans, nstart = 50, K.max = 20, B = 40, iter.max = 200)
 fviz_gap_stat(gap_stats)
 
+tiff(file = file.path(FiguresDir, 'v2', 'validation plots', 'kmeans_comparison_6.8.20.tif'), family = 'Times New Roman', width = 6.5, height = 3.5, pointsize = 11, units = 'in', res=800, compression='lzw')
+par(mar=c(2, 4, 0.5, 0.5))
+plot(2:20, rowMeans(results), type='b', xlab='', ylab='', cex=0.8, cex.axis=1, cex.lab=1, xaxt='n', ylim=c(0,82))
+lines(2:20, best_cluster_ch$crit/30, type='b', lty=2, pch=8)
+lines(2:20, best_cluster$crit*100, type='b', lty=2, pch=4)
+lines(1:20, gap_stats$Tab, type='b', l)
+mtext(text = 'Number of soil health regions (cluster size in conceptual model)', side=1, line=0.75)
+mtext(text = 'SSURGO variability captured by clusters (%)', side=2, line=2.5, at=35)
+text(1:20, rowMeans(results), labels=as.character(1:20), pos=3, offset=0.5)
+text(x=1, y=80, 'a', adj=c(0,0))
+dev.off()
+
+cluster_results <- data.frame(cluster_size=1:20, btwnSS_totSS=rowMeans(results), tot.withinss=rowMeans(results_tot.withinss), asw=best_cluster$crit, CH_index=best_cluster_ch$crit, gap_stat=gap_stats$Tab[,3], gap_stat=gap_stats$Tab[,4])
+
+write.csv(cluster_results, file.path(dataDir, 'FINAL results', 'cluster_analysis_summary.csv'), row.names = FALSE)
 #visualize stats by cluster using untransformed data
 
 #compare key properties across classes
