@@ -12,6 +12,7 @@ library(cluster)
 library(factoextra)
 library(fpc)
 library(fmsb)
+library(NbClust)
 library(extrafont)
 library(extrafontdb)
 #font_import() #only needs to be done one time after updating and re-installing R and moving and updating packages
@@ -472,10 +473,19 @@ km.boot_3
 km.boot_4 <- clusterboot(na.omit(df_for_clustering_scaled), B=500, bootmethod="boot", clustermethod=kmeansCBI, krange=4, runs=25) #runs is same as nstart
 km.boot_4
 
+#
+nbclust_wss <- fviz_nbclust(df_for_clustering_scaled, FUNcluster = kmeans, k.max = 20, method='wss', print.summary = TRUE, iter.max = 200, nstart=50)
+
+nbclust_sil <- fviz_nbclust(df_for_clustering_scaled, FUNcluster = kmeans, k.max = 20, method='silhouette', iter.max = 200, nstart=50)
+nbclust_sil
+
+#test NbClust function
+NbClust_result <- NbClust(data=df_for_clustering_scaled, distance = 'euclidean', min.nc=2, max.nc = 20, method= 'kmeans', index = 'alllong')
 
 #find optimum number of clusters based on gap statistic
-gap_stats <- clusGap(df_for_clustering_scaled, FUN = kmeans, nstart = 50, K.max = 20, B = 40, iter.max = 200)
-fviz_gap_stat(gap_stats)
+gap_stats <- clusGap(df_for_clustering_scaled, FUN = kmeans, nstart = 50, K.max = 20, B = 500, iter.max = 200)
+fviz_gap_stat(gap_stats, maxSE = list('firstSEmax', SE.factor=1))
+fviz_gap_stat(gap_stats, maxSE = list('firstSEmax', SE.factor=3))
 
 tiff(file = file.path(FiguresDir, 'v2', 'validation plots', 'kmeans_comparison_6.8.20.tif'), family = 'Times New Roman', width = 6.5, height = 3.5, pointsize = 11, units = 'in', res=800, compression='lzw')
 par(mar=c(2, 4, 0.5, 0.5))
