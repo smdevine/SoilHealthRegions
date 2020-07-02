@@ -41,6 +41,7 @@ valley30cm_by_mukey$dom_order <- dom_order_by_mukey$dom_order[match(valley30cm_b
 # DomOrderArea <- tapply(valley30cm_by_mukey$area_ac, valley30cm_by_mukey$dom_order, sum)
 
 
+
 unique(unlist(strsplit(unique(valley30cm_by_mukey$txorders), '-'))) #these orders are represented: "Alfisols" "Inceptisols" "Mollisols"  "Entisols"    "Vertisols" Ultisols" "Aridisols" "Andisols"
 sum(valley30cm_by_mukey$area_ac[is.na(valley30cm_by_mukey$txorders)]) #only 3391.2 acres missing soil order
 unique(unlist(strsplit(valley30cm_by_mukey$mjcmpnms, '-')))
