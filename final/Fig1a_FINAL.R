@@ -30,6 +30,7 @@ if (laptop) {
 }
 
 cluster_results <- read.csv(file.path(dataDir, 'FINAL results', 'cluster_analysis_summary.csv'))
+
 #v2 of Fig1a
 tiff(file = file.path(FiguresDir, 'FINAL', 'validation plots', 'kmeans_comparison_6.8.20.tif'), family = 'Times New Roman', width = 6.5, height = 3.5, pointsize = 11, units = 'in', res=800, compression='lzw')
 par(mar=c(4, 4, 0.5, 8))
@@ -57,14 +58,14 @@ dev.off()
 CH_index_rescale <- mean(cluster_results$tot.withinss[2:20]/cluster_results$CH_index[2:20])
 asw_rescale <- mean(cluster_results$tot.withinss[2:20]/cluster_results$asw[2:20])
 gap_rescale <- mean(cluster_results$tot.withinss[2:20]/cluster_results$gap_stat[2:20])
-tiff(file = file.path(FiguresDir, 'FINAL', 'validation plots', 'kmeans_comparison_v3.tif'), family = 'Times New Roman', width = 6.5, height = 3.5, pointsize = 11, units = 'in', res=800, compression='lzw')
-par(mar=c(4, 4, 0.5, 8))
+tiff(file = file.path(FiguresDir, 'FINAL', 'validation plots', 'Fig1.tif'), family = 'Times New Roman', width = 6.5, height = 3.5, pointsize = 11, units = 'in', res=800, compression='lzw')
+par(mar=c(3.75, 3.75, 0.25, 8))
 plot(2:20, cluster_results$tot.withinss[2:20], type='b', xlab='', ylab='', cex.axis=1, cex.lab=1, xaxt='n', cex=0.8)
 lines(2:20, cluster_results$CH_index[2:20]*CH_index_rescale, type='b', col='blue', cex=0.8)
 lines(2:20, cluster_results$asw[2:20]*asw_rescale, type='b', col='red', cex=0.8)
 lines(2:20, cluster_results$gap_stat[2:20]*gap_rescale, type='b', col='grey', cex=0.8)
-mtext(text = 'Number of soil health regions (cluster size in conceptual model)', side=1, line=2.5)
-mtext(text = 'Total within-cluster sum of squares', side=2, line=2.5, at=22500)
+mtext(text = 'Number of soil health regions (cluster size in conceptual model)', side=1, line=2.25)
+mtext(text = 'Total within-cluster sum of squares', side=2, line=2.25, at=22500)
 axis(side=4, at=c(800, 1200, 1600, 2000)*CH_index_rescale, labels = FALSE, line=0.25, col='blue', col.ticks = 'blue')
 mtext(text=c(800, 1200, 1600, 2000), side = 4, at=c(800, 1200, 1600, 2000)*CH_index_rescale, col='blue', line=0.75)
 mtext(text = 'Calinski Harabasz index', side=4, line=1.5, at=1400*CH_index_rescale, col = 'blue')
@@ -76,5 +77,5 @@ mtext(text=c(0.8,1,1.2), side = 4, at=c(0.8,1,1.2)*gap_rescale, col='grey', line
 mtext(text = 'Gap statistic', side=4, at=gap_rescale, col='grey', line=6.5)
 axis(side=1, at=seq(from=2, to=20, by=2))
 #text(2:20, cluster_results$btwnSS_totSS[2:20], labels=as.character(2:20), pos=3, offset=0.5)
-text(x=20, y=30000, 'a', adj=c(0,0))
+# text(x=20, y=30000, 'a', adj=c(0,0))
 dev.off()
