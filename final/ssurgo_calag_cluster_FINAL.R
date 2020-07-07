@@ -480,7 +480,7 @@ nbclust_sil <- fviz_nbclust(df_for_clustering_scaled, FUNcluster = kmeans, k.max
 nbclust_sil
 
 #test NbClust function
-NbClust_result <- NbClust(data=df_for_clustering_scaled, distance = 'euclidean', min.nc=2, max.nc = 20, method= 'kmeans', index = 'alllong')
+NbClust_result <- NbClust(data=df_for_clustering_scaled, distance = 'euclidean', min.nc=2, max.nc = 20, method= 'kmeans', index = 'all')
 
 #find optimum number of clusters based on gap statistic
 gap_stats <- clusGap(df_for_clustering_scaled, FUN = kmeans, nstart = 50, K.max = 20, B = 500, iter.max = 200)
