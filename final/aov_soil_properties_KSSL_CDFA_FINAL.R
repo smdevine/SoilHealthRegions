@@ -110,7 +110,6 @@ tapply(kerri_points_30cm$cluster_7, kerri_points_30cm$vineyard_name, function(x)
 tapply(kerri_points_30cm$cluster_7, kerri_points_30cm$vineyard_name, function(x) unique(x))
 tapply(kerri_points_30cm$cluster_7, kerri_points_30cm$vineyard_region, function(x) unique(x))
 tapply(kerri_points_30cm$totC_30cm, kerri_points_30cm$vineyard_region, function(x) length(unique(x)))
-kerri_points_30cm$shr7_name <- cluster_
 
 df_combined2 <- kerri_points_30cm[!is.na(kerri_points_30cm$cluster_7), c('clay_30cm', 'om_30cm', 'bd_30cm', 'pH_H2O_30cm', 'kgOrg.m2_30cm', colnames(kerri_points_30cm)[grepl('cluster_', colnames(kerri_points_30cm))], 'dom_order')]
 dim(df_combined2) #103 rows
