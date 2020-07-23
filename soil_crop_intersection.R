@@ -1,5 +1,5 @@
 #re-ran 5/4/20 with updated SHR shapefile
-laptop <- FALSE
+laptop <- TRUE
 library(vioplot)
 library(raster)
 library(corrplot)
@@ -81,6 +81,8 @@ crops_by_cluster7$crop_class <- crops_simplifed
 crops_by_cluster7$crop_class2 <- crops_simplifed2
 write.csv(crops_by_cluster7, file.path(dataDir, 'FINAL results', 'crops', 'crops_by_cluster_7SHR.csv'), row.names = TRUE)
 
+crops_by_cluster7 <- read.csv(file.path(dataDir, 'FINAL results', 'crops', 'crops_by_cluster_7SHR.csv'), stringsAsFactors = FALSE)
+
 valley_crops_mu$CropClass <- crops_by_cluster7$crop_class2[match(valley_crops_mu$Crop2014, row.names(crops_by_cluster7))]
 
 cropClass_by_cluster7 <- as.data.frame(tapply(valley_crops_mu$area_ac, list(valley_crops_mu$CropClass, valley_crops_mu$cluster_7), sum, na.rm=TRUE))
@@ -88,8 +90,56 @@ colnames(cropClass_by_cluster7) <- clus_7_names
 cropClass_by_cluster7 <- cropClass_by_cluster7[,order_lgnd_7]
 write.csv(cropClass_by_cluster7, file.path(dataDir, 'FINAL results', 'crops', 'cropClass_by_cluster_7SHR.csv'), row.names = TRUE)
 
+#read in generalized data
+cropsClass_by_cluster7 <- read.csv(file.path(dataDir, 'crops', 'cropClass_by_cluster_7SHR.csv'), stringsAsFactors = FALSE)
+cropsClass_by_cluster7
+clus_7_colors <- c('deepskyblue', 'gold', 'firebrick3', 'lightgoldenrod', 'tan4', 'violetred', 'lightblue1')
+order_lgnd_7 <- c(4,5,2,3,7,1,6)
+clus_7_names <- c('6. Fine salt-affected', '3. Coarse-loamy with restrictive horizons', '4. Loamy with restrictive horizons', '1. Coarse with no restrictions', '2. Loamy with no restrictions', '7. Shrink-swell', '5. Coarse-loamy salt-affected')
+clus_7_names[order_lgnd_7]
+colnames(cropsClass_by_cluster7)[2:8] <- clus_7_names[order_lgnd_7]
+cropsClass_by_cluster7 <- cropsClass_by_cluster7[c(1:3,5:7),]
+cropsClass_by_cluster7$total_area <- rowSums(cropsClass_by_cluster7[,2:8])
+cropPercentage_by_shr7 <- cropsClass_by_cluster7[,2:8]/cropsClass_by_cluster7$total_area
+row.names(cropPercentage_by_shr7) <- cropsClass_by_cluster7$Crop.Class
 
-  
+tiff(file = file.path(FiguresDir, 'CalAg', 'crops_SHR7_rel_area.tif'), family = 'Times New Roman', width = 6.5, height = 4, pointsize = 12, units = 'in', res=800, compression='lzw')
+par(mar=c(3, 4.5, 4.5, 0.5), xpd=TRUE)
+barplot(t(as.matrix(cropPercentage_by_shr7))*100, beside=TRUE, col=clus_7_colors[order_lgnd_7], legend.text=clus_7_names[order_lgnd_7], ylab='Relative soil health region area (%)', args.legend=list(x='top', cex=0.9, bty='n', ncol=2, inset=c(0,-0.35)), names.arg=c('Alfalfa\nand pasture', 'Annual\nfield crops', 'Grapes', 'Managed\nwetland', 'Orchards', 'Small fruits\nand vegetables'), cex.names=0.9)
+dev.off()
+
+#read-in specific data
+list.files(file.path(dataDir, 'crops'))
+crops_by_cluster7 <- read.csv(file.path(dataDir, 'crops', 'crops_by_cluster_7SHR.csv'), stringsAsFactors = FALSE)
+head(crops_by_cluster7)
+colnames(crops_by_cluster7)[2:8] <- clus_7_names[order_lgnd_7]
+crops_by_cluster7$total_area <- rowSums(crops_by_cluster7[,2:8], na.rm = TRUE)
+crops_by_cluster7$Crop[order(crops_by_cluster7$total_area, decreasing = TRUE)]
+perennial_maj_crops <- crops_by_cluster7[match(c('Almonds', 'Grapes', 'Alfalfa and Alfalfa Mixtures', 'Walnuts', 'Pistachios', 'Citrus'), crops_by_cluster7$Crop), ]
+perennial_maj_crops <- perennial_maj_crops[,-c(9:10)]
+perennial_maj_crop_percentage <- perennial_maj_crops[,2:8] / perennial_maj_crops$total_area 
+row.names(perennial_maj_crop_percentage) <- perennial_maj_crops$Crop
+
+annual_maj_crops <- crops_by_cluster7[match(c('Corn, Sorghum and Sudan', 'Rice', 'Tomatoes', 'Cotton', 'Wheat'), crops_by_cluster7$Crop), ]
+annual_maj_crops <- annual_maj_crops[,-c(9:10)]
+small_fruits_veggies <- crops_by_cluster7[crops_by_cluster7$crop_class2=='Small fruit and vegetables',]
+small_fruits_veggies <- small_fruits_veggies[,-c(9:10)]
+annual_maj_crops <- rbind(annual_maj_crops, data.frame(Crop='Small fruits & vegetables', lapply(small_fruits_veggies[,2:9], sum, na.rm = TRUE), stringsAsFactors = FALSE, check.names = FALSE))
+annual_maj_crops <- annual_maj_crops[order(annual_maj_crops$total_area, decreasing = TRUE),]
+annual_maj_crop_percentage <- annual_maj_crops[,2:8] / annual_maj_crops$total_area
+row.names(annual_maj_crop_percentage) <- annual_maj_crops$Crop
+
+tiff(file = file.path(FiguresDir, 'CalAg', 'annual_crops_SHR7_rel_area.tif'), family = 'Times New Roman', width = 6.5, height = 4, pointsize = 12, units = 'in', res=800, compression='lzw')
+par(mar=c(3, 4.5, 4.5, 0.5), xpd=TRUE)
+barplot(t(as.matrix(annual_maj_crop_percentage))*100, beside=TRUE, col=clus_7_colors[order_lgnd_7], legend.text=clus_7_names[order_lgnd_7], ylab='Relative soil health region area (%)', args.legend=list(x='top', cex=0.9, bty='n', ncol=2, inset=c(0,-0.35)), names.arg=c('Corn', 'Rice', 'Small fruits\nand vegetables', 'Tomatoes', 'Cotton', 'Wheat'), cex.names=0.9)
+dev.off()
+
+tiff(file = file.path(FiguresDir, 'CalAg', 'perennial_crops_SHR7_rel_area.tif'), family = 'Times New Roman', width = 6.5, height = 4, pointsize = 12, units = 'in', res=800, compression='lzw')
+par(mar=c(3, 4.5, 4.5, 0.5), xpd=TRUE)
+barplot(t(as.matrix(perennial_maj_crop_percentage))*100, beside=TRUE, col=clus_7_colors[order_lgnd_7], legend.text=clus_7_names[order_lgnd_7], ylab='Relative soil health region area (%)', args.legend=list(x='top', cex=0.9, bty='n', ncol=2, inset=c(0,-0.35)), names.arg=c('Almonds', 'Grapes', 'Alfalfa', 'Walnuts', 'Pistachios', 'Citrus'), cex.names=0.9)
+dev.off()
+row.names(perennial_maj_crop_percentage)
+
 #SAGBI index
 SAGBIdir <- 'C:/Users/smdevine/Desktop/SpatialData/SAGBI'
 list.files(SAGBIdir)
