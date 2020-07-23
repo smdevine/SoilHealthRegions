@@ -5,7 +5,7 @@ library(vioplot)
 library(extrafont)
 library(extrafontdb)
 loadfonts(device = 'win')
-laptop <- FALSE
+laptop <- TRUE
 
 if (laptop) {
   mainDir <- 'C:/Users/smdevine/Desktop/post doc'
@@ -16,6 +16,7 @@ if (laptop) {
   dataDir <- 'C:/Users/smdevine/Desktop/post doc/soil health/summaries/valley_final' #was valley_trial
   FiguresDir <- 'C:/Users/smdevine/Desktop/post doc/soil health/Figures/valley_final' #was valley_trial
   ksslDir <- 'C:/Users/smdevine/Desktop/post doc/soil health/kssl'
+  kerriDir <- 'C:/Users/smdevine/Desktop/post doc/soil health/kerri data'
 } else { #on UCD desktop
   dataDir <- 'C:/Users/smdevine/Desktop/PostDoc/soil health/summaries/valley_final' #was valley_trial
   FiguresDir <- 'C:/Users/smdevine/Desktop/PostDoc/soil health/Figures/valley_final' #was valley_trial
@@ -46,7 +47,6 @@ kssl_ssurgo_30cm$labsampnum <- kssl_shp$pdlbsmp[kssl_ssurgo_30cm$point.ID]
 kssl_horizons <- read.csv(file.path(ksslDir, 'ca_kssl_horizons.csv'), stringsAsFactors = FALSE)
 sum(is.na(kssl_horizons$oc) & !is.na(kssl_horizons$c_tot))
 sum(is.na(kssl_horizons$oc) & !is.na(kssl_horizons$c_tot) & kssl_horizons$ph_h2o < 7.8, na.rm = TRUE)
-
 
 wtd.mean_v2 <- function(x, y) {
   # use horizon thickness as a weight
@@ -182,12 +182,204 @@ tapply(kssl_points_30cm$cec_7_30cm, kssl_points_30cm$cluster_9, summary)
 sum(!is.na(kssl_points_30cm$kgOrg.m2_30cm)) #120 of 370 have 0-30 cm content data (was 106)
 write.csv(kssl_ssurgo_30cm, file.path(ksslDir, 'kssl_pts_ssurgo_30cm_extract_FINAL.csv'), row.names = FALSE)
 
-kssl_points_30cm <- read.csv(file.path(ksslDir, 'kssl_cluster_30cm_FINAL.csv'), stringsAsFactors = FALSE)
-kssl_points_30cm$SHR7name <- clus_7_names[kssl_points_30cm$cluster_7]
 
+#read in 30 cm data
+om_to_oc <- 1.72
+crit_pH <- 7.8
+clus_7_colors <- c('deepskyblue', 'gold', 'firebrick3', 'lightgoldenrod', 'tan4', 'violetred', 'lightblue1')
+order_lgnd_7 <- c(4,5,2,3,7,1,6)
+valley30cm_by_mukey <- read.csv(file.path(dataDir, 'FINAL results', 'valley30cm_by_mukey_cluster_FINAL.csv'), stringsAsFactors = FALSE)
+dom_order_by_mukey <- read.csv(file.path(dataDir, 'FINAL results', "soil survey facts", 'dom_order_by_mukey.csv'), stringsAsFactors = FALSE)
+
+kssl_ssurgo_extract <- read.csv(file.path(ksslDir, 'kssl_pts_ssurgo_30cm_extract_FINAL.csv'), stringsAsFactors = FALSE)
+kssl_points_30cm <- read.csv(file.path(ksslDir, 'kssl_cluster_30cm_FINAL.csv'), stringsAsFactors = FALSE) #updated 2/11/20 to consider total C when org C not available but soil pH sufficiently low for calculating SOC content
+kssl_points_30cm$xdim_vioplot7 <- match(kssl_points_30cm$cluster_7, order_lgnd_7)
+kssl_points_30cm$labsampnum <- kssl_ssurgo_extract$labsampnum[match(kssl_points_30cm$pedon_key, kssl_ssurgo_extract$pedon_key)]
+sum(grepl('UCD', kssl_points_30cm$labsampnum)) #54
+colnames(kssl_points_30cm)
 dim(kssl_points_30cm)
-sum(!is.na(kssl_points_30cm$clay_30cm) & !is.na(kssl_points_30cm$oc_30cm) & !is.na(kssl_points_30cm$cec_7_30cm) & !is.na(kssl_points_30cm$bd_13b_30cm) & !is.na(kssl_points_30cm$ec_30cm) & !is.na(kssl_points_30cm$pH_H2O_30cm) & !is.na(kssl_points_30cm$lep_30cm) & !is.na(kssl_points_30cm$awc_30cm)) #only 60!
-lapply(kssl_points_30cm[,c('clay_30cm', 'oc_30cm', 'cec_7_30cm', 'bd_13b_30cm', 'ec_30cm', 'pH_H2O_30cm', 'lep_30cm', 'awc_30cm')], function(x) sum(!is.na(x)))
+kssl_points_30cm$mukey <- kssl_ssurgo_extract$mukey[match(kssl_points_30cm$pedon_key, kssl_ssurgo_extract$pedon_key)]
+kssl_points_30cm$dom_order <- dom_order_by_mukey$dom_order[match(kssl_points_30cm$mukey, dom_order_by_mukey$mukey)]
+tapply(kssl_points_30cm$om_30cm, kssl_points_30cm$dom_order, summary)
+table(kssl_points_30cm$dom_order)
+sum(is.na(kssl_points_30cm$clay_30cm)) #55 are NA
+sum(is.na(kssl_points_30cm$oc_30cm)) #88 are NA
+sum(is.na(kssl_points_30cm$cluster_7))
+sampnumbers_kgOrgC <- table(kssl_points_30cm$cluster_7[!is.na(kssl_points_30cm$kgOrg.m2_30cm)])
+names(sampnumbers_kgOrgC) <- clus_7_names
+sampnumbers_kgOrgC
+
+sampnumbers_OC <- table(kssl_points_30cm$cluster_7[!is.na(kssl_points_30cm$oc_30cm)])
+names(sampnumbers_OC) <- clus_7_names
+sampnumbers_OC
+
+#replace OC with totC when pH sufficiently low
+kssl_points_30cm$oc_30cm[which(is.na(kssl_points_30cm$oc_30cm) & kssl_points_30cm$pH_H2O_30cm < crit_pH)] <- kssl_points_30cm$c_tot_30cm[which(is.na(kssl_points_30cm$oc_30cm) & kssl_points_30cm$pH_H2O_30cm < crit_pH)]
+sum(is.na(kssl_points_30cm$oc)) #NAs reduced from 88 to 56
+
+#replace estimated om with
+kssl_points_30cm$om_30cm_v2 <- kssl_points_30cm$oc_30cm * om_to_oc
+plot(kssl_points_30cm$om_30cm, kssl_points_30cm$om_30cm_v2)
+sum(is.na(kssl_points_30cm$om_30cm_v2))
+sum(is.na(kssl_points_30cm$om_30cm))
+kssl_points_30cm$om_30cm <- kssl_points_30cm$om_30cm_v2
+kssl_points_30cm$om_30cm_v2 <- NULL
+kssl_points_30cm[139:150,]
+valley30cm_by_mukey[valley30cm_by_mukey$mukey==460870,]
+dom_order_by_mukey[dom_order_by_mukey$mukey==460870,]
+sum(is.na(dom_order_by_mukey$dom_order)) #89
+lapply(kssl_points_30cm, function(x) sum(!is.na(x)))
+
+# kssl_points_100cm <- read.csv(file.path(ksslDir, 'kssl_cluster_100cm_NArm.csv'), stringsAsFactors = FALSE)
+# colnames(kssl_points_100cm)
+# table(kssl_points_100cm$cluster_7[!is.na(kssl_points_100cm$kgOrg.m2_100cm)])
+# test <- table(kssl_points_100cm$cluster_7[!is.na(kssl_points_100cm$kgOrg.m2_100cm)])
+# names(test) <- clus_7_names
+# test
+
+df_combined1 <-  kssl_points_30cm[ ,c('clay_30cm', 'om_30cm', 'bd_13b_30cm', 'pH_H2O_30cm', 'kgOrg.m2_30cm', colnames(kssl_points_30cm)[grepl('cluster_', colnames(kssl_points_30cm))], 'dom_order', 'xdim_vioplot7')]
+dim(df_combined1) #369 rows
+colnames(df_combined1)[3] <- 'bd_30cm'
+df_combined1$source <- 'KSSL'
+
+kerri_points_30cm <- read.csv(file.path(kerriDir, 'FINAL', 'CDFA_samples_cluster_30cm.csv'), stringsAsFactors = FALSE)
+kerri_points_30cm$xdim_vioplot7 <- match(kerri_points_30cm$cluster_7, order_lgnd_7)
+colnames(kerri_points_30cm)
+kerri_points_30cm$om_30cm <- kerri_points_30cm$totC_30cm * om_to_oc
+kerri_ssurgo_extract <- read.csv(file.path(kerriDir, 'FINAL', 'CDFA_pts_ssurgo_30cm_extract_FINAL.csv'), stringsAsFactors = FALSE)
+colnames(kerri_ssurgo_extract)
+kerri_points_30cm$mukey <- kerri_ssurgo_extract$mukey[match(kerri_points_30cm$Concatenate, kerri_ssurgo_extract$Concatenate)]
+kerri_points_30cm$dom_order <- dom_order_by_mukey$dom_order[match(kerri_points_30cm$mukey, dom_order_by_mukey$mukey)]
+tapply(kerri_points_30cm$om_30cm, kerri_points_30cm$dom_order, summary)
+table(kerri_points_30cm$dom_order)
+
+kerri_metadata <- read.csv(file.path(kerriDir, 'CDFA Soil Survey All Data_copy.csv'), stringsAsFactors = FALSE)
+unique(kerri_metadata$Area)
+length(unique(kerri_metadata$Concatenate))#127 unique points, 102 in study area
+
+kerri_points_30cm$vineyard_region <- kerri_metadata$Area[match(kerri_points_30cm$Concatenate, kerri_metadata$Concatenate)]
+kerri_points_30cm$vineyard_name <- kerri_metadata$Vineyard.Management[match(kerri_points_30cm$Concatenate, kerri_metadata$Concatenate)]
+kerri_points_30cm$cc_meta <- kerri_metadata$covercrop.vs.resident.vegetation[match(kerri_points_30cm$Concatenate, kerri_metadata$Concatenate)]
+kerri_points_30cm$cc_type <- kerri_metadata$perennial.Covercrop.vs.annual.covercrop[match(kerri_points_30cm$Concatenate, kerri_metadata$Concatenate)]
+table(kerri_points_30cm$cc_type)
+
+tapply(kerri_points_30cm$compost_added, kerri_points_30cm$xdim_vioplot7, table)
+boxplot(kerri_points_30cm$om_30cm[kerri_points_30cm$xdim_vioplot7==4] ~ kerri_points_30cm$compost_added[kerri_points_30cm$xdim_vioplot7==4])
+boxplot(kerri_points_30cm$clay_30cm[kerri_points_30cm$xdim_vioplot7==4] ~ kerri_points_30cm$compost_added[kerri_points_30cm$xdim_vioplot7==4])
+boxplot(kerri_points_30cm$om_30cm[kerri_points_30cm$xdim_vioplot7==3] ~ kerri_points_30cm$compost_added[kerri_points_30cm$xdim_vioplot7==3])
+boxplot(kerri_points_30cm$om_30cm[kerri_points_30cm$xdim_vioplot7==2] ~ kerri_points_30cm$compost_added[kerri_points_30cm$xdim_vioplot7==2])
+plot(kerri_points_30cm$clay_30cm[kerri_points_30cm$xdim_vioplot7==2], kerri_points_30cm$om_30cm[kerri_points_30cm$xdim_vioplot7==2])
+
+plot(kerri_points_30cm$bd_30cm[kerri_points_30cm$xdim_vioplot7==2], kerri_points_30cm$om_30cm[kerri_points_30cm$xdim_vioplot7==2])
+
+tapply(kerri_points_30cm$cc_type, kerri_points_30cm$xdim_vioplot7, table)
+boxplot(kerri_points_30cm$om_30cm ~ kerri_points_30cm$cc_type)
+plot(ifelse(kerri_points_30cm$cc_type[kerri_points_30cm$xdim_vioplot7==7]=='perennial', 3, ifelse(kerri_points_30cm$cc_type[kerri_points_30cm$xdim_vioplot7==7]=='annual', 2, 1)), kerri_points_30cm$om_30cm[kerri_points_30cm$xdim_vioplot7==7])
+boxplot(kerri_points_30cm$om_30cm[kerri_points_30cm$xdim_vioplot7==4] ~ kerri_points_30cm$cc_type[kerri_points_30cm$xdim_vioplot7==4])
+boxplot(kerri_points_30cm$clay_30cm[kerri_points_30cm$xdim_vioplot7==4] ~ kerri_points_30cm$cc_type[kerri_points_30cm$xdim_vioplot7==4])
+boxplot(kerri_points_30cm$om_30cm[kerri_points_30cm$xdim_vioplot7==3] ~ kerri_points_30cm$cc_type[kerri_points_30cm$xdim_vioplot7==3])
+boxplot(kerri_points_30cm$om_30cm[kerri_points_30cm$xdim_vioplot7==2] ~ kerri_points_30cm$cc_type[kerri_points_30cm$xdim_vioplot7==2])
+kerri_points_30cm[kerri_points_30cm$cc_type=='perennial' & !is.na(kerri_points_30cm$cluster_7),]
+table(kerri_points_30cm$compost_added[kerri_points_30cm$cc_type=='perennial' & kerri_points_30cm$xdim_vioplot7==2])
+
+#till vs. no-till
+tapply(kerri_points_30cm$tillage, kerri_points_30cm$xdim_vioplot7, table)
+boxplot(kerri_points_30cm$om_30cm ~ kerri_points_30cm$tillage)
+boxplot(kerri_points_30cm$om_30cm[kerri_points_30cm$xdim_vioplot7==4] ~ kerri_points_30cm$tillage[kerri_points_30cm$xdim_vioplot7==4])
+boxplot(kerri_points_30cm$clay_30cm[kerri_points_30cm$xdim_vioplot7==4] ~ kerri_points_30cm$tillage[kerri_points_30cm$xdim_vioplot7==4])
+boxplot(kerri_points_30cm$om_30cm[kerri_points_30cm$xdim_vioplot7==3] ~ kerri_points_30cm$tillage[kerri_points_30cm$xdim_vioplot7==3])
+boxplot(kerri_points_30cm$om_30cm[kerri_points_30cm$xdim_vioplot7==2] ~ kerri_points_30cm$tillage[kerri_points_30cm$xdim_vioplot7==2])
+
+table(kerri_points_30cm$vineyard_region) #30 in Lodi, 97 in Napa
+table(kerri_points_30cm$vineyard_region[!is.na(kerri_points_30cm$cluster_7)]) #27 in Lodi, 76 in Napa in area of interest
+unique(kerri_points_30cm$vineyard_name[kerri_points_30cm$vineyard_region=='Napa']) #16 vineyards in Napa (paper says ninteen)
+unique(kerri_points_30cm$vineyard_name[kerri_points_30cm$vineyard_region=='Lodi']) #5 vineyards (paper says nine)
+tapply(kerri_points_30cm$Concatenate[kerri_points_30cm$vineyard_region=='Napa'], kerri_points_30cm$vineyard_name[kerri_points_30cm$vineyard_region=='Napa'], function(x) length(x))
+tapply(kerri_points_30cm$Concatenate[kerri_points_30cm$vineyard_region=='Lodi'], kerri_points_30cm$vineyard_name[kerri_points_30cm$vineyard_region=='Lodi'], function(x) length(x))
+kerri_points_30cm[kerri_points_30cm$vineyard_name=='Big Ranch Vineyard',]
+tapply(kerri_points_30cm$cluster_7, kerri_points_30cm$vineyard_name, function(x) length(unique(x)))
+tapply(kerri_points_30cm$cluster_7, kerri_points_30cm$vineyard_name, function(x) unique(x))
+tapply(kerri_points_30cm$cluster_7, kerri_points_30cm$vineyard_region, function(x) unique(x))
+tapply(kerri_points_30cm$totC_30cm, kerri_points_30cm$vineyard_region, function(x) length(unique(x)))
+kerri_points_30cm$SHM_rating <- sum(kerri_points_30cm$compost_added=='yes', kerri_points_30cm$tillage=='no till', kerri_points_30cm$irrigated_vs_dryfarm=='dryfarm',  
+# kerri_points_30cm$shr7_name <- cluster_
+
+df_combined2 <- kerri_points_30cm[!is.na(kerri_points_30cm$cluster_7), c('clay_30cm', 'om_30cm', 'bd_30cm', 'pH_H2O_30cm', 'kgOrg.m2_30cm', colnames(kerri_points_30cm)[grepl('cluster_', colnames(kerri_points_30cm))], 'dom_order', 'xdim_vioplot7')]
+dim(df_combined2) #103 rows
+df_combined2$source <- 'CDFA'
+
+df_combined <- rbind(df_combined1, df_combined2)
+dim(df_combined) #472
+table(df_combined$dom_order[!is.na(df_combined$om_30cm)])
+df_combined$om_30cm[df_combined$dom_order=='Ultisols']
+lapply(df_combined, function(x) sum(!is.na(x)))
+
+#create kssl point vioplots
+vioplot_mod_clus7_KSSL_validation <- function(df, varname, ylim_vioplot, plot_order, area_fact, labnames, ylab, fname, mar, kssl_df, kssl_varname, legend_plot, legendloc, legend_cex, sig_labels, fig_label, legend_text, fig_height, removeOutlier, OutlierThreshold) {
+  plot_order2 <- (1:7)[plot_order]
+  if (removeOutlier) {
+    df <- df[which(df[[varname]] < OutlierThreshold), ]
+  } else{
+    df <- df[!is.na(df[[varname]]), ]
+  }
+  tiff(file = file.path(FiguresDir, 'FINAL', 'CalAg validation plots', fname), family = 'Times New Roman', width = 3.25, height = fig_height, pointsize = 12, units = 'in', res=800, compression='lzw')
+  par(mar=mar)
+  vioplot(df[[varname]][df$cluster_7==plot_order2[1]]*if(kssl_varname=='totC_30cm'){1.72} else{1}, df[[varname]][df$cluster_7==plot_order2[2]]*if(kssl_varname=='totC_30cm'){1.72} else{1}, df[[varname]][df$cluster_7==plot_order2[3]]*if(kssl_varname=='totC_30cm'){1.72} else{1}, df[[varname]][df$cluster_7==plot_order2[4]]*if(kssl_varname=='totC_30cm'){1.72} else{1}, df[[varname]][df$cluster_7==plot_order2[5]]*if(kssl_varname=='totC_30cm'){1.72} else{1}, df[[varname]][df$cluster_7==plot_order2[6]]*if(kssl_varname=='totC_30cm'){1.72} else{1}, df[[varname]][df$cluster_7==plot_order2[7]]*if(kssl_varname=='totC_30cm'){1.72} else{1}, col=clus_7_colors[plot_order], wex=1.2, cex=0.8, rectCol = 'gray', ylim = ylim_vioplot, ylab = NULL)
+  mtext('Soil health region', side = 1, line = 2)
+  mtext(ylab, side = 2, line = 2)
+  points(x=kssl_df$xdim_vioplot7[!is.na(kssl_df[[kssl_varname]])]-0.15, y=kssl_df[[kssl_varname]][!is.na(kssl_df[[kssl_varname]])]*if(kssl_varname=='totC_30cm'){1.72} else{1}, cex=0.5, pch=1, col='black')
+  kssl_means <- data.frame(mean=tapply(kssl_df[[kssl_varname]]*if(kssl_varname=='totC_30cm'){1.72} else{1}, kssl_df$cluster_7, mean, na.rm=TRUE))
+  kssl_means$xdim_vioplot <- match(row.names(kssl_means), plot_order)
+  points(x=kssl_means$xdim_vioplot-0.15, y=kssl_means$mean, pch=8, cex=0.5, col='orange')
+  text(x=1:7, y=ylim_vioplot[1], labels = sig_labels, adj=0.5, cex=0.9)
+  legend('topright', fig_label, bty='n', inset=0.005)
+  if(legend_plot) {
+    legend(x=legendloc, legend=legend_text, pch=c(NA,1,8,4,8), col = c(NA, 'black', 'orange', 'black', 'darkblue'), pt.cex=legend_cex, bty = 'n')
+  }
+  dev.off()
+}
+vioplot_mod_clus7_KSSL_validation(kssl_points_30cm, 'clay_30cm', ylim_vioplot = c(-2.5,80), plot_order = order_lgnd_7, area_fact = 10, ylab='Clay (%)', fname='class7_clay_vioplots_KSSL_pts_only_validation.tif', mar=c(0.02, 3.25, 0.25, 0.25), kssl_df = kssl_points_30cm, legend_plot=TRUE, legendloc='topleft', legend_cex = 0.9 , kssl_varname = 'clay_30cm', sig_labels = c('A', 'B', 'A', 'AB', 'A', 'C', 'D'), fig_label = 'a', fig_height = 3, legend_text =  c('KSSL point data violin plots', 'KSSL point data', 'KSSL mean'))
+
+vioplot_mod_clus7_KSSL_validation(kssl_points_30cm, 'kgOrg.m2_30cm', ylim_vioplot = c(-0.15,12), plot_order = order_lgnd_7, area_fact = 10, ylab=expression('0-30 cm SOC (kg m'^-2*')'), fname='class7_kgSOC_0_30cm_vioplots_KSSL_pts_only_validation.tif', mar=c(3.5, 4.25, 1, 1), kssl_df = kssl_points_30cm, legend_plot=FALSE, legendloc='topleft', legend_cex = 0.9 , kssl_varname = "kgOrg.m2_30cm", sig_labels = c('A', 'C', 'A', 'C', 'A', 'AB', 'BC'), fig_label = 'b', fig_height = 3, removeOutlier = FALSE)
+
+TukeyHSD(aov(kssl_points_30cm$oc_30cm[which(kssl_points_30cm$oc_30cm < 3.5)] * 1.72 ~ kssl_points_30cm$SHR7name[which(kssl_points_30cm$oc_30cm < 3.5)]), ordered=FALSE)
+sum(TukeyHSD(aov(kssl_points_30cm$oc_30cm[which(kssl_points_30cm$oc_30cm < 3.5)] * 1.72 ~ kssl_points_30cm$SHR7name[which(kssl_points_30cm$oc_30cm < 3.5)]))[[1]][,4] <= 0.05) #9
+vioplot_mod_clus7_KSSL_validation(kssl_points_30cm, 'oc_30cm', ylim_vioplot = c(0, 3.5), plot_order = order_lgnd_7, area_fact = 10, ylab='Organic matter (%)', fname='class7_OM_vioplots_KSSL_pts_only_validation_0_4.tif', mar=c(3.5, 4.25, 1, 1), kssl_df = kssl_points_30cm, legend_plot=FALSE, legendloc='topleft', legend_cex = 0.9 , kssl_varname = "oc_30cm", sig_labels = c('A', 'C', 'A', 'C', 'A', 'AB', 'BC'), fig_label = 'b', fig_height = 3, removeOutlier=TRUE, OutlierThreshold=3.5)
+
+#add Napa-Lodi data to vioplots
+vioplot_mod_clus7_validation <- function(df, varname, ylim_vioplot, plot_order, area_fact, labnames, ylab, fname, mar, kssl_df, kssl_varname, cdfa_pts, cdfa_varname, legend_plot, legendloc, legend_cex, sig_labels, fig_label, legend_text, fig_height, removeOutlier, OutlierThreshold) {
+  plot_order2 <- (1:7)[plot_order]
+  if (removeOutlier) {
+    df <- df[which(df[[varname]] < OutlierThreshold), ]
+  } else{
+    df <- df[!is.na(df[[varname]]), ]
+  }
+  tiff(file = file.path(FiguresDir, 'FINAL', 'CalAg validation plots', fname), family = 'Times New Roman', width = 3.25, height = fig_height, pointsize = 12, units = 'in', res=800, compression='lzw')
+  par(mar=mar)
+  vioplot(df[[varname]][df$cluster_7==plot_order2[1]]*if(kssl_varname=='totC_30cm'){1.72} else{1}, df[[varname]][df$cluster_7==plot_order2[2]]*if(kssl_varname=='totC_30cm'){1.72} else{1}, df[[varname]][df$cluster_7==plot_order2[3]]*if(kssl_varname=='totC_30cm'){1.72} else{1}, df[[varname]][df$cluster_7==plot_order2[4]]*if(kssl_varname=='totC_30cm'){1.72} else{1}, df[[varname]][df$cluster_7==plot_order2[5]]*if(kssl_varname=='totC_30cm'){1.72} else{1}, df[[varname]][df$cluster_7==plot_order2[6]]*if(kssl_varname=='totC_30cm'){1.72} else{1}, df[[varname]][df$cluster_7==plot_order2[7]]*if(kssl_varname=='totC_30cm'){1.72} else{1}, col=clus_7_colors[plot_order], wex=1.2, cex=0.8, rectCol = 'gray', ylim = ylim_vioplot, ylab = NULL)
+  mtext('Soil health region', side = 1, line = 2)
+  mtext(ylab, side = 2, line = 2)
+  points(x=kssl_df$xdim_vioplot7[!is.na(kssl_df[[kssl_varname]])]-0.15, y=kssl_df[[kssl_varname]][!is.na(kssl_df[[kssl_varname]])]*if(kssl_varname=='totC_30cm'){1.72} else{1}, cex=0.5, pch=1, col='black')
+  kssl_means <- data.frame(mean=tapply(kssl_df[[kssl_varname]]*if(kssl_varname=='totC_30cm'){1.72} else{1}, kssl_df$cluster_7, mean, na.rm=TRUE))
+  kssl_means$xdim_vioplot <- match(row.names(kssl_means), plot_order)
+  points(x=kssl_means$xdim_vioplot-0.15, y=kssl_means$mean, pch=8, cex=0.5, col='orange')
+  points(x=cdfa_pts$xdim_vioplot7[!is.na(cdfa_pts[[cdfa_varname]])]+0.15, y=cdfa_pts[[cdfa_varname]][!is.na(cdfa_pts[[cdfa_varname]])], cex=0.5, pch=4, col='black')
+  cdfa_means <- data.frame(mean=tapply(cdfa_pts[[cdfa_varname]], cdfa_pts$cluster_7, mean, na.rm=TRUE))
+  cdfa_means$xdim_vioplot <- match(row.names(cdfa_means), plot_order)
+  points(x=cdfa_means$xdim_vioplot+0.15, y=cdfa_means$mean, pch=8, cex=0.5, col='darkblue')
+  text(x=1:7, y=ylim_vioplot[1], labels = sig_labels, adj=0.5, cex=0.9)
+  legend('topright', fig_label, bty='n', inset=0.005)
+  if(legend_plot) {
+    legend(x=legendloc, legend=c('Validation point data violin plots', 'KSSL points', 'KSSL average', 'Napa-Lodi points', 'Napa-Lodi average'), pch=c(NA,1,8,4,8), col = c(NA, 'black', 'orange', 'black', 'darkblue'), pt.cex=legend_cex, bty='n')
+  }
+  dev.off()
+}
+# vioplot_mod_clus7_validation(df_combined, 'clay_30cm', ylim_vioplot = c(-2.5,80), plot_order = order_lgnd_7, area_fact = 10, ylab='Clay (%)', fname='class7_clay_vioplots_validation_pts_all.tif', mar=c(3, 3, 1, 1), kssl_df = kssl_points_30cm, cdfa_pts=kerri_points_30cm, legend_plot=TRUE, legendloc='topleft', legend_cex = 0.5, legend_text='', kssl_varname = 'clay_30cm', cdfa_varname = 'clay_30cm', sig_labels = c('A', 'B', 'A', 'AB', 'A', 'C', 'D'), fig_label = 'a', removeOutlier = FALSE, fig_height = 3)
+
+vioplot_mod_clus7_validation(df_combined, 'om_30cm', ylim_vioplot = c(0,4.4), plot_order = order_lgnd_7, area_fact = 10, ylab='Organic matter (%)', fname='class7_om_vioplots_validation_pts_all.tif', mar=c(3, 3, 1, 1), kssl_df = kssl_points_30cm, cdfa_pts=kerri_points_30cm, legend_plot=FALSE, legendloc='topleft', legend_cex = 0.5, legend_text='', kssl_varname = 'om_30cm', cdfa_varname = 'om_30cm', sig_labels = c('A', 'C', 'A', 'C', 'A', 'AB', 'BC'), fig_label = 'a', removeOutlier = TRUE, OutlierThreshold = 4.5, fig_height = 3.5)
+hist(kssl_points_30cm$om_30cm)
+
+vioplot_mod_clus7_validation(df_combined, 'kgOrg.m2_30cm', ylim_vioplot = c(-0.15,10.1), plot_order = order_lgnd_7, area_fact = 10, ylab=expression('0-30 cm SOC (kg m'^-2*')'), fname='class7_kgSOC_0_30cm_vioplots_validation_pts_all.tif', mar=c(3, 3.25, 1, 1), kssl_df = kssl_points_30cm, legend_plot=FALSE, legendloc='topleft', legend_cex = 0.9 , kssl_varname = "kgOrg.m2_30cm", cdfa_pts=kerri_points_30cm, cdfa_varname = 'kgOrg.m2_30cm', sig_labels = c('A', 'C', 'A', 'C', 'A', 'AB', 'BC'), fig_label = 'b', fig_height = 3.5, removeOutlier = FALSE, OutlierThreshold = 10)
 
 #create KSSL shapefile that are within soil health regions
 sum(!is.na(kssl_points_30cm$cluster_7))
@@ -196,6 +388,7 @@ kssl_SHR_shp <- kssl_shp
 kssl_SHR_shp <- kssl_SHR_shp[kssl_SHR_shp$pedn_ky %in% kssl_points_30cm$pedon_key, ]
 kssl_SHR_shp$SHR7name  <- kssl_points_30cm$SHR7name[match(kssl_SHR_shp$pedn_ky, kssl_points_30cm$pedon_key)]
 # shapefile(kssl_SHR_shp, file.path(ksslDir, 'shapefiles', 'kssl_SHR7.shp'))
+table(kssl_SHR_shp$SHR7name)
 kssl_SHR_UCD_shp <- kssl_SHR_shp
 kssl_SHR_UCD_shp <- kssl_SHR_UCD_shp[grepl('UCD', kssl_SHR_UCD_shp$pdlbsmp), ] #54
 # shapefile(kssl_SHR_UCD_shp, file.path(ksslDir, 'shapefiles', 'kssl_UCD_SHR7.shp'))
@@ -220,9 +413,15 @@ sum(is.na(kssl_points_100cm$cluster_7))
 sum(!is.na(kssl_points_100cm$kgOrg.m2_100cm)) #only 84 of 369 have complete content data (was 79 before)
 write.csv(kssl_points_100cm, file.path(ksslDir, 'kssl_cluster_100cm_NArm_v2.csv'), row.names = FALSE)
 
+kssl_points_100cm <- read.csv(file.path(ksslDir, 'kssl_cluster_100cm_NArm_v2.csv'), stringsAsFactors = FALSE)
+
+table(kssl_points_100cm$cluster_7)
+
 clus_5_names <- c()
 clus_6_names <- c()
 clus_7_names <- c('3. Coarse w/pans', '6. Fine saline-sodic', '5. Coarse saline-sodic', '1. Coarse w/no restrictions', '7. Fine shrink-swell', '2. Loamy w/no restrictions', '4. Loamy w/pans')
+
+
 
 compare_region_means <- function(df, names, cluster_no, y) {
   x <- names[match(df[[paste0('cluster_', cluster_no)]], 1:cluster_no)]
