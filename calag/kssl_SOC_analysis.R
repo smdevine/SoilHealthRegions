@@ -127,7 +127,11 @@ head(kssl_climate_SHR)
 kssl_points_30cm$annual.P <- kssl_climate_SHR$annual.P[match(kssl_points_30cm$pedon_key, kssl_climate_SHR$pedn_ky)]
 kssl_points_30cm$annual.T <- kssl_climate_SHR$annual.T[match(kssl_points_30cm$pedon_key, kssl_climate_SHR$pedn_ky)]
 kssl_points_30cm$cec_to_clay <- kssl_points_30cm$clay_30cm / kssl_points_30cm$cec_7_30cm
+kssl_points_30cm$SHR7name <- clus_7_names[kssl_points_30cm$cluster_7]
+kssl_points_30cm$oc_30cm_log <- log(kssl_points_30cm$oc_30cm)
+kssl_points_30cm$fines_30cm <- kssl_points_30cm$clay_30cm + kssl_points_30cm$silt_30cm
 plot(kssl_points_30cm$cec_to_clay, kssl_points_30cm$oc_30cm)
+
 
 summary(lm(oc_30cm ~ cec_to_clay + annual.T + annual.P, data = kssl_points_30cm))
 summary(lm(oc_30cm ~ clay_30cm + annual.T + annual.P, data = kssl_points_30cm))
@@ -139,8 +143,8 @@ plot(lm(oc_30cm ~ clay_30cm + annual.T + annual.P, data = kssl_points_30cm[kssl_
 summary(lm(oc_30cm ~ clay_30cm, data = kssl_points_30cm))
 summary(lm(oc_30cm ~ annual.T, data = kssl_points_30cm))
 summary(lm(oc_30cm ~ annual.P, data = kssl_points_30cm))
-kssl_points_30cm$SHR7name <- clus_7_names[kssl_points_30cm$cluster_7]
-kssl_points_30cm$oc_30cm_log <- log(kssl_points_30cm$oc_30cm)
+summary(lm(annual.T ~ annual.P, data = kssl_points_30cm))
+
 summary(lm(oc_30cm_log ~ clay_30cm + annual.T + annual.P, data = kssl_points_30cm))
 plot(lm(oc_30cm_log ~ clay_30cm + annual.T + annual.P, data = kssl_points_30cm))
 summary(lm(kssl_points_30cm$oc_30cm[kssl_points_30cm$SHR7name==] ~ kssl_points_30cm$clay_30cm + kssl_points_30cm$annual.T + kssl_points_30cm$annual.P))
@@ -150,7 +154,31 @@ lapply(clus_7_names[order(clus_7_names)], function(x) {
   summary(lm(kssl_points_30cm$oc_30cm[kssl_points_30cm$SHR7name==x] ~ kssl_points_30cm$clay_30cm[kssl_points_30cm$SHR7name==x] + kssl_points_30cm$annual.P[kssl_points_30cm$SHR7name==x] + kssl_points_30cm$annual.T[kssl_points_30cm$SHR7name==x]))
   }
 )
-
+lapply(clus_7_names[order(clus_7_names)], function(x) {
+  print(x)
+  summary(lm(kssl_points_30cm$oc_30cm[kssl_points_30cm$SHR7name==x] ~ kssl_points_30cm$annual.T[kssl_points_30cm$SHR7name==x]))
+}
+)
+lapply(clus_7_names[order(clus_7_names)], function(x) {
+  print(x)
+  summary(lm(kssl_points_30cm$oc_30cm[kssl_points_30cm$SHR7name==x] ~ kssl_points_30cm$annual.P[kssl_points_30cm$SHR7name==x]))
+}
+)
+lapply(clus_7_names[order(clus_7_names)], function(x) {
+  print(x)
+  summary(lm(kssl_points_30cm$oc_30cm[kssl_points_30cm$SHR7name==x] ~ kssl_points_30cm$clay_30cm[kssl_points_30cm$SHR7name==x]))
+}
+)
+lapply(clus_7_names[order(clus_7_names)], function(x) {
+  print(x)
+  summary(lm(kssl_points_30cm$oc_30cm[kssl_points_30cm$SHR7name==x] ~ kssl_points_30cm$sand_30cm[kssl_points_30cm$SHR7name==x]))
+}
+)
+lapply(clus_7_names[order(clus_7_names)], function(x) {
+  print(x)
+  summary(lm(kssl_points_30cm$oc_30cm[kssl_points_30cm$SHR7name==x] ~ kssl_points_30cm$fines_30cm[kssl_points_30cm$SHR7name==x]))
+}
+)
 summary(lm(oc_30cm ~ clay_30cm + annual.T + annual.P, data = kssl_points_30cm[kssl_points_30cm$oc_30cm < 3.5 & kssl_points_30cm$SHR7name=='1. Coarse & no restrictions',]))
 summary(lm(oc_30cm ~ clay_30cm + annual.T + annual.P, data = kssl_points_30cm[kssl_points_30cm$oc_30cm < 3.5 & kssl_points_30cm$SHR7name=='2. Loamy & no restrictions',]))
 summary(lm(oc_30cm ~ clay_30cm + annual.T + annual.P, data = kssl_points_30cm[kssl_points_30cm$oc_30cm < 3.5 & kssl_points_30cm$SHR7name=='3. Coarse-loamy & restrictive layers',]))
@@ -168,3 +196,5 @@ summary(lm(oc_30cm ~ clay_30cm + annual.T + annual.P, data = kssl_points_30cm[ks
 summary(lm(oc_30cm ~ clay_30cm + annual.T + annual.P, data = kssl_points_30cm[kssl_points_30cm$oc_30cm < 3.5 & kssl_points_30cm$SHR7name=='5. Coarse-loamy saline-sodic',]))
 summary(lm(oc_30cm ~ clay_30cm + annual.T + annual.P, data = kssl_points_30cm[kssl_points_30cm$oc_30cm < 3.5 & kssl_points_30cm$SHR7name=='6. Fine saline-sodic',]))
 summary(lm(oc_30cm ~ clay_30cm + annual.T + annual.P, data = kssl_points_30cm[kssl_points_30cm$oc_30cm < 3.5 & kssl_points_30cm$SHR7name=='7. Shrink-swell',]))
+
+#shrink 
