@@ -83,6 +83,7 @@ table(napa_lodi_data$SHR7name[which(napa_lodi_data$tillage=='till' & napa_lodi_d
 table(napa_lodi_data$SHR7name[which(napa_lodi_data$tillage=='no till' & napa_lodi_data$irrigation=='dryfarm')])
 
 summary(aov(soil_C_0_5cm ~ tillage + irrigation + compost + cc_type + SHR7name, data = napa_lodi_data))
+summary(lm(soil_C_0_5cm ~ tillage + irrigation + compost + cc_type + SHR7name, data = napa_lodi_data))
 TukeyHSD(aov(soil_C_0_5cm ~ tillage + irrigation + compost + SHR7name, data = napa_lodi_data))
 summary(lm(soil_C_0_5cm ~ tillage + irrigation + compost + SHR7name, data = napa_lodi_data))
 summary(lm(soil_C_0_5cm ~ tillage + irrigation + SHR7name, data = napa_lodi_data))
@@ -156,10 +157,10 @@ soil_data_shrink_swell$kgOrg.m2_50cm <- pts_50cm$kgOrg.m2_50cm[match(soil_data_s
 colnames(soil_data_shrink_swell)
 soil_data_shrink_swell <- soil_data_shrink_swell[order(soil_data_shrink_swell$tillage, soil_data_shrink_swell$irrigation, soil_data_shrink_swell$cc_type, soil_data_shrink_swell$compost), ]
 soil_data_shrink_swell$SHR <- 7
-write.csv(soil_data_shrink_swell, file.path(CalAgDir, 'soil_data_shrink_swell.csv'), row.names = FALSE)
+# write.csv(soil_data_shrink_swell, file.path(CalAgDir, 'soil_data_shrink_swell.csv'), row.names = FALSE)
 shrink_swell <- data.frame(C_means=sapply(soil_data_shrink_swell[,8:11], mean, na.rm=TRUE), C_se=sapply(soil_data_shrink_swell[,8:11], function(x) {sd(x, na.rm = TRUE)/sqrt(length(x[!is.na(x)]))}), n=sapply(soil_data_shrink_swell[,8:11], function(x) {length(x[!is.na(x)])}), C_q25=sapply(soil_data_shrink_swell[,8:11], quantile, probs=0.25, na.rm=TRUE), C_medians=sapply(soil_data_shrink_swell[,8:11], median, na.rm=TRUE), C_q75=sapply(soil_data_shrink_swell[,8:11], quantile, probs=0.75, na.rm=TRUE))
 shrink_swell
-write.csv(shrink_swell, file.path(CalAgDir, 'shrink_swell_soilC.csv'), row.names = FALSE)
+# write.csv(shrink_swell, file.path(CalAgDir, 'shrink_swell_soilC.csv'), row.names = FALSE)
 
 
 soil_data_loamy_w_no_res <- data.frame(ID=pts_30cm$Concatenate[which(pts_30cm$SHR7name=="2. Loamy & no restrictions")], tillage=pts_30cm$tillage[which(pts_30cm$SHR7name=="2. Loamy & no restrictions")], irrigation=pts_30cm$irrigated_vs_dryfarm[which(pts_30cm$SHR7name=="2. Loamy & no restrictions")], compost=pts_30cm$compost_added[which(pts_30cm$SHR7name=="2. Loamy & no restrictions")], cc_type=pts_30cm$cc_type[which(pts_30cm$SHR7name=="2. Loamy & no restrictions")], stringsAsFactors = FALSE)
@@ -179,11 +180,11 @@ soil_data_loamy_w_no_res$kgOrg.m2_50cm <- pts_50cm$kgOrg.m2_50cm[match(soil_data
 colnames(soil_data_loamy_w_no_res)
 soil_data_loamy_w_no_res <- soil_data_loamy_w_no_res[order(soil_data_loamy_w_no_res$tillage, soil_data_loamy_w_no_res$irrigation, soil_data_loamy_w_no_res$cc_type, soil_data_loamy_w_no_res$compost), ]
 soil_data_loamy_w_no_res$SHR <- 2
-write.csv(soil_data_loamy_w_no_res, file.path(CalAgDir, 'soil_data_loamy_w_no_res.csv'), row.names = FALSE)
+# write.csv(soil_data_loamy_w_no_res, file.path(CalAgDir, 'soil_data_loamy_w_no_res.csv'), row.names = FALSE)
 
 loamy_w_no_res <- data.frame(C_means=sapply(soil_data_loamy_w_no_res[,8:11], mean, na.rm=TRUE), C_se=sapply(soil_data_loamy_w_no_res[,8:11], function(x) {sd(x, na.rm = TRUE)/sqrt(length(x[!is.na(x)]))}), n=sapply(soil_data_loamy_w_no_res[,8:11], function(x) {length(x[!is.na(x)])}), C_q25=sapply(soil_data_loamy_w_no_res[,8:11], quantile, probs=0.25, na.rm=TRUE), C_medians=sapply(soil_data_loamy_w_no_res[,8:11], median, na.rm=TRUE), C_q75=sapply(soil_data_loamy_w_no_res[,8:11], quantile, probs=0.75, na.rm=TRUE))
 loamy_w_no_res
-write.csv(loamy_w_no_res, file.path(CalAgDir, 'loamy_w_no_res_soilC.csv'), row.names = FALSE)
+# write.csv(loamy_w_no_res, file.path(CalAgDir, 'loamy_w_no_res_soilC.csv'), row.names = FALSE)
 
 till_irr_ann_loamy_w_no_res <- data.frame(C_means=sapply(soil_data_loamy_w_no_res[which(soil_data_loamy_w_no_res$tillage=='till' & soil_data_loamy_w_no_res$irrigation=='irrigated' & soil_data_loamy_w_no_res$cc_type!='perennial' & if(account_for_compost){soil_data_loamy_w_no_res$compost=='yes'}else{TRUE}),8:11], mean, na.rm=TRUE), C_se=sapply(soil_data_loamy_w_no_res[which(soil_data_loamy_w_no_res$tillage=='till' & soil_data_loamy_w_no_res$irrigation=='irrigated' & soil_data_loamy_w_no_res$cc_type!='perennial' & if(account_for_compost){soil_data_loamy_w_no_res$compost=='yes'}else{TRUE}),8:11], function(x) {sd(x, na.rm=TRUE)/sqrt(length(x[!is.na(x)]))}), n=sapply(soil_data_loamy_w_no_res[which(soil_data_loamy_w_no_res$tillage=='till' & soil_data_loamy_w_no_res$irrigation=='irrigated' & soil_data_loamy_w_no_res$cc_type!='perennial' & if(account_for_compost){soil_data_loamy_w_no_res$compost=='yes'}else{TRUE}),8:11], function(x) {length(x[!is.na(x)])})) #2a in plot
 till_irr_ann_loamy_w_no_res
@@ -212,11 +213,11 @@ soil_data_coarse_w_no_res$kgOrg.m2_30cm <- pts_30cm$kgOrg.m2_30cm[match(soil_dat
 soil_data_coarse_w_no_res$kgOrg.m2_50cm <- pts_50cm$kgOrg.m2_50cm[match(soil_data_coarse_w_no_res$ID, pts_50cm$Concatenate)]
 soil_data_coarse_w_no_res <- soil_data_coarse_w_no_res[order(soil_data_coarse_w_no_res$tillage, soil_data_coarse_w_no_res$irrigation, soil_data_coarse_w_no_res$cc_type, soil_data_coarse_w_no_res$compost), ]
 soil_data_coarse_w_no_res$SHR <- 1
-write.csv(soil_data_coarse_w_no_res, file.path(CalAgDir, 'soil_data_coarse_w_no_res.csv'), row.names = FALSE)
+# write.csv(soil_data_coarse_w_no_res, file.path(CalAgDir, 'soil_data_coarse_w_no_res.csv'), row.names = FALSE)
 
 coarse_w_no_res <- data.frame(C_means=sapply(soil_data_coarse_w_no_res[,8:11], mean, na.rm=TRUE), C_se=sapply(soil_data_coarse_w_no_res[,8:11], function(x) {sd(x, na.rm = TRUE)/sqrt(length(x[!is.na(x)]))}), n=sapply(soil_data_coarse_w_no_res[,8:11], function(x) {length(x[!is.na(x)])}), C_q25=sapply(soil_data_coarse_w_no_res[,8:11], quantile, probs=0.25, na.rm=TRUE), C_medians=sapply(soil_data_coarse_w_no_res[,8:11], median, na.rm=TRUE), C_q75=sapply(soil_data_coarse_w_no_res[,8:11], quantile, probs=0.75, na.rm=TRUE))
 coarse_w_no_res
-write.csv(coarse_w_no_res, file.path(CalAgDir, 'coarse_w_no_res_soilC.csv'), row.names = FALSE)
+# write.csv(coarse_w_no_res, file.path(CalAgDir, 'coarse_w_no_res_soilC.csv'), row.names = FALSE)
 
 till_irr_coarse_w_no_res <- data.frame(C_means=sapply(soil_data_coarse_w_no_res[which(soil_data_coarse_w_no_res$tillage=='till' & soil_data_coarse_w_no_res$irrigation=='irrigated' & if(account_for_compost){soil_data_coarse_w_no_res$compost=='yes'}else{TRUE}),8:11], mean, na.rm=TRUE), C_se=sapply(soil_data_coarse_w_no_res[which(soil_data_coarse_w_no_res$tillage=='till' & soil_data_coarse_w_no_res$irrigation=='irrigated' & if(account_for_compost){soil_data_coarse_w_no_res$compost=='yes'}else{TRUE}),8:11], function(x) {sd(x, na.rm = TRUE)/sqrt(length(x[!is.na(x)]))}), n=sapply(soil_data_coarse_w_no_res[which(soil_data_coarse_w_no_res$tillage=='till' & soil_data_coarse_w_no_res$irrigation=='irrigated' & if(account_for_compost){soil_data_coarse_w_no_res$compost=='yes'}else{TRUE}),8:11], function(x) {length(x[!is.na(x)])}))
 till_irr_coarse_w_no_res #excludes 3 dryfarm coarse w/no res in Napa
@@ -226,6 +227,7 @@ soil_data_loamy_w_res$soil_C_0_5cm <-  soil_data$C....g.g..Oven.dry.converted[so
 soil_data_loamy_w_res$soil_C_0_5cm[soil_data_loamy_w_res$soil_C_0_5cm==0] <- NA #convert 0 value to NA
 soil_data_loamy_w_res$soil_C_5_10cm <-  soil_data$C....g.g..Oven.dry.converted[soil_data$Depth..cm.=='5_10'][match(soil_data_loamy_w_res$ID, soil_data$Concatenate[soil_data$Depth..cm.=='5_10'])]
 soil_data_loamy_w_res$soil_C_0_10cm <- apply(soil_data_loamy_w_res[,c('soil_C_0_5cm', 'soil_C_5_10cm')], 1, mean)
+soil_data_loamy_w_res$soil_C_0_10cm[soil_data_loamy_w_res$ID==853] <- soil_data_loamy_w_res$soil_C_5_10cm[soil_data_loamy_w_res$ID==853]
 soil_data_loamy_w_res$soil_C_10_30cm <-  soil_data$C....g.g..Oven.dry.converted[soil_data$Depth..cm.=='10_30'][match(soil_data_loamy_w_res$ID, soil_data$Concatenate[soil_data$Depth..cm.=='10_30'])]
 soil_data_loamy_w_res$soil_C_30_50cm <-  soil_data$C....g.g..Oven.dry.converted[soil_data$Depth..cm.=='30_50'][match(soil_data_loamy_w_res$ID, soil_data$Concatenate[soil_data$Depth..cm.=='30_50'])]
 soil_data_loamy_w_res$soil_C_50_100cm <-  soil_data$C....g.g..Oven.dry.converted[soil_data$Depth..cm.=='50_100'][match(soil_data_loamy_w_res$ID, soil_data$Concatenate[soil_data$Depth..cm.=='50_100'])]
@@ -234,18 +236,17 @@ soil_data_loamy_w_res$kgOrg.m2_10cm <- pts_10cm$kgOrg.m2_10cm[match(soil_data_lo
 soil_data_loamy_w_res$kgOrg.m2_30cm <- pts_30cm$kgOrg.m2_30cm[match(soil_data_loamy_w_res$ID, pts_30cm$Concatenate)]
 soil_data_loamy_w_res$kgOrg.m2_50cm <- pts_50cm$kgOrg.m2_50cm[match(soil_data_loamy_w_res$ID, pts_50cm$Concatenate)]
 soil_data_loamy_w_res$SHR <- 4
-write.csv(soil_data_loamy_w_res, file.path(CalAgDir, 'soil_data_loamy_w_res.csv'), row.names = FALSE)
+# write.csv(soil_data_loamy_w_res, file.path(CalAgDir, 'soil_data_loamy_w_res.csv'), row.names = FALSE)
 colnames(soil_data_loamy_w_res)
 loamy_w_res <- data.frame(C_means=sapply(soil_data_loamy_w_res[,8:11], mean, na.rm=TRUE), C_se=sapply(soil_data_loamy_w_res[,8:11], function(x) {sd(x, na.rm = TRUE)/sqrt(length(x[!is.na(x)]))}), n=sapply(soil_data_loamy_w_res[,8:11], function(x) {length(x[!is.na(x)])}), C_q25=sapply(soil_data_loamy_w_res[,8:11], quantile, probs=0.25, na.rm=TRUE), C_medians=sapply(soil_data_loamy_w_res[,8:11], median, na.rm=TRUE), C_q75=sapply(soil_data_loamy_w_res[,8:11], quantile, probs=0.75, na.rm=TRUE))
 loamy_w_res
-write.csv(loamy_w_res, file.path(CalAgDir, 'loamy_w_res_soilC.csv'), row.names = FALSE)
+# write.csv(loamy_w_res, file.path(CalAgDir, 'loamy_w_res_soilC.csv'), row.names = FALSE)
 
 notill_irr_ann_loamy_w_res <- data.frame(C_means=sapply(soil_data_loamy_w_res[which(soil_data_loamy_w_res$tillage=='no till' & soil_data_loamy_w_res$irrigation=='irrigated' & soil_data_loamy_w_res$cc_type!='perennial' & if(account_for_compost){soil_data_loamy_w_res$compost=='yes'}else{TRUE}),8:11], mean, na.rm=TRUE), C_se=sapply(soil_data_loamy_w_res[which(soil_data_loamy_w_res$tillage=='no till' & soil_data_loamy_w_res$irrigation=='irrigated' & soil_data_loamy_w_res$cc_type!='perennial' & if(account_for_compost){soil_data_loamy_w_res$compost=='yes'}else{TRUE}),8:11], function(x) {sd(x, na.rm = TRUE)/sqrt(length(x[!is.na(x)]))}), n=sapply(soil_data_loamy_w_res[which(soil_data_loamy_w_res$tillage=='no till' & soil_data_loamy_w_res$irrigation=='irrigated' & soil_data_loamy_w_res$cc_type!='perennial' & if(account_for_compost){soil_data_loamy_w_res$compost=='yes'}else{TRUE}),8:11], function(x) {length(x[!is.na(x)])})) #4 in plot
 notill_irr_ann_loamy_w_res
 
 notill_irr_per_loamy_w_res <- data.frame(C_means=sapply(soil_data_loamy_w_res[which(soil_data_loamy_w_res$tillage=='no till' & soil_data_loamy_w_res$irrigation=='irrigated' & soil_data_loamy_w_res$cc_type=='perennial' & if(account_for_compost){soil_data_loamy_w_res$compost=='yes'}else{TRUE}),8:11], mean, na.rm=TRUE), C_se=sapply(soil_data_loamy_w_res[which(soil_data_loamy_w_res$tillage=='no till' & soil_data_loamy_w_res$irrigation=='irrigated' & soil_data_loamy_w_res$cc_type=='perennial' & if(account_for_compost){soil_data_loamy_w_res$compost=='yes'}else{TRUE}),8:11], function(x) {sd(x, na.rm = TRUE)/sqrt(length(x[!is.na(x)]))}), n=sapply(soil_data_loamy_w_res[which(soil_data_loamy_w_res$tillage=='no till' & soil_data_loamy_w_res$irrigation=='irrigated' & soil_data_loamy_w_res$cc_type=='perennial' & if(account_for_compost){soil_data_loamy_w_res$compost=='yes'}else{TRUE}),8:11], function(x) {length(x[!is.na(x)])}))
 notill_irr_per_loamy_w_res
-
 
 soil_data_coarse_loamy_w_res <- data.frame(ID=pts_30cm$Concatenate[which(pts_30cm$SHR7name=="3. Coarse-loamy & restrictive layers")], tillage=pts_30cm$tillage[which(pts_30cm$SHR7name=="3. Coarse-loamy & restrictive layers")], irrigation=pts_30cm$irrigated_vs_dryfarm[which(pts_30cm$SHR7name=="3. Coarse-loamy & restrictive layers")], compost=pts_30cm$compost_added[which(pts_30cm$SHR7name=="3. Coarse-loamy & restrictive layers")], cc_type=pts_30cm$cc_type[which(pts_30cm$SHR7name=="3. Coarse-loamy & restrictive layers")], stringsAsFactors = FALSE)
 
@@ -261,15 +262,31 @@ soil_data_coarse_loamy_w_res$kgOrg.m2_30cm <- pts_30cm$kgOrg.m2_30cm[match(soil_
 soil_data_coarse_loamy_w_res$kgOrg.m2_50cm <- pts_50cm$kgOrg.m2_50cm[match(soil_data_coarse_loamy_w_res$ID, pts_50cm$Concatenate)]
 soil_data_coarse_loamy_w_res <- soil_data_coarse_loamy_w_res[order(soil_data_coarse_loamy_w_res$tillage, soil_data_coarse_loamy_w_res$irrigation, soil_data_coarse_loamy_w_res$cc_type, soil_data_coarse_loamy_w_res$compost), ]
 soil_data_coarse_loamy_w_res$SHR <- 3
-write.csv(soil_data_coarse_loamy_w_res, file.path(CalAgDir, 'soil_data_coarse_loamy_w_res.csv'), row.names = FALSE)
+# write.csv(soil_data_coarse_loamy_w_res, file.path(CalAgDir, 'soil_data_coarse_loamy_w_res.csv'), row.names = FALSE)
 coarse_loamy_w_res <- data.frame(C_means=sapply(soil_data_coarse_loamy_w_res[,8:11], mean, na.rm=TRUE), C_se=sapply(soil_data_coarse_loamy_w_res[,8:11], function(x) {sd(x, na.rm = TRUE)/sqrt(length(x[!is.na(x)]))}), n=sapply(soil_data_coarse_loamy_w_res[,8:11], function(x) {length(x[!is.na(x)])}), C_q25=sapply(soil_data_coarse_loamy_w_res[,8:11], quantile, probs=0.25, na.rm=TRUE), C_medians=sapply(soil_data_coarse_loamy_w_res[,8:11], median, na.rm=TRUE), C_q75=sapply(soil_data_coarse_loamy_w_res[,8:11], quantile, probs=0.75, na.rm=TRUE))
 coarse_loamy_w_res
-write.csv(coarse_loamy_w_res, file.path(CalAgDir, 'coarse_loamy_w_res_soilC.csv'), row.names = FALSE)
+# write.csv(coarse_loamy_w_res, file.path(CalAgDir, 'coarse_loamy_w_res_soilC.csv'), row.names = FALSE)
 
 till_irr_ann_coarse_loamy_w_res <- data.frame(C_means=sapply(soil_data_coarse_loamy_w_res[which(soil_data_coarse_loamy_w_res$tillage=='till' & soil_data_coarse_loamy_w_res$irrigation=='irrigated' & soil_data_coarse_loamy_w_res$cc_type!='perennial'),8:11], mean, na.rm=TRUE), C_se=sapply(soil_data_coarse_loamy_w_res[which(soil_data_coarse_loamy_w_res$tillage=='till' & soil_data_coarse_loamy_w_res$irrigation=='irrigated'& soil_data_coarse_loamy_w_res$cc_type!='perennial'), 8:11], function(x) {sd(x, na.rm = TRUE)/sqrt(length(x[!is.na(x)]))}), n=sapply(soil_data_coarse_loamy_w_res[which(soil_data_coarse_loamy_w_res$tillage=='till' & soil_data_coarse_loamy_w_res$irrigation=='irrigated'& soil_data_coarse_loamy_w_res$cc_type!='perennial'), 8:11], function(x) {length(x[!is.na(x)])}))
 till_irr_ann_coarse_loamy_w_res
+
 soil_data_allSHR <- rbind(soil_data_coarse_w_no_res, soil_data_loamy_w_no_res, soil_data_coarse_loamy_w_res, soil_data_loamy_w_res, soil_data_shrink_swell)
 soil_data_allSHR$SHRcolor <- ifelse(soil_data_allSHR$SHR==1, 'lightgoldenrod', ifelse(soil_data_allSHR$SHR==2, 'tan4', ifelse(soil_data_allSHR$SHR==3, 'gold', ifelse(soil_data_allSHR$SHR==4, 'firebrick3', ifelse(soil_data_allSHR$SHR==7, 'violetred', 'black')))))
+table(soil_data_allSHR$SHR)
+soil_data_allSHR$Area <- soil_data$Area[match(soil_data_allSHR$ID, soil_data$Concatenate)]
+soil_data_allSHR$Vineyard_Mgmt <- soil_data$Vineyard.Management[match(soil_data_allSHR$ID, soil_data$Concatenate)]
+soil_data_allSHR$yrs_in_vineyard <- soil_data$years.in.vineyard[match(soil_data_allSHR$ID, soil_data$Concatenate)]
+soil_data_allSHR$slope <- soil_data$Cluster.SLOPE[match(soil_data_allSHR$ID, soil_data$Concatenate)]
+soil_data_allSHR$great_group <- soil_data$Cluster.GREATGROUP[match(soil_data_allSHR$ID, soil_data$Concatenate)]
+soil_data_allSHR$soil_series <- soil_data$Soil.Series.SSURGO[match(soil_data_allSHR$ID, soil_data$Concatenate)]
+write.csv(soil_data_allSHR, file.path(CalAgDir, 'soil_data_allSHR.csv'), row.names = FALSE)
+
+lapply(c(1,2,3,4,7), function(x) {table(soil_data_allSHR$Area[soil_data_allSHR$SHR==x])})
+lapply(c(1,2,3,4,7), function(x) {table(soil_data_allSHR$soil_series[soil_data_allSHR$SHR==x])})
+lapply(c(1,2,3,4,7), function(x) {table(soil_data_allSHR$great_group[soil_data_allSHR$SHR==x])})
+lapply(c(1,2,3,4,7), function(x) {table(soil_data_allSHR$Vineyard_Mgmt[soil_data_allSHR$SHR==x])})
+soil_data_allSHR[soil_data_allSHR$SHR==1,]
+soil_data_allSHR[soil_data_allSHR$SHR==2,]
 
 
 depths_cm <- c(5, 20, 40, 75)
@@ -351,9 +368,9 @@ colnames(Cmeans_SHRmgmt) <- c('0-10 cm', '10-30 cm', '30-50 cm', '50-100 cm')
 C_SE_SHRmgmt <- rbind(till_irr_coarse_w_no_res$C_se, till_irr_ann_loamy_w_no_res$C_se, notill_irr_ann_loamy_w_no_res$C_se, notill_irr_per_loamy_w_no_res$C_se, till_dry_ann_loamy_w_no_res$C_se, notill_dry_ann_loamy_w_no_res$C_se, till_irr_ann_coarse_loamy_w_res$C_se, notill_irr_ann_loamy_w_res$C_se, notill_irr_per_loamy_w_res$C_se, shrink_swell$C_se)
 C_n_SHRmgmt <- rbind(till_irr_coarse_w_no_res$n, till_irr_ann_loamy_w_no_res$n, notill_irr_ann_loamy_w_no_res$n, notill_irr_per_loamy_w_no_res$n, till_dry_ann_loamy_w_no_res$n, notill_dry_ann_loamy_w_no_res$n, till_irr_ann_coarse_loamy_w_res$n, notill_irr_ann_loamy_w_res$n, notill_irr_per_loamy_w_res$n, shrink_swell$n)
 
-tiff(file = file.path(FiguresDir, 'Napa_Lodi_soilC_barchart_alldepths.tif'), pointsize = 11, family = 'Times New Roman', width = 9, height = 3.5, units = 'in', res=800, compression = 'lzw')
-par(mar=c(3.5, 3.5, 0.5, 0.5))
-Cmeans_bardims <- barplot(Cmeans_SHRmgmt, beside=TRUE, legend.text=c('1. Coarse & no restrictions', '2a. Loamy & no restrictions', '2b. Loamy & no restrictions: no-till', '2c. Loamy & no restrictions: no-till & perennial', '2d. Loamy & no restrictions: dryfarm', '2e. Loamy & no restrictions: no-till & dryfarm', '3. Coarse-loamy & restrictive horizons', '4a. Loamy & restrictive horizons: no-till', '4b. Loamy & restrictive horizons: no-till & perennial', '7. Shrink-swell'), col=c('lightgoldenrod', 'tan4', 'tan4', 'tan4',  'tan4', 'tan4', 'gold', 'firebrick3', 'firebrick3', 'violetred'), ylab='', ylim=c(0,4.2), args.legend=list(x='topright', cex=0.9, pt.cex=1, bty='n', ncol=2, inset=c(-0.015,-0.02), x.intersp=0.4), cex.names=1)
+tiff(file = file.path(FiguresDir, "Napa Lodi", 'Napa_Lodi_soilC_barchart_alldepths_v3.tif'), pointsize = 11, family = 'Times New Roman', width = 9, height = 4.25, units = 'in', res=800, compression = 'lzw')
+par(mar=c(2.4, 3.5, 1.25, 0.5))
+Cmeans_bardims <- barplot(Cmeans_SHRmgmt, beside=TRUE, legend.text=c('1. Coarse & no restrictions (n=9)', '2a. Loamy & no restrictions (n=18)', '2b. Loamy & no restrictions: no-till (n=5)', '2c. Loamy & no restrictions: no-till & perennial (n=13)', '2d. Loamy & no restrictions: dryfarm (n=12)', '2e. Loamy & no restrictions: no-till & dryfarm (n=6)', '3. Coarse-loamy & restrictive horizons (n=15)', '4a. Loamy & restrictive horizons: no-till (n=5)', '4b. Loamy & restrictive horizons: no-till & perennial (n=6)', '7. Shrink-swell (n=4)'), col=c('lightgoldenrod', 'tan4', 'tan4', 'tan4',  'tan4', 'tan4', 'gold', 'firebrick3', 'firebrick3', 'violetred'), ylab='', ylim=c(0,4.2), args.legend=list(x='topright', cex=1, pt.cex=1, bty='n', ncol=1, inset=c(0,-0.05), x.intersp=0.4), cex.names=1)
 mtext(text = row.names(Cmeans_SHRmgmt), side = 1, line=0.1, at=Cmeans_bardims, cex=0.9)
 mtext('Soil organic carbon (%)', side=2, line=2.25)
 segments(x0=Cmeans_bardims[1,], y0=Cmeans_SHRmgmt[1,] + qt(0.975,df=C_n_SHRmgmt[1,]) * C_SE_SHRmgmt[1,], x1=Cmeans_bardims[1,], y1=Cmeans_SHRmgmt[1,] + qt(0.025,df=C_n_SHRmgmt[1,]) * C_SE_SHRmgmt[1,], lwd = 1)
