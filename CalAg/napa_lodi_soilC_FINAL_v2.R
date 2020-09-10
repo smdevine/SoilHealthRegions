@@ -275,18 +275,29 @@ soil_data_allSHR$SHRcolor <- ifelse(soil_data_allSHR$SHR==1, 'lightgoldenrod', i
 table(soil_data_allSHR$SHR)
 soil_data_allSHR$Area <- soil_data$Area[match(soil_data_allSHR$ID, soil_data$Concatenate)]
 soil_data_allSHR$Vineyard_Mgmt <- soil_data$Vineyard.Management[match(soil_data_allSHR$ID, soil_data$Concatenate)]
+soil_data$years.in.vineyard[soil_data$years.in.vineyard=='unknown'] <- NA
+soil_data$years.in.vineyard <- as.integer(soil_data$years.in.vineyard)
 soil_data_allSHR$yrs_in_vineyard <- soil_data$years.in.vineyard[match(soil_data_allSHR$ID, soil_data$Concatenate)]
 soil_data_allSHR$slope <- soil_data$Cluster.SLOPE[match(soil_data_allSHR$ID, soil_data$Concatenate)]
 soil_data_allSHR$great_group <- soil_data$Cluster.GREATGROUP[match(soil_data_allSHR$ID, soil_data$Concatenate)]
 soil_data_allSHR$soil_series <- soil_data$Soil.Series.SSURGO[match(soil_data_allSHR$ID, soil_data$Concatenate)]
-write.csv(soil_data_allSHR, file.path(CalAgDir, 'soil_data_allSHR.csv'), row.names = FALSE)
 
+write.csv(soil_data_allSHR, file.path(CalAgDir, 'soil_data_allSHR.csv'), row.names = FALSE)
+dim(soil_data_allSHR)
+table(soil_data_allSHR$SHR)
+lapply(c(1,2,3,4,7), function(x) {table(soil_data_allSHR$tillage[soil_data_allSHR$SHR==x])})
+lapply(c(1,2,3,4,7), function(x) {table(soil_data_allSHR$irrigation[soil_data_allSHR$SHR==x])})
+lapply(c(1,2,3,4,7), function(x) {table(soil_data_allSHR$compost[soil_data_allSHR$SHR==x])})
+lapply(c(1,2,3,4,7), function(x) {table(soil_data_allSHR$cc_type[soil_data_allSHR$SHR==x])})
 lapply(c(1,2,3,4,7), function(x) {table(soil_data_allSHR$Area[soil_data_allSHR$SHR==x])})
 lapply(c(1,2,3,4,7), function(x) {table(soil_data_allSHR$soil_series[soil_data_allSHR$SHR==x])})
 lapply(c(1,2,3,4,7), function(x) {table(soil_data_allSHR$great_group[soil_data_allSHR$SHR==x])})
 lapply(c(1,2,3,4,7), function(x) {table(soil_data_allSHR$Vineyard_Mgmt[soil_data_allSHR$SHR==x])})
+lapply(c(1,2,3,4,7), function(x) {summary(soil_data_allSHR$slope[soil_data_allSHR$SHR==x])})
+lapply(c(1,2,3,4,7), function(x) {summary(soil_data_allSHR$yrs_in_vineyard[soil_data_allSHR$SHR==x])})
 soil_data_allSHR[soil_data_allSHR$SHR==1,]
 soil_data_allSHR[soil_data_allSHR$SHR==2,]
+
 
 
 depths_cm <- c(5, 20, 40, 75)
