@@ -23,7 +23,14 @@ if (laptop) {
 }
 mar_settings <- c(4, 4.5, 1, 1)
 om_to_oc <- 1.72
-# valley_mu_shp_30cm <- shapefile(file.path(dataDir, 'FINAL results', 'shapefiles with data', 'valley_30cm_cluster.shp'))
+valley_mu_shp_30cm <- shapefile(file.path(dataDir, 'FINAL results', 'shapefiles with data', 'valley_30cm_cluster.shp'))
+head(valley_mu_shp_30cm$muname)
+area(valley_mu_shp_30cm)
+sum(valley_mu_shp_30cm$area_ac) #13873110
+sum(valley_mu_shp_30cm$area_ac[valley_mu_shp_30cm$muname=='Urban land'])
+#52361.53 acres
+sum(valley_mu_shp_30cm$muname=='Urban land' & !is.na(valley_mu_shp_30cm$cluster_7))
+
 clus_7_names <- c('6. Fine saline-sodic', '3. Coarse-loamy & restrictive layers', '4. Loamy & restrictive layers', '1. Coarse & no restrictions', '2. Loamy & no restrictions', '7. Shrink-swell', '5. Coarse-loamy saline-sodic')
 #produced in ssurgo_calag_cluster_FINAL.R
 valley30cm_by_mukey <- read.csv(file.path(dataDir, 'FINAL results', 'valley30cm_by_mukey_cluster_FINAL.csv'), stringsAsFactors = FALSE)
@@ -31,8 +38,8 @@ colnames(valley30cm_by_mukey)
 sum(valley30cm_by_mukey$area_ac) #13034096
 valley30cm_by_mukey$clus7_name <- clus_7_names[valley30cm_by_mukey$cluster_7]
 # SHR7area <- tapply(valley30cm_by_mukey$area_ac, valley30cm_by_mukey$clus7_name, sum)
-
-
+unique(valley30cm_by_mukey$muname)[grepl('Urban', unique(valley30cm_by_mukey$muname))]
+sum(valley30cm_by_mukey$area_ac[grepl('Urban', valley30cm_by_mukey$muname)]) #155953.2
 
 #produced in...
 dom_order_by_mukey <- read.csv(file.path(dataDir, 'FINAL results', "soil survey facts", 'dom_order_by_mukey.csv'), stringsAsFactors = FALSE)
