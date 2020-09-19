@@ -25,9 +25,9 @@ if (laptop) {
 mar_settings <- c(4, 4.5, 1, 1)
 ec_zero_rule <- 1.5
 list.files(dataDir)
-valley_mu_shp_30cm <- shapefile(file.path(dataDir, 'shapefiles with data', 'valley_30cm.shp'))
+# valley_mu_shp_30cm <- shapefile(file.path(dataDir, 'shapefiles with data', 'valley_30cm.shp'))
 # names(valley_mu_shp_30cm)
-valley30cm_by_mukey <- read.csv(file.path(dataDir, 'for cluster analysis', 'valley30cm_by_mukey_final.csv'), stringsAsFactors = FALSE)
+valley30cm_by_mukey <- read.csv(file.path(dataDir, 'for cluster analysis', 'valley30cm_by_mukey_final_v2.csv'), stringsAsFactors = FALSE) #re-run 9/17/20 for NbClust analysis
 
 
 #create data.frame for cluster analysis
@@ -86,6 +86,7 @@ kmeans_test <- function(y, z) {sapply(1:y, function(x) {
 results <- replicate(30, kmeans_test(12, princomp_results$scores[,1:5]))
 plot(1:12, rowMeans(results), type='b', xlab='Number of clusters', ylab='Soil variability captured by clustering (%)', cex=0.8, cex.axis=1, cex.lab=1)
 
+#col_index selects how many princomps to use
 col_index <- 1:7
 set.seed(11431030)
 cluster_2_pc <- kmeans(princomp_results$scores[,col_index], centers=2, iter.max = 200, nstart = 50)
@@ -141,14 +142,14 @@ valley30cm_by_mukey_PC$cluster_12pc <- cluster_12_pc$cluster[match(valley30cm_by
 cluster_pc_area_summary <- c(tapply(valley30cm_by_mukey_PC$area_ac, valley30cm_by_mukey_PC$cluster_2pc, sum), tapply(valley30cm_by_mukey_PC$area_ac, valley30cm_by_mukey_PC$cluster_3pc, sum), tapply(valley30cm_by_mukey_PC$area_ac, valley30cm_by_mukey_PC$cluster_4pc, sum), tapply(valley30cm_by_mukey_PC$area_ac, valley30cm_by_mukey_PC$cluster_5pc, sum), tapply(valley30cm_by_mukey_PC$area_ac, valley30cm_by_mukey_PC$cluster_6pc, sum), tapply(valley30cm_by_mukey_PC$area_ac, valley30cm_by_mukey_PC$cluster_7pc, sum), tapply(valley30cm_by_mukey_PC$area_ac, valley30cm_by_mukey_PC$cluster_8pc, sum), tapply(valley30cm_by_mukey_PC$area_ac, valley30cm_by_mukey_PC$cluster_9pc, sum), tapply(valley30cm_by_mukey_PC$area_ac, valley30cm_by_mukey_PC$cluster_10pc, sum), tapply(valley30cm_by_mukey_PC$area_ac, valley30cm_by_mukey_PC$cluster_11pc, sum), tapply(valley30cm_by_mukey_PC$area_ac, valley30cm_by_mukey_PC$cluster_12pc, sum))
 cluster_fk_pc$area_ac <- cluster_pc_area_summary
 cluster_fk_pc$area_pct <- 100 * cluster_fk_pc$area_ac / sum(valley30cm_by_mukey_PC$area_ac)
-write.csv(cluster_fk_pc, file.path(dataDir, 'v2 results', 'pc analysis', 'clusters_pc5_2_to_12_df_for_radarchart.csv'), row.names = FALSE)
+write.csv(cluster_fk_pc, file.path(dataDir, 'FINAL results', 'pc analysis', 'clusters_pc7_2_to_12_df_for_radarchart.csv'), row.names = FALSE)
 
-cluster_no <- 9
+cluster_no <- 7
 for (i in 1:cluster_no) {
   print(i)
   print(summary(valley30cm_by_mukey_PC[[paste0('cluster_',cluster_no)]][valley30cm_by_mukey_PC[[paste0('cluster_', cluster_no, 'pc')]]==i]))
 }
-cluster_no <- 9
+cluster_no <- 7
 for (i in 1:cluster_no) {
   hist(valley30cm_by_mukey_PC[[paste0('cluster_',cluster_no)]][valley30cm_by_mukey_PC[[paste0('cluster_', cluster_no, 'pc')]]==i], main=i)
 }
@@ -157,10 +158,11 @@ for (i in 1:cluster_no) {
   print(i)
   print(table(valley30cm_by_mukey_PC[[paste0('cluster_',cluster_no)]][valley30cm_by_mukey_PC[[paste0('cluster_', cluster_no, 'pc')]]==i]))
 }
+
 cluster_radar_plot <- function(cluster_no) {
-  radarchart_df <- cluster_fk_pc[cluster_fk$clusters==cluster_no,]
+  radarchart_df <- cluster_fk_pc[cluster_fk_pc$clusters==cluster_no,]
   radarchart_df <- rbind(apply(radarchart_df, 2, max), apply(radarchart_df, 2, min), radarchart_df) #have to create a data.frame where first row is max, second row is min, and then followed by the data for radarchart
-  tiff(file = file.path(FiguresDir, 'v2', 'pc analysis', paste0('valley_', cluster_no, '_classes_spider.tif')), family = 'Times New Roman', width = 6.5, height = 6.5, pointsize = 11, units = 'in', res=800, compression = 'lzw')
+  tiff(file = file.path(FiguresDir, 'FINAL', 'pc analysis', paste0('valley_', cluster_no, '_classes_spider.tif')), family = 'Times New Roman', width = 6.5, height = 6.5, pointsize = 11, units = 'in', res=800, compression = 'lzw')
   par(mar=rep(0.1, 4))
   radarchart(radarchart_df[,1:10], vlabels=1:10, maxmin = TRUE, plwd = 3)
   legend(x = -1.25, y = -0.25, legend = 1:cluster_no, col=1:cluster_no, lty=1:cluster_no, lwd = 3)
@@ -177,6 +179,69 @@ cluster_radar_plot(9) #color starts to repeat
 cluster_radar_plot(10)
 cluster_radar_plot(11)
 cluster_radar_plot(12)
+
+#add silhouette distances
+lapply(valley30cm_by_mukey_PC[,c(56:62, 65:66, 71, 73)], function(x) tapply(x, valley30cm_by_mukey_PC$cluster_2pc, mean))
+lapply(valley30cm_by_mukey_PC[,c(56:62, 65:66, 71, 73)], function(x) tapply(x, valley30cm_by_mukey_PC$cluster_3pc, mean))
+lapply(valley30cm_by_mukey_PC[,c(56:62, 65:66, 71, 73)], function(x) tapply(x, valley30cm_by_mukey_PC$cluster_4pc, mean))
+lapply(valley30cm_by_mukey_PC[,c(56:62, 65:66, 71, 73)], function(x) tapply(x, valley30cm_by_mukey_PC$cluster_5pc, mean))
+lapply(valley30cm_by_mukey_PC[,c(56:62, 65:66, 71, 73)], function(x) tapply(x, valley30cm_by_mukey_PC$cluster_6pc, mean))
+lapply(valley30cm_by_mukey_PC[,c(56:62, 65:66, 71, 73)], function(x) tapply(x, valley30cm_by_mukey_PC$cluster_7pc, mean))
+#name order corrected 9/17/20
+# clus_9_names <- c('4. Coarse w/pans', '5. Loamy w/pans', '3. Loamy w/no restrictions', '1. Very coarse w/no restrictions',  '7. Coarse saline-sodic', '2. Coarse w/no restrictions', '8. Fine saline-sodic', '6. Loamy w/pans (high OM)', '9. Fine shrink-swell') #order corrected 4/7/20
+# clus_8_names <- c('6. Coarse saline-sodic', '7. Fine saline-sodic', '5. Loamy w/pans', '2. Coarse w/no restrictions', '8. Fine shrink-swell', '4. Coarse w/pans', '3. Loamy w/no restrictions', '1. Very coarse w/no restrictions') #order corrected 4/7/20
+clus_7_names <- c('6. Fine salt-affected', '3. Low OM & restrictive horizons', '4. High OM & restrictive horizons', '1. Coarse & no restrictions', '2. Loamy & no restrictions', '7. Shrink-swell', '5. Coarse-loamy salt-affected')
+clus_6_names <- c('4. High OM w/restrictive horizons', '1. Coarse w/no restrictions', '2. Loamy w/no restrictions', '6. Shrink-swell', '3. Low OM w/restrictive horizons', '5. Salt-affected') 
+clus_5_names <- c('4. Salt affected', '5. Fine shrink-swell', '1. Coarse w/no restrictions', '2. Loamy w/no restrictions', '3. Soils w/restrictive horizons')
+clus_4_names <- c( '4. Shrink-swell', '3. Salt-affected', '2. Loamy', '1. Coarse')
+clus_3_names <- c('1. Loamy', '2. Coarse', '3. Shrink-swell')
+clus_2_names <- c('1. Coarse', '2. Fine')
+valley30cm_by_mukey_silhouette <- valley30cm_by_mukey_PC
+add_silhouette_data <- function(clus_df, clus_no, clus_names) {
+  result <- silhouette(clus_df$cluster, dist(princomp_results$scores[,col_index]))
+  valley30cm_by_mukey_silhouette[[paste0('clus', clus_no, '_sil_width')]] <- result[,3]
+  valley30cm_by_mukey_silhouette[[paste0('clus', clus_no, '_names')]] <- clus_names[valley30cm_by_mukey_silhouette[[paste0('cluster_', clus_no, 'pc')]]]
+  valley30cm_by_mukey_silhouette
+}
+valley30cm_by_mukey_silhouette <- add_silhouette_data(cluster_2_pc, '2', clus_2_names)
+valley30cm_by_mukey_silhouette <- add_silhouette_data(cluster_3_pc, '3', clus_3_names)
+valley30cm_by_mukey_silhouette <- add_silhouette_data(cluster_4_pc, '4', clus_4_names)
+valley30cm_by_mukey_silhouette <- add_silhouette_data(cluster_5_pc, '5', clus_5_names)
+valley30cm_by_mukey_silhouette <- add_silhouette_data(cluster_6_pc, '6', clus_6_names)
+valley30cm_by_mukey_silhouette <- add_silhouette_data(cluster_7_pc, '7', clus_7_names)
+# valley30cm_by_mukey_silhouette <- add_silhouette_data(cluster_8_pc, '8', clus_8_names)
+# valley30cm_by_mukey_silhouette <- add_silhouette_data(cluster_9_pc, '9', clus_9_names)
+clus7_silhouette <- silhouette(cluster_7$cluster, dist(df_for_clustering_scaled))
+summary_sil7 <- summary(clus7_silhouette)
+mean(summary_sil7$clus.avg.widths)
+mean(clus7_silhouette[,3])
+median(clus7_silhouette[,3])
+plot(clus7_silhouette)
+
+lapply(valley30cm_by_mukey_silhouette[,c(37, 56:62, 65:66, 70:71, 73, 85)], function(x) tapply(x, valley30cm_by_mukey_silhouette$clus2_names, mean))
+lapply(valley30cm_by_mukey_silhouette[,c(37, 56:62, 65:66, 70:71, 73, 87)], function(x) tapply(x, valley30cm_by_mukey_silhouette$clus3_names, mean))
+lapply(valley30cm_by_mukey_silhouette[,c(37, 56:62, 65:66, 70:71, 73, 89)], function(x) tapply(x, valley30cm_by_mukey_silhouette$clus4_names, mean))
+lapply(valley30cm_by_mukey_silhouette[,c(37, 56:62, 65:66, 70:71, 73, 91)], function(x) tapply(x, valley30cm_by_mukey_silhouette$clus5_names, mean))
+lapply(valley30cm_by_mukey_silhouette[,c(37, 56:62, 65:66, 70:71, 73, 93)], function(x) tapply(x, valley30cm_by_mukey_silhouette$clus6_names, mean))
+lapply(valley30cm_by_mukey_silhouette[,c(37, 56:62, 65:66, 70:71, 73, 95)], function(x) tapply(x, valley30cm_by_mukey_silhouette$clus7_names, mean))
+# lapply(valley30cm_by_mukey_silhouette[,c(37, 56:62, 65:66, 70:71, 73, 95)], function(x) tapply(x, valley30cm_by_mukey_silhouette$clus8_names, mean))
+# lapply(valley30cm_by_mukey_silhouette[,c(37, 56:62, 65:66, 70:71, 73, 97)], function(x) tapply(x, valley30cm_by_mukey_silhouette$clus9_names, mean))
+lapply(valley30cm_by_mukey_silhouette[,seq(85,99,2)], function(x) mean(x))
+lapply(valley30cm_by_mukey_silhouette[,seq(85,99,2)], function(x) mean(x[valley30cm_by_mukey_silhouette$clus7_names!='4. High OM & restrictive horizons']))
+lapply(valley30cm_by_mukey_silhouette[,seq(85,99,2)], function(x) mean(x[valley30cm_by_mukey_silhouette$clus7_names!='6. Loamy w/pans (high OM) ']))
+
+#gap stat
+gap_stats <- clusGap(princomp_results$scores[,col_index], FUN = kmeans, nstart = 50, K.max = 20, B = 100, iter.max = 200)
+
+fviz_gap_stat(gap_stats, maxSE = list('firstSEmax', SE.factor=1))
+fviz_gap_stat(gap_stats, maxSE = list('firstSEmax', SE.factor=3))
+fviz_gap_stat(gap_stats, maxSE = list('Tibs2001SEmax'))
+
+#test NbClust function
+library(NbClust)
+NbClust_result_euc <- NbClust(data=princomp_results$scores[,col_index], distance = 'euclidean', min.nc=2, max.nc = 20, method= 'kmeans', index = 'all')
+write.csv(NbClust_result_euc$All.index, file.path(dataDir, 'FINAL results', 'pc analysis', 'NbClust_cluster_metrics.csv'), row.names = TRUE)
+write.csv(NbClust_result_euc$Best.nc, file.path(dataDir, 'FINAL results', 'pc analysis', 'NbClust_optimal_cluster_no.csv'), row.names = TRUE)
 
 #y nada cambia
 best_cluster <- kmeansruns(data = princomp_results$scores, krange = 1:12, criterion = 'asw', iter.max = 200, runs = 100, nstart=50)
