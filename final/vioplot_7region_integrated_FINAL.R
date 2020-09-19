@@ -35,7 +35,8 @@ dom_order_by_mukey <- read.csv(file.path(dataDir, 'FINAL results', "soil survey 
 valley30cm_by_mukey$dom_order <- dom_order_by_mukey$dom_order[match(valley30cm_by_mukey$mukey, dom_order_by_mukey$mukey)]
 
 #updated 4/7/20 b/c of set.seed issue
-clus_7_colors <- c('deepskyblue', 'gold', 'firebrick3', 'lightgoldenrod', 'tan4', 'violetred', 'lightblue1')
+# clus_7_colors <- c('deepskyblue', 'gold', 'firebrick3', 'lightgoldenrod', 'tan4', 'violetred', 'lightblue1')
+clus_7_colors <- c('deepskyblue', 'olivedrab3', 'firebrick3', 'lightgoldenrod', 'tan4', 'violetred', 'lightblue1') #olivedrab3
 order_lgnd_7 <- c(4,5,2,3,7,1,6)
 
 kssl_ssurgo_extract <- read.csv(file.path(ksslDir, 'kssl_pts_ssurgo_30cm_extract_FINAL.csv'), stringsAsFactors = FALSE)
@@ -68,7 +69,7 @@ vioplot(valley30cm_by_mukey$clay_30cm[valley30cm_by_mukey$cluster_7==1], cex = 1
 
 vioplot_mod_clus7_validation <- function(df, varname, ylim_vioplot, plot_order, area_fact, labnames, ylab, fname, mar, kssl_df, kssl_varname, cdfa_pts, cdfa_varname, legend_plot, legendloc, legend_cex, sig_labels, fig_label, legend_text, fig_height) {
   plot_order2 <- (1:7)[plot_order]
-  tiff(file = file.path(FiguresDir, 'FINAL', 'validation plots', 'v2', fname), family = 'Times New Roman', width = 3.25, height = fig_height, pointsize = 12, units = 'in', res=800, compression='lzw')
+  tiff(file = file.path(FiguresDir, 'FINAL', 'validation plots', 'revised colors', fname), family = 'Times New Roman', width = 3.25, height = fig_height, pointsize = 12, units = 'in', res=800, compression='lzw')
   par(mar=mar)
   vioplot(rep(df[[varname]][df$cluster_7==plot_order2[1]], times=round(df$area_ac[df$cluster_7==plot_order2[1]]/area_fact, 0)), rep(df[[varname]][df$cluster_7==plot_order2[2]], times=round(df$area_ac[df$cluster_7==plot_order2[2]]/area_fact, 0)), rep(df[[varname]][df$cluster_7==plot_order2[3]], times=round(df$area_ac[df$cluster_7==plot_order2[3]]/area_fact, 0)), rep(df[[varname]][df$cluster_7==plot_order2[4]], times=round(df$area_ac[df$cluster_7==plot_order2[4]]/area_fact, 0)), rep(df[[varname]][df$cluster_7==plot_order2[5]], times=round(df$area_ac[df$cluster_7==plot_order2[5]]/area_fact, 0)), rep(df[[varname]][df$cluster_7==plot_order2[6]], times=round(df$area_ac[df$cluster_7==plot_order2[6]]/area_fact, 0)), rep(df[[varname]][df$cluster_7==plot_order2[7]], times=round(df$area_ac[df$cluster_7==plot_order2[7]]/area_fact, 0)), col=clus_7_colors[plot_order], wex=1.2, cex=0.8, rectCol = 'gray', ylim = ylim_vioplot, ylab = NULL)
   mtext('Soil health region', side = 1, line = 2)
@@ -90,7 +91,7 @@ vioplot_mod_clus7_validation <- function(df, varname, ylim_vioplot, plot_order, 
 }
 # vioplot_mod_clus7_validation(valley30cm_by_mukey, 'clay_30cm', ylim_vioplot = c(-2.5,80), plot_order = order_lgnd_7, area_fact = 10, ylab='Clay (%)', fname='class7_clay_vioplots_validation.tif', mar=c(3, 3, 1, 1), kssl_df = kssl_points_30cm, cdfa_pts=kerri_points_30cm, legend_plot=TRUE, legendloc='topleft', legend_cex = 0.5, legend_text='' kssl_varname = 'clay_30cm', cdfa_varname = 'clay_30cm', sig_labels = c('A', 'B', 'A', 'AB', 'A', 'C', 'D'), fig_label = 'a')
 
-vioplot_mod_clus7_validation(valley30cm_by_mukey, 'pH_30cm', ylim_vioplot = c(4.9,10.1), plot_order = order_lgnd_7, area_fact = 10, ylab=expression('Soil pH'[H2O]), fname='class7_pH_vioplots_validation.tif', mar=c(0.02, 3.25, 0.25, 0.25), kssl_df = kssl_points_30cm, cdfa_pts=kerri_points_30cm, legend_plot=FALSE, legendloc='topleft', legend_cex = 0.5, kssl_varname = "pH_H2O_30cm", cdfa_varname = 'pH_H2O_30cm', sig_labels = c('CD', 'BC', 'A', 'AB', 'E', 'E', 'D'), fig_label = 'd', fig_height = 2.75)
+vioplot_mod_clus7_validation(valley30cm_by_mukey, 'pH_30cm', ylim_vioplot = c(4.9,10.1), plot_order = order_lgnd_7, area_fact = 10, ylab=expression('Soil pH'[H2O]), fname='class7_pH_vioplots_validation_v3.tif', mar=c(0.02, 3.25, 0.25, 0.25), kssl_df = kssl_points_30cm, cdfa_pts=kerri_points_30cm, legend_plot=FALSE, legendloc='topleft', legend_cex = 0.5, kssl_varname = "pH_H2O_30cm", cdfa_varname = 'pH_H2O_30cm', sig_labels = c('CD', 'BC', 'A', 'AB', 'E', 'E', 'D'), fig_label = 'd', fig_height = 2.75)
 
 vioplot_mod_clus7_validation(valley30cm_by_mukey, 'om_30cm', ylim_vioplot = c(-0.2,12), plot_order = order_lgnd_7, area_fact = 10, ylab='Organic matter (%)', fname='class7_om_vioplots_validation.tif', mar=c(0.02, 3.25, 0.25, 0.25), kssl_df = kssl_points_30cm, cdfa_pts=kerri_points_30cm, legend_plot=FALSE, legendloc='topleft', legend_cex = 0.9 , kssl_varname = "om_30cm", cdfa_varname = 'totC_30cm', sig_labels = c('A', 'C', 'A', 'C', 'A', 'AB', 'BC'), fig_label = 'b', fig_height = 2.75)
 
@@ -101,7 +102,7 @@ vioplot_mod_clus7_validation(valley30cm_by_mukey, 'om_30cm', ylim_vioplot = c(-0
 #KSSL only validation for 7-region model
 vioplot_mod_clus7_KSSL_validation <- function(df, varname, ylim_vioplot, plot_order, area_fact, labnames, ylab, fname, mar, kssl_df, kssl_varname, legend_plot, legendloc, legend_cex, sig_labels, fig_label, legend_text, fig_height) {
   plot_order2 <- (1:7)[plot_order]
-  tiff(file = file.path(FiguresDir, 'FINAL', 'validation plots', 'v2', fname), family = 'Times New Roman', width = 3.25, height = fig_height, pointsize = 12, units = 'in', res=800, compression='lzw')
+  tiff(file = file.path(FiguresDir, 'FINAL', 'validation plots', 'revised colors', fname), family = 'Times New Roman', width = 3.25, height = fig_height, pointsize = 12, units = 'in', res=800, compression='lzw')
   par(mar=mar)
   vioplot(rep(df[[varname]][df$cluster_7==plot_order2[1]], times=round(df$area_ac[df$cluster_7==plot_order2[1]]/area_fact, 0)), rep(df[[varname]][df$cluster_7==plot_order2[2]], times=round(df$area_ac[df$cluster_7==plot_order2[2]]/area_fact, 0)), rep(df[[varname]][df$cluster_7==plot_order2[3]], times=round(df$area_ac[df$cluster_7==plot_order2[3]]/area_fact, 0)), rep(df[[varname]][df$cluster_7==plot_order2[4]], times=round(df$area_ac[df$cluster_7==plot_order2[4]]/area_fact, 0)), rep(df[[varname]][df$cluster_7==plot_order2[5]], times=round(df$area_ac[df$cluster_7==plot_order2[5]]/area_fact, 0)), rep(df[[varname]][df$cluster_7==plot_order2[6]], times=round(df$area_ac[df$cluster_7==plot_order2[6]]/area_fact, 0)), rep(df[[varname]][df$cluster_7==plot_order2[7]], times=round(df$area_ac[df$cluster_7==plot_order2[7]]/area_fact, 0)), col=clus_7_colors[plot_order], wex=1.2, cex=0.8, rectCol = 'gray', ylim = ylim_vioplot, ylab = NULL)
   mtext('Soil health region', side = 1, line = 2)
@@ -131,13 +132,13 @@ vioplot_mod_clus7_KSSL_validation(valley30cm_by_mukey, 'lep_30cm', ylim_vioplot 
 #no validation data plots
 vioplot_mod_clus7 <- function(df, varname, ylim_vioplot, plot_order, area_fact, labnames, ylab, fname, mar, fig_label, fig_height) {
   plot_order2 <- (1:7)[plot_order]
-  tiff(file = file.path(FiguresDir, 'FINAL', 'validation plots', 'v2', fname), family = 'Times New Roman', width = 3.25, height = fig_height, pointsize = 12, units = 'in', res=800, compression='lzw')
+  tiff(file = file.path(FiguresDir, 'FINAL', 'validation plots', 'revised colors', fname), family = 'Times New Roman', width = 3.25, height = fig_height, pointsize = 12, units = 'in', res=800, compression='lzw')
   par(mar=mar)
   vioplot(rep(df[[varname]][df$cluster_7==plot_order2[1]], times=round(df$area_ac[df$cluster_7==plot_order2[1]]/area_fact, 0)), rep(df[[varname]][df$cluster_7==plot_order2[2]], times=round(df$area_ac[df$cluster_7==plot_order2[2]]/area_fact, 0)), rep(df[[varname]][df$cluster_7==plot_order2[3]], times=round(df$area_ac[df$cluster_7==plot_order2[3]]/area_fact, 0)), rep(df[[varname]][df$cluster_7==plot_order2[4]], times=round(df$area_ac[df$cluster_7==plot_order2[4]]/area_fact, 0)), rep(df[[varname]][df$cluster_7==plot_order2[5]], times=round(df$area_ac[df$cluster_7==plot_order2[5]]/area_fact, 0)), rep(df[[varname]][df$cluster_7==plot_order2[6]], times=round(df$area_ac[df$cluster_7==plot_order2[6]]/area_fact, 0)), rep(df[[varname]][df$cluster_7==plot_order2[7]], times=round(df$area_ac[df$cluster_7==plot_order2[7]]/area_fact, 0)), col=clus_7_colors[plot_order], wex=1.2, cex=0.8,  rectCol = 'gray', ylim = ylim_vioplot, ylab = NULL)
   mtext('Soil health region', side = 1, line = 2)
   mtext(ylab, side=2, line=2)
-  #legend('topright', fig_label, bty='n', inset=0.005)
-  text(x=7.5, y=180, labels=fig_label)
+  legend('topright', fig_label, bty='n', inset=0.005)
+  # text(x=7.5, y=180, labels=fig_label)
   dev.off()
 }
 df2 <- valley30cm_by_mukey[!is.na(valley30cm_by_mukey$storiemn),]
@@ -164,7 +165,7 @@ vioplot_mod_clus7(valley30cm_by_mukey, 'storiemn', ylim_vioplot = c(0,100), plot
 
 #make a violin plot by soil order
 #order: 
-color_by_soil_order <- c('lightgoldenrod', 'tan4', 'gold', 'firebrick3', 'lightblue1', 'deepskyblue', 'violetred')
+color_by_soil_order <- c('lightgoldenrod', 'tan4', 'olivedrab3', 'firebrick3', 'lightblue1', 'deepskyblue', 'violetred')
 col2rgb(color_by_soil_order)
 soil_order_logic <- c('Entisols', 'Mollisols', 'Alfisols', 'Ultisols', 'Inceptisols', 'Aridisols', 'Vertisols') #left out Andisols
 cbind(color_by_soil_order, soil_order_logic, t(col2rgb(color_by_soil_order)))
@@ -180,7 +181,7 @@ table(kerri_points_30cm$dom_order)
 tapply(kerri_points_30cm$totC_30cm, kerri_points_30cm$dom_order, mean, na.rm=TRUE)[c(2,4,1,5,3,NA,6)] #c('Entisols', 'Mollisols', 'Alfisols', 'Ultisols', 'Inceptisols', 'Aridisols', 'Vertisols')
 
 vioplot_mod_SoilOrder_validation <- function(df, varname, ylim_vioplot, area_fact, labnames, ylab, fname, mar, plot_order_kssl, plot_order_cdfa, kssl_df, kssl_varname, cdfa_pts, cdfa_varname, sig_labels, legend_plot, legendloc, legend_cex, fig_label, plot_CDFA=TRUE, fig_height) {
-  tiff(file = file.path(FiguresDir, 'FINAL', 'soil orders', 'v2', fname), family = 'Times New Roman', width = 3.25, height = fig_height, pointsize = 12, units = 'in', res=800, compression='lzw')
+  tiff(file = file.path(FiguresDir, 'FINAL', 'soil orders', 'revised colors', fname), family = 'Times New Roman', width = 3.25, height = fig_height, pointsize = 12, units = 'in', res=800, compression='lzw')
   par(mar=mar)
   vioplot(rep(df[[varname]][which(df$dom_order=='Entisols')], times=round(df$area_ac[which(df$dom_order=='Entisols')]/area_fact, 0)), rep(df[[varname]][which(df$dom_order=='Mollisols')], times=round(df$area_ac[which(df$dom_order=='Mollisols')]/area_fact, 0)), rep(df[[varname]][which(df$dom_order=='Alfisols')], times=round(df$area_ac[which(df$dom_order=='Alfisols')]/area_fact, 0)), rep(df[[varname]][which(df$dom_order=='Ultisols')], times=round(df$area_ac[which(df$dom_order=='Ultisols')]/area_fact, 0)), rep(df[[varname]][which(df$dom_order=='Inceptisols')], times=round(df$area_ac[which(df$dom_order=='Inceptisols')]/area_fact, 0)), rep(df[[varname]][which(df$dom_order=='Aridisols')], times=round(df$area_ac[which(df$dom_order=='Aridisols')]/area_fact, 0)), rep(df[[varname]][which(df$dom_order=='Vertisols')], times=round(df$area_ac[which(df$dom_order=='Vertisols')]/area_fact, 0)), col = color_by_soil_order, wex=1.2, cex=0.8, rectCol = 'gray', ylim = ylim_vioplot, ylab = NULL) #, rep(df[[varname]][which(df$dom_order=='Andisols')], times=round(df$area_ac[which(df$dom_order=='Andisols')]/area_fact, 0))
   mtext('Soil orders (USDA-NRCS soil taxonomy)', side = 1, line = 2, at = 3.5)
@@ -228,13 +229,13 @@ table(kerri_points_30cm$dom_order[!is.na(kerri_points_30cm$pH_H2O_30cm)])
 #c('Entisols', 'Mollisols', 'Alfisols', 'Ultisols', 'Inceptisols', 'Aridisols', 'Vertisols')
 
 vioplot_mod_SoilOrder_SSURGO <- function(df, varname, ylim_vioplot, area_fact, labnames, ylab, fname, mar, fig_label, fig_height) {
-  tiff(file = file.path(FiguresDir, 'FINAL', 'soil orders', 'v2', fname), family = 'Times New Roman', width = 3.25, height = fig_height, pointsize = 12, units = 'in', res=800, compression='lzw')
+  tiff(file = file.path(FiguresDir, 'FINAL', 'soil orders', 'revised colors', fname), family = 'Times New Roman', width = 3.25, height = fig_height, pointsize = 12, units = 'in', res=800, compression='lzw')
   par(mar=mar)
   vioplot(rep(df[[varname]][which(df$dom_order=='Entisols')], times=round(df$area_ac[which(df$dom_order=='Entisols')]/area_fact, 0)), rep(df[[varname]][which(df$dom_order=='Mollisols')], times=round(df$area_ac[which(df$dom_order=='Mollisols')]/area_fact, 0)), rep(df[[varname]][which(df$dom_order=='Alfisols')], times=round(df$area_ac[which(df$dom_order=='Alfisols')]/area_fact, 0)), rep(df[[varname]][which(df$dom_order=='Ultisols')], times=round(df$area_ac[which(df$dom_order=='Ultisols')]/area_fact, 0)), rep(df[[varname]][which(df$dom_order=='Inceptisols')], times=round(df$area_ac[which(df$dom_order=='Inceptisols')]/area_fact, 0)), rep(df[[varname]][which(df$dom_order=='Aridisols')], times=round(df$area_ac[which(df$dom_order=='Aridisols')]/area_fact, 0)), rep(df[[varname]][which(df$dom_order=='Vertisols')], times=round(df$area_ac[which(df$dom_order=='Vertisols')]/area_fact, 0)), col = color_by_soil_order, wex=1.2, cex=0.8, rectCol = 'gray', ylim = ylim_vioplot, ylab = NULL) #, rep(df[[varname]][which(df$dom_order=='Andisols')], times=round(df$area_ac[which(df$dom_order=='Andisols')]/area_fact, 0))
   mtext('Soil orders (USDA-NRCS soil taxonomy)', side = 1, line = 2, at=3.5)
   mtext(ylab, side = 2, line = 2)
-  #legend('topright', fig_label, bty='n', inset=0.005)
-  text(x=7.5, y=180, labels=fig_label)
+  legend('topright', fig_label, bty='n', inset=0.005)
+  # text(x=7.5, y=180, labels=fig_label)
   dev.off()
 }
 
