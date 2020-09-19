@@ -4,7 +4,7 @@
 #(2) summarize classes for 4 and 5 
 #(3) log transform om and ksat [DONE]
 #(4) identify outliers
-laptop <- FALSE
+laptop <- TRUE
 library(vioplot)
 library(raster)
 library(corrplot)
@@ -111,6 +111,7 @@ results_tot.withinss <- replicate(100, kmeans_test_tot.withinss(20, df_for_clust
 # dim(results)
 # rowMeans(results)
 # apply(results, 1, sd)
+# revised version of this figure in Fig1a_FINAL.R script
 tiff(file = file.path(FiguresDir, 'v2', 'validation plots', 'kmeans_comparison_3.31.20.tif'), family = 'Times New Roman', width = 6.5, height = 3.5, pointsize = 11, units = 'in', res=800, compression='lzw')
 par(mar=c(2, 4, 0.5, 0.5))
 plot(1:20, rowMeans(results), type='b', xlab='', ylab='', cex=0.8, cex.axis=1, cex.lab=1, ylim=c(0,82), xaxt='n')
@@ -210,7 +211,7 @@ valley30cm_by_mukey$cluster_9 <- cluster_9$cluster[match(valley30cm_by_mukey$muk
 valley30cm_by_mukey$cluster_10 <- cluster_10$cluster[match(valley30cm_by_mukey$mukey, names(cluster_10$cluster))]
 valley30cm_by_mukey$cluster_11 <- cluster_11$cluster[match(valley30cm_by_mukey$mukey, names(cluster_11$cluster))]
 valley30cm_by_mukey$cluster_12 <- cluster_12$cluster[match(valley30cm_by_mukey$mukey, names(cluster_12$cluster))]
-write.csv(valley30cm_by_mukey, file.path(dataDir, 'FINAL results', 'valley30cm_by_mukey_cluster_FINAL.csv'), row.names = FALSE) #this produced a different order of cluster labels even with setting seed--perhaps because R version has changed since last run?
+# write.csv(valley30cm_by_mukey, file.path(dataDir, 'FINAL results', 'valley30cm_by_mukey_cluster_FINAL.csv'), row.names = FALSE) #this produced a different order of cluster labels even with setting seed--perhaps because R version has changed since last run?
 
 #read in cluster valley file by mukey with cluster info
 valley30cm_by_mukey_orig <- read.csv(file.path(dataDir, 'v2 results', 'valley30cm_by_mukey_cluster.csv'), stringsAsFactors = FALSE)
@@ -476,14 +477,76 @@ km.boot_4
 #
 nbclust_wss <- fviz_nbclust(df_for_clustering_scaled, FUNcluster = kmeans, k.max = 20, method='wss', print.summary = TRUE, iter.max = 200, nstart=50)
 
-nbclust_sil <- fviz_nbclust(df_for_clustering_scaled, FUNcluster = kmeans, k.max = 20, method='silhouette', iter.max = 200, nstart=50)
-nbclust_sil
+nbclust_sil <- fviz_nbclust(df_for_clustering_scaled, FUNcluster = kmeans, k.max = 12, method='silhouette', iter.max = 200, nstart=50)
+nbclust_sil$data
+
+#add silhouette distances
+clus_9_names <- c('4. Coarse w/pans', '5. Loamy w/pans', '3. Loamy w/no restrictions', '1. Very coarse w/no restrictions',  '7. Coarse saline-sodic', '2. Coarse w/no restrictions', '8. Fine saline-sodic', '6. Loamy w/pans (high OM)', '9. Fine shrink-swell') #order corrected 4/7/20
+clus_8_names <- c('6. Coarse saline-sodic', '7. Fine saline-sodic', '5. Loamy w/pans', '2. Coarse w/no restrictions', '8. Fine shrink-swell', '4. Coarse w/pans', '3. Loamy w/no restrictions', '1. Very coarse w/no restrictions') #order corrected 4/7/20
+clus_7_names <- c('6. Fine salt-affected', '3. Low OM & restrictive horizons', '4. High OM & restrictive horizons', '1. Coarse & no restrictions', '2. Loamy & no restrictions', '7. Shrink-swell', '5. Coarse-loamy salt-affected')
+clus_6_names <- c('3. Low OM w/restrictive horizons', '4. High OM w/restrictive horizons', '5. Salt-affected', '1. Coarse w/no restrictions', '6. Shrink-swell', '2. Loamy w/no restrictions') #order corrected 4/7/20
+clus_5_names <- c('3. Soils w/restrictive horizons', '4. Salt affected', '2. Loamy w/no restrictions', '5. Fine shrink-swell', '1. Coarse w/no restrictions')
+clus_4_names <- c('1. Coarse', '2. Loamy', '3. Salt-affected', '4. Shrink-swell')
+clus_3_names <- c('1. Loamy', '3. Shrink-swell', '2. Coarse')
+clus_2_names <- c('1. Coarse', '2. Fine')
+valley30cm_by_mukey_silhouette <- valley30cm_by_mukey
+add_silhouette_data <- function(clus_df, clus_no, clus_names) {
+  result <- silhouette(clus_df$cluster, dist(df_for_clustering_scaled))
+  valley30cm_by_mukey_silhouette[[paste0('clus', clus_no, '_sil_width')]] <- result[,3]
+  valley30cm_by_mukey_silhouette[[paste0('clus', clus_no, '_names')]] <- clus_names[valley30cm_by_mukey_silhouette[[paste0('cluster_', clus_no)]]]
+  valley30cm_by_mukey_silhouette
+}
+valley30cm_by_mukey_silhouette <- add_silhouette_data(cluster_2, '2', clus_2_names)
+valley30cm_by_mukey_silhouette <- add_silhouette_data(cluster_3, '3', clus_3_names)
+valley30cm_by_mukey_silhouette <- add_silhouette_data(cluster_4, '4', clus_4_names)
+valley30cm_by_mukey_silhouette <- add_silhouette_data(cluster_5, '5', clus_5_names)
+valley30cm_by_mukey_silhouette <- add_silhouette_data(cluster_6, '6', clus_6_names)
+valley30cm_by_mukey_silhouette <- add_silhouette_data(cluster_7, '7', clus_7_names)
+valley30cm_by_mukey_silhouette <- add_silhouette_data(cluster_8, '8', clus_8_names)
+valley30cm_by_mukey_silhouette <- add_silhouette_data(cluster_9, '9', clus_9_names)
+clus7_silhouette <- silhouette(cluster_7$cluster, dist(df_for_clustering_scaled))
+summary_sil7 <- summary(clus7_silhouette)
+mean(summary_sil7$clus.avg.widths)
+mean(clus7_silhouette[,3])
+median(clus7_silhouette[,3])
+plot(clus7_silhouette)
+lapply(valley30cm_by_mukey[,c(56:62, 65:66, 71, 73)], function(x) tapply(x, valley30cm_by_mukey$cluster_2, mean))
+lapply(valley30cm_by_mukey_silhouette[,c(37, 56:62, 65:66, 70:71, 73, 99)], function(x) tapply(x, valley30cm_by_mukey_silhouette$clus2_names, mean))
+lapply(valley30cm_by_mukey_silhouette[,c(37, 56:62, 65:66, 70:71, 73, 85)], function(x) tapply(x, valley30cm_by_mukey_silhouette$clus3_names, mean))
+lapply(valley30cm_by_mukey_silhouette[,c(37, 56:62, 65:66, 70:71, 73, 87)], function(x) tapply(x, valley30cm_by_mukey_silhouette$clus4_names, mean))
+lapply(valley30cm_by_mukey_silhouette[,c(37, 56:62, 65:66, 70:71, 73, 89)], function(x) tapply(x, valley30cm_by_mukey_silhouette$clus5_names, mean))
+lapply(valley30cm_by_mukey_silhouette[,c(37, 56:62, 65:66, 70:71, 73, 91)], function(x) tapply(x, valley30cm_by_mukey_silhouette$clus6_names, mean))
+lapply(valley30cm_by_mukey_silhouette[,c(37, 56:62, 65:66, 70:71, 73, 93)], function(x) tapply(x, valley30cm_by_mukey_silhouette$clus7_names, mean))
+lapply(valley30cm_by_mukey_silhouette[,c(37, 56:62, 65:66, 70:71, 73, 95)], function(x) tapply(x, valley30cm_by_mukey_silhouette$clus8_names, mean))
+lapply(valley30cm_by_mukey_silhouette[,c(37, 56:62, 65:66, 70:71, 73, 97)], function(x) tapply(x, valley30cm_by_mukey_silhouette$clus9_names, mean))
+lapply(valley30cm_by_mukey_silhouette[,seq(85,99,2)], function(x) mean(x))
+lapply(valley30cm_by_mukey_silhouette[,seq(85,99,2)], function(x) mean(x[valley30cm_by_mukey_silhouette$clus7_names!='4. High OM & restrictive horizons']))
+lapply(valley30cm_by_mukey_silhouette[,seq(85,99,2)], function(x) mean(x[valley30cm_by_mukey_silhouette$clus7_names!='6. Loamy w/pans (high OM) ']))
+#use of silhouette function
+clus2_silhouette <- silhouette(pam(df_for_clustering_scaled, 2))
+summary(clus2_silhouette)
+plot(clus2_silhouette)
+
+
+clus5_silhouette <- silhouette(pam(df_for_clustering_scaled, 5))
+summary(clus5_silhouette)
+plot(clus5_silhouette)
+
+
+clus7_silhouette <- silhouette(pam(df_for_clustering_scaled, 7))
+summary(clus7_silhouette)
+plot(clus7_silhouette)
+
+
+valley30cm_by_mukey
 
 #test NbClust function
-NbClust_result <- NbClust(data=df_for_clustering_scaled, distance = 'euclidean', min.nc=2, max.nc = 20, method= 'kmeans', index = 'all')
+NbClust_result_euc <- NbClust(data=df_for_clustering_scaled, distance = 'euclidean', min.nc=2, max.nc = 12, method= 'kmeans', index = 'all')
+write.csv(NbClust_result_euc$All.index, file.path(dataDir, 'FINAL results', 'NbClust_cluster_metrics.csv'), row.names = TRUE)
+write.csv(NbClust_result_euc$Best.nc, file.path(dataDir, 'FINAL results', 'NbClust_optimal_cluster_no.csv'), row.names = TRUE)
 
 #find optimum number of clusters based on gap statistic
-gap_stats <- clusGap(df_for_clustering_scaled, FUN = kmeans, nstart = 50, K.max = 20, B = 500, iter.max = 200)
+gap_stats <- clusGap(df_for_clustering_scaled, FUN = kmeans, nstart = 50, K.max = 10, B = 500, iter.max = 200)
 fviz_gap_stat(gap_stats, maxSE = list('firstSEmax', SE.factor=1))
 fviz_gap_stat(gap_stats, maxSE = list('firstSEmax', SE.factor=3))
 
