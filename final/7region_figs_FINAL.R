@@ -30,10 +30,10 @@ if (laptop) {
 cluster_fk <- read.csv(file.path(dataDir, 'FINAL results', 'clusters2_to_12_df_for_radarchart.csv'), stringsAsFactors = FALSE)
 cluster_7_df <- cluster_fk[cluster_fk$clusters==7,1:10]
 radarchart_7 <- rbind(apply(cluster_7_df, 2, max), apply(cluster_7_df, 2, min), cluster_7_df)
-clus_7_colors <- c('deepskyblue', 'gold', 'firebrick3', 'lightgoldenrod', 'tan4', 'violetred', 'lightblue1')
+clus_7_colors <- c('deepskyblue', 'olivedrab3', 'firebrick3', 'lightgoldenrod', 'tan4', 'violetred', 'lightblue1')
 order_lgnd_7 <- c(4,5,2,3,7,1,6)
 clus_7_lines <- c(2,3,3,1,1,2,2)
-clus_7_names <- c('6. Fine salt-affected', '3. Coarse-loamy with restrictive horizons', '4. Loamy with restrictive horizons', '1. Coarse with no restrictions', '2. Loamy with no restrictions', '7. Shrink-swell', '5. Coarse-loamy salt-affected')
+clus_7_names <- c('6. Fine salt-affected', '3. Low OM with restrictive horizons', '4. High OM with restrictive horizons', '1. Coarse with no restrictions', '2. Loamy with no restrictions', '7. Shrink-swell', '5. Coarse-loamy salt-affected')
 #clus_7_names <- c('3. Very coarse w/pans', '6. Loamy saline-sodic', '5. Very coarse saline-sodic', '1. Very coarse w/no restrictions', '7. Loamy shrink-swell', '2. Coarse w/no resrictions', '4. Coarse w/pans') #this is v1
 clus_7_names[order_lgnd_7]
 fix_legend_columns <- function(x) {
@@ -41,9 +41,10 @@ fix_legend_columns <- function(x) {
 }
 fix_legend_columns(clus_7_names[order_lgnd_7])
 tiff(file = file.path(FiguresDir, 'FINAL', 'valley_7_classes_spider.tif'), family = 'Times New Roman', width = 9, height = 6, pointsize = 11, units = 'in', res=800, compression = 'lzw')
-par(xpd=TRUE, mar=c(2.5, 0.1, 0.1, 0.1))
+par(xpd=TRUE, mar=c(3, 0.1, 0.1, 0.1))
 radarchart(radarchart_7[,c('clay_30cm', 'om_30cm', 'lep_30cm', 'cec_30cm', 'ec_30cm', 'pH_30cm',  "MnRs_dep", 'ksat_30cm', 'awc_30cm')], plty = clus_7_lines, pcol = clus_7_colors, vlabels=c('Clay', 'Organic\nmatter', ' Shrink-\n  swell', 'CEC', 'Salinity', 'pH',  "Depth to\nRestriction", expression('K'['s']), 'Available water\n   capacity'), maxmin = TRUE, plwd = 3)
-legend(x=-2, y=-1.2, legend = fix_legend_columns(clus_7_names[order_lgnd_7]), col=fix_legend_columns(clus_7_colors[order_lgnd_7]), lty=fix_legend_columns(clus_7_lines[order_lgnd_7]), lwd = 3, ncol = 3, bty='n')
+text(x=0, y=-1.24, 'Soil health regions', cex=1.17)
+legend(x=-2, y=-1.25, legend = fix_legend_columns(clus_7_names[order_lgnd_7]), col=fix_legend_columns(clus_7_colors[order_lgnd_7]), lty=fix_legend_columns(clus_7_lines[order_lgnd_7]), lwd = 3, ncol = 3, bty='n')
 dev.off()
 
 #CDFA C validation for 7-region model
