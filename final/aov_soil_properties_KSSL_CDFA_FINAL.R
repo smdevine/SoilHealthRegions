@@ -29,7 +29,7 @@ if (laptop) {
 }
 om_to_oc <- 1.72
 crit_pH <- 7.8
-clus_7_names <- c('6. Fine saline-sodic', '3. Coarse-loamy & restrictive layers', '4. Loamy & restrictive layers', '1. Coarse & no restrictions', '2. Loamy & no restrictions', '7. Shrink-swell', '5. Coarse-loamy saline-sodic')
+clus_7_names <- c('6. Fine salt-affected', '3. Low OM with restrictive horizons', '4. High OM with restrictive horizons', '1. Coarse with no restrictions', '2. Loamy with no restrictions', '7. Shrink-swell', '5. Coarse-loamy salt-affected')
 valley30cm_by_mukey <- read.csv(file.path(dataDir, 'FINAL results', 'valley30cm_by_mukey_cluster_FINAL.csv'), stringsAsFactors = FALSE)
 dom_order_by_mukey <- read.csv(file.path(dataDir, 'FINAL results', "soil survey facts", 'dom_order_by_mukey.csv'), stringsAsFactors = FALSE)
 
@@ -70,7 +70,34 @@ valley30cm_by_mukey[valley30cm_by_mukey$mukey==460870,]
 dom_order_by_mukey[dom_order_by_mukey$mukey==460870,]
 sum(is.na(dom_order_by_mukey$dom_order)) #89
 lapply(kssl_points_30cm, function(x) sum(!is.na(x)))
+kssl_points_30cm$SHR7name <- clus_7_names[kssl_points_30cm$cluster_7]
+tapply(kssl_points_30cm$om_30cm, kssl_points_30cm$SHR7name, function(x) sum(is.na(x)))
+tapply(kssl_points_30cm$om_30cm, kssl_points_30cm$SHR7name, mean, na.rm=TRUE)
+tapply(kssl_points_30cm$om_30cm, kssl_points_30cm$SHR7name, median, na.rm=TRUE)
 
+textural.class.calc <- function(sand, silt, clay) {
+  ifelse(is.na(sand) | is.na(silt) | is.na(clay), NA,
+         ifelse(sand + silt + clay > 101 |
+                  sand + silt + clay < 99, 'proportions do not sum to 100+-1',
+                ifelse(silt + 1.5 * clay < 15, 'sand',
+                       ifelse(silt + 1.5 * clay >= 15 & silt + 2 * clay < 30, 'loamy sand',
+                              ifelse((clay >= 7 & clay < 20 & sand > 52 & silt + 2 * clay >= 30) | 
+                                       (clay < 7 & silt < 50 & silt + 2 * clay >= 30), 'sandy loam',
+                                     ifelse(clay >= 7 & clay < 27 & silt >=28 & silt < 50 & sand <= 52, 'loam',
+                                            ifelse((silt >= 50 & clay >= 12 & clay < 27) | 
+                                                     (silt >=50 & silt < 80 & clay < 12), 'silt loam',
+                                                   ifelse(silt >= 80 & clay < 12, 'silt',
+                                                          ifelse(clay >= 20 & clay < 35 & silt < 28 & sand > 45, 'sandy clay loam',
+                                                                 ifelse(clay >= 27 & clay < 40 & sand > 20 & sand <= 45, 'clay loam',
+                                                                        ifelse(clay >= 27 & clay < 40 & sand <= 20, 'silty clay loam',
+                                                                               ifelse(clay >= 35 & sand > 45, 'sandy clay',
+                                                                                      ifelse(clay >= 40 & silt >= 40, 'silty clay',
+                                                                                             ifelse(clay >= 40 & sand <= 45 & silt < 40, 'clay',
+                                                                                                    'undefined textural class'))))))))))))))
+}
+kssl_points_30cm$textural_class <- textural.class.calc(sand = kssl_points_30cm$sand_30cm, silt = kssl_points_30cm$silt_30cm, clay = kssl_points_30cm$clay_30cm)
+table(kssl_points_30cm$textural_class)
+sum(!is.na(kssl_points_30cm$textural_class)) #314
 # kssl_points_100cm <- read.csv(file.path(ksslDir, 'kssl_cluster_100cm_NArm.csv'), stringsAsFactors = FALSE)
 # colnames(kssl_points_100cm)
 # table(kssl_points_100cm$cluster_7[!is.na(kssl_points_100cm$kgOrg.m2_100cm)])
@@ -96,13 +123,22 @@ table(kerri_points_30cm$dom_order)
 kerri_metadata <- read.csv(file.path(kerriDir, 'CDFA Soil Survey All Data_copy.csv'), stringsAsFactors = FALSE)
 unique(kerri_metadata$Area)
 length(unique(kerri_metadata$Concatenate))#127 unique points, 102 in study area
+kerri_points_30cm$SHR7name <- clus_7_names[kerri_points_30cm$cluster_7]
+table(kerri_points_30cm$SHR7name)
+tapply(kerri_points_30cm$om_30cm, kerri_points_30cm$SHR7name, function(x) sum(is.na(x)))
+tapply(kerri_points_30cm$om_30cm, kerri_points_30cm$SHR7name, mean, na.rm=TRUE)
+tapply(kerri_points_30cm$om_30cm, kerri_points_30cm$SHR7name, median, na.rm=TRUE)
 
 kerri_points_30cm$vineyard_region <- kerri_metadata$Area[match(kerri_points_30cm$Concatenate, kerri_metadata$Concatenate)]
 kerri_points_30cm$vineyard_name <- kerri_metadata$Vineyard.Management[match(kerri_points_30cm$Concatenate, kerri_metadata$Concatenate)]
 table(kerri_points_30cm$vineyard_region) #30 in Lodi, 97 in Napa
 table(kerri_points_30cm$vineyard_region[!is.na(kerri_points_30cm$cluster_7)]) #27 in Lodi, 76 in Napa in area of interest
 unique(kerri_points_30cm$vineyard_name[kerri_points_30cm$vineyard_region=='Napa']) #16 vineyards in Napa (paper says ninteen)
+unique(kerri_points_30cm$vineyard_name[kerri_points_30cm$vineyard_region=='Napa' & !is.na(kerri_points_30cm$SHR7name)]) #12 vineyards
+kerri_points_30cm$Concatenate[kerri_points_30cm$vineyard_region=='Napa' & !is.na(kerri_points_30cm$SHR7name)][order(kerri_points_30cm$Concatenate[kerri_points_30cm$vineyard_region=='Napa' & !is.na(kerri_points_30cm$SHR7name)])] #25 blocks with 76 points
 unique(kerri_points_30cm$vineyard_name[kerri_points_30cm$vineyard_region=='Lodi']) #5 vineyards (paper says nine)
+unique(kerri_points_30cm$vineyard_name[kerri_points_30cm$vineyard_region=='Lodi' & !is.na(kerri_points_30cm$SHR7name)]) #4 vineyards
+kerri_points_30cm$Concatenate[kerri_points_30cm$vineyard_region=='Lodi' & !is.na(kerri_points_30cm$SHR7name)][order(kerri_points_30cm$Concatenate[kerri_points_30cm$vineyard_region=='Lodi' & !is.na(kerri_points_30cm$SHR7name)])] #9 vineyard blocks
 tapply(kerri_points_30cm$Concatenate[kerri_points_30cm$vineyard_region=='Napa'], kerri_points_30cm$vineyard_name[kerri_points_30cm$vineyard_region=='Napa'], function(x) length(x))
 tapply(kerri_points_30cm$Concatenate[kerri_points_30cm$vineyard_region=='Lodi'], kerri_points_30cm$vineyard_name[kerri_points_30cm$vineyard_region=='Lodi'], function(x) length(x))
 kerri_points_30cm[kerri_points_30cm$vineyard_name=='Big Ranch Vineyard',]
