@@ -2,6 +2,7 @@ library(extrafont)
 library(extrafontdb)
 #font_import() #only needs to be done one time after updating and re-installing R and moving and updating packages
 loadfonts(device = 'win')
+SOC_to_SOM <- 1.72
 FiguresDir <- 'C:/Users/smdevine/Desktop/post doc/soil health/Figures/valley_final/CalAg'
 dataDir <- 'C:/Users/smdevine/Desktop/post doc/soil health/publication/California Agriculture/long term studies'
 rm_missing_plots <- TRUE #plot 8-3 will be removed since missing from 8-3
@@ -104,8 +105,12 @@ soilC_1993$pctC_100_150 <- soilC_100_150_1993$soilC[match(soilC_1993$Plot, soilC
 lapply(soilC_1993[,3:7], summary)
 lapply(soilC_1993[,3:7], hist)
 lapply(soilC_1993[,3:7], function(x) tapply(x[!is.na(x)], soilC_1993$Treatment[!is.na(x)], mean))
-soilC_1993_means <- do.call(cbind, lapply(soilC_1993[,3:7], function(x) tapply(x[!is.na(x)], soilC_1993$Treatment[!is.na(x)], mean)))
-soilC_1993_sd <- do.call(cbind, lapply(soilC_1993[,3:7], function(x) tapply(x[!is.na(x)], soilC_1993$Treatment[!is.na(x)], sd)))
+#add 0-30 means
+soilC_1993$pctC_0_30 <- (soilC_1993$pctC_0_15 + soilC_1993$pctC_15_30) / 2
+soilC_1993$pctSOM_0_30 <- soilC_1993$pctC_0_30 * SOC_to_SOM
+soilC_1993_means <- do.call(cbind, lapply(soilC_1993[,3:9], function(x) tapply(x[!is.na(x)], soilC_1993$Treatment[!is.na(x)], mean)))
+soilC_1993_sd <- do.call(cbind, lapply(soilC_1993[,3:9], function(x) tapply(x[!is.na(x)], soilC_1993$Treatment[!is.na(x)], sd)))
+
 
 
 #consolidate 2012 data
@@ -116,15 +121,26 @@ soilC_2012$pctC_15_30 <- soilC_15_30_2012$soilC[match(soilC_2012$Plot, soilC_15_
 soilC_2012$pctC_30_60 <- soilC_30_60_2012$soilC[match(soilC_2012$Plot, soilC_30_60_2012$Plot)]
 soilC_2012$pctC_60_100 <- soilC_60_100_2012$soilC[match(soilC_2012$Plot, soilC_60_100_2012$Plot)]
 soilC_2012$pctC_100_150 <- soilC_100_150_2012$soilC[match(soilC_2012$Plot, soilC_100_150_2012$Plot)]
-lapply(soilC_2012[,3:7], summary)
-lapply(soilC_2012[,3:7], hist)
-lapply(soilC_2012[,3:7], function(x) tapply(x[!is.na(x)], soilC_2012$Treatment[!is.na(x)], mean))
-soilC_2012_means <- do.call(cbind, lapply(soilC_2012[,3:7], function(x) tapply(x[!is.na(x)], soilC_2012$Treatment[!is.na(x)], mean)))
-soilC_2012_sd <- do.call(cbind, lapply(soilC_2012[,3:7], function(x) tapply(x[!is.na(x)], soilC_2012$Treatment[!is.na(x)], sd)))
+soilC_2012$pctC_0_30 <- (soilC_2012$pctC_0_15 + soilC_2012$pctC_15_30) / 2
+soilC_2012$pctSOM_0_30 <- soilC_2012$pctC_0_30 * SOC_to_SOM
+lapply(soilC_2012[,3:9], summary)
+lapply(soilC_2012[,3:9], hist)
+lapply(soilC_2012[,3:9], function(x) tapply(x[!is.na(x)], soilC_2012$Treatment[!is.na(x)], mean))
+soilC_2012_means <- do.call(cbind, lapply(soilC_2012[,3:9], function(x) tapply(x[!is.na(x)], soilC_2012$Treatment[!is.na(x)], mean)))
+soilC_2012_sd <- do.call(cbind, lapply(soilC_2012[,3:9], function(x) tapply(x[!is.na(x)], soilC_2012$Treatment[!is.na(x)], sd)))
 soilC_2012_means
 soilC_2012_sd
 View(soilC_2012)
 depths <- c(7.5,22.5,45,80,125)
+
+#write summaries to file
+write.csv(soilC_1993, file.path(dataDir, 'CenturyResults', 'soilC_1993.csv'), row.names=FALSE)
+write.csv(soilC_2012, file.path(dataDir, 'CenturyResults', 'soilC_2012.csv'), row.names=FALSE)
+write.csv(soilC_1993_means, file.path(dataDir, 'CenturyResults', 'soilC_1993_means_by_trtmt.csv'), row.names=TRUE)
+write.csv(soilC_2012_means, file.path(dataDir, 'CenturyResults', 'soilC_2012_means_by_trtmt.csv'), row.names=TRUE)
+write.csv(soilC_1993_sd, file.path(dataDir, 'CenturyResults', 'soilC_1993_sd_by_trtmt.csv'), row.names=TRUE)
+write.csv(soilC_2012_sd, file.path(dataDir, 'CenturyResults', 'soilC_2012_sd_by_trtmt.csv'), row.names=TRUE)
+
 
 #maize vs. tomato comparisons
 cex.setting <- 0.6
