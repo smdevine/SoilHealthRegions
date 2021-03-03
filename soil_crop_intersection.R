@@ -93,9 +93,9 @@ write.csv(cropClass_by_cluster7, file.path(dataDir, 'FINAL results', 'crops', 'c
 #read in generalized data
 cropsClass_by_cluster7 <- read.csv(file.path(dataDir, 'crops', 'cropClass_by_cluster_7SHR.csv'), stringsAsFactors = FALSE)
 cropsClass_by_cluster7
-clus_7_colors <- c('deepskyblue', 'gold', 'firebrick3', 'lightgoldenrod', 'tan4', 'violetred', 'lightblue1')
+clus_7_colors <- c('deepskyblue', 'olivedrab3', 'firebrick3', 'lightgoldenrod', 'tan4', 'violetred', 'lightblue1')
 order_lgnd_7 <- c(4,5,2,3,7,1,6)
-clus_7_names <- c('6. Fine salt-affected', '3. Coarse-loamy with restrictive horizons', '4. Loamy with restrictive horizons', '1. Coarse with no restrictions', '2. Loamy with no restrictions', '7. Shrink-swell', '5. Coarse-loamy salt-affected')
+clus_7_names <- c('6. Fine salt-affected', '3. Low OM with restrictive horizons', '4. High OM with restrictive horizons', '1. Coarse with no restrictions', '2. Loamy with no restrictions', '7. Shrink-swell', '5. Coarse-loamy salt-affected')
 clus_7_names[order_lgnd_7]
 colnames(cropsClass_by_cluster7)[2:8] <- clus_7_names[order_lgnd_7]
 cropsClass_by_cluster7 <- cropsClass_by_cluster7[c(1:3,5:7),]
@@ -129,14 +129,16 @@ annual_maj_crops <- annual_maj_crops[order(annual_maj_crops$total_area, decreasi
 annual_maj_crop_percentage <- annual_maj_crops[,2:8] / annual_maj_crops$total_area
 row.names(annual_maj_crop_percentage) <- annual_maj_crops$Crop
 
-tiff(file = file.path(FiguresDir, 'CalAg', 'annual_crops_SHR7_rel_area.tif'), family = 'Times New Roman', width = 6.5, height = 4, pointsize = 12, units = 'in', res=800, compression='lzw')
+tiff(file = file.path(FiguresDir, 'CalAg', 'annual_crops_SHR7_rel_area_v2.tif'), family = 'Times New Roman', width = 6.5, height = 4, pointsize = 12, units = 'in', res=800, compression='lzw')
 par(mar=c(3, 4.5, 4.5, 0.5), xpd=TRUE)
 barplot(t(as.matrix(annual_maj_crop_percentage))*100, beside=TRUE, col=clus_7_colors[order_lgnd_7], legend.text=clus_7_names[order_lgnd_7], ylab='Relative soil health region area (%)', args.legend=list(x='top', cex=0.9, bty='n', ncol=2, inset=c(0,-0.35)), names.arg=c('Corn', 'Rice', 'Small fruits\nand vegetables', 'Tomatoes', 'Cotton', 'Wheat'), cex.names=0.9)
+text(47, 50, 'A')
 dev.off()
 
 tiff(file = file.path(FiguresDir, 'CalAg', 'perennial_crops_SHR7_rel_area.tif'), family = 'Times New Roman', width = 6.5, height = 4, pointsize = 12, units = 'in', res=800, compression='lzw')
 par(mar=c(3, 4.5, 4.5, 0.5), xpd=TRUE)
 barplot(t(as.matrix(perennial_maj_crop_percentage))*100, beside=TRUE, col=clus_7_colors[order_lgnd_7], legend.text=clus_7_names[order_lgnd_7], ylab='Relative soil health region area (%)', args.legend=list(x='top', cex=0.9, bty='n', ncol=2, inset=c(0,-0.35)), names.arg=c('Almonds', 'Grapes', 'Alfalfa', 'Walnuts', 'Pistachios', 'Citrus'), cex.names=0.9)
+text(47, 43, 'B')
 dev.off()
 row.names(perennial_maj_crop_percentage)
 
