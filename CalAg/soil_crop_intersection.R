@@ -18,10 +18,10 @@ if (laptop) {
 }
 if (laptop) {
   dataDir <- 'C:/Users/smdevine/Desktop/post doc/soil health/summaries/valley_final' #was valley_trial
-  FiguresDir <- 'C:/Users/smdevine/Desktop/post doc/soil health/Figures/valley_final' #was valley_trial
+  FiguresDir <- 'C:/Users/smdevine/Desktop/post doc/soil health/publication/California Agriculture/Figures' #was valley_final
 } else { #on UCD desktop
   dataDir <- 'C:/Users/smdevine/Desktop/PostDoc/soil health/summaries/valley_final' #was valley_trial
-  FiguresDir <- 'C:/Users/smdevine/Desktop/PostDoc/soil health/Figures/valley_final' #was valley_trial
+  FiguresDir <- 'C:/Users/smdevine/Desktop/PostDoc/soil health/Figures/' #was valley_final
   LandIQDir <- 'D:/Dissertation/Allowable_Depletion/LandIQ.crops'
 }
 list.files(file.path(dataDir, 'FINAL results', 'shapefiles with data'))
@@ -108,6 +108,8 @@ par(mar=c(3, 4.5, 4.5, 0.5), xpd=TRUE)
 barplot(t(as.matrix(cropPercentage_by_shr7))*100, beside=TRUE, col=clus_7_colors[order_lgnd_7], legend.text=clus_7_names[order_lgnd_7], ylab='Relative soil health region area (%)', args.legend=list(x='top', cex=0.9, bty='n', ncol=2, inset=c(0,-0.35)), names.arg=c('Alfalfa\nand pasture', 'Annual\nfield crops', 'Grapes', 'Managed\nwetland', 'Orchards', 'Small fruits\nand vegetables'), cex.names=0.9)
 dev.off()
 
+
+
 #read-in specific data
 list.files(file.path(dataDir, 'crops'))
 crops_by_cluster7 <- read.csv(file.path(dataDir, 'crops', 'crops_by_cluster_7SHR.csv'), stringsAsFactors = FALSE)
@@ -141,6 +143,20 @@ barplot(t(as.matrix(perennial_maj_crop_percentage))*100, beside=TRUE, col=clus_7
 text(47, 43, 'B')
 dev.off()
 row.names(perennial_maj_crop_percentage)
+
+#make Figure 5
+cairo_pdf(file = file.path(FiguresDir, 'PDF versions', 'Figure_5_FINAL.pdf'), pointsize = 12, family = 'Times New Roman', width = 6.5, height = 7.5)
+layout(matrix(c(1,2,3), ncol=1), heights = c(1,3.5,3.5))
+par(mar=c(1, 1, 1, 1))
+plot(NULL, xlim=c(0,1), ylim=c(0,1), ylab="", xlab="", frame.plot=FALSE, axes=FALSE)
+legend('left', legend=clus_7_names[order_lgnd_7], cex=1, pt.bg=clus_7_colors[order_lgnd_7], col='black', ncol = 3, pch=22, pt.cex=1.4, bty='n', inset = c(0.1,0))
+par(mar=c(3, 4.5, 1, 0.5), xpd=TRUE)
+barplot(t(as.matrix(annual_maj_crop_percentage))*100, beside=TRUE, col=clus_7_colors[order_lgnd_7], legend.text=NULL, ylab='Relative soil health region area (%)',  names.arg=c('Corn', 'Rice', 'Small fruits\nand vegetables', 'Tomatoes', 'Cotton', 'Wheat'), cex.names=0.9) #args.legend=list(x='top', cex=0.9, bty='n', ncol=2, inset=c(0,-0.35)), legend.text=clus_7_names[order_lgnd_7]
+text(47, 55, 'A')
+par(mar=c(3, 4.5, 1, 0.5))
+barplot(t(as.matrix(perennial_maj_crop_percentage))*100, beside=TRUE, col=clus_7_colors[order_lgnd_7], ylab='Relative soil health region area (%)', legend.text=NULL, names.arg=c('Almonds', 'Grapes', 'Alfalfa', 'Walnuts', 'Pistachios', 'Citrus'), cex.names=0.9)
+text(47, 43, 'B')
+dev.off()
 
 #SAGBI index
 SAGBIdir <- 'C:/Users/smdevine/Desktop/SpatialData/SAGBI'
