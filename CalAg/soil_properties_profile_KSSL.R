@@ -34,6 +34,17 @@ xyplot(top ~ p.q50 | variable, groups=SHR7name, data=kssl_horizons_SHR.slab, yla
 dev.off()
 #key=list(text=list(levels(dframe$Z)), space='top', points=list(pch=1:nlevels(dframe$Z), col=col), lines=list(col=col), columns=nlevels(dframe$Z))
 
+#make eps version
+setEPS()
+postscript(file = file.path(FiguresDir, 'EPS versions', 'Figure_2_FINAL.eps'), pointsize = 12, family = 'Times New Roman', width = 9, height = 5)
+xyplot(top ~ p.q50 | variable, groups=SHR7name, data=kssl_horizons_SHR.slab, ylab='Depth (cm)', xlab='KSSL median bounded by 25th and 75th percentiles', lower=kssl_horizons_SHR.slab$p.q25, upper=kssl_horizons_SHR.slab$p.q75, ylim=c(155,-5), xlim = list(c(2,55), c(5.5, 8.9), c(0,12), c(0,3.5)), panel=panel.depth_function, alpha=0.4, sync.colors=TRUE, prepanel=prepanel.depth_function, par.strip.text=list(cex=0.8), strip=strip.custom(bg=grey(0.85)), layout=c(4,1), scales=list(x=list(alternating=1, relation='free'), y=list(alternating=3)), par.settings=tps, auto.key=list(columns=3, lines=TRUE, points=FALSE, lwd=2))
+dev.off()
+
+#make pdf version
+cairo_pdf(file = file.path(FiguresDir, 'PDF versions', 'Figure_2_FINAL.pdf'), pointsize = 12, family = 'Times New Roman', width = 9, height = 5)
+xyplot(top ~ p.q50 | variable, groups=SHR7name, data=kssl_horizons_SHR.slab, ylab='Depth (cm)', xlab='KSSL median bounded by 25th and 75th percentiles', lower=kssl_horizons_SHR.slab$p.q25, upper=kssl_horizons_SHR.slab$p.q75, ylim=c(155,-5), xlim = list(c(2,55), c(5.5, 8.9), c(0,12), c(0,3.5)), panel=panel.depth_function, alpha=0.4, sync.colors=TRUE, prepanel=prepanel.depth_function, par.strip.text=list(cex=0.8), strip=strip.custom(bg=grey(0.85)), layout=c(4,1), scales=list(x=list(alternating=1, relation='free'), y=list(alternating=3)), par.settings=tps, auto.key=list(columns=3, lines=TRUE, points=FALSE, lwd=2))
+dev.off()
+
 kssl_horizons_SHR.slab_v2 <- slab(kssl_horizons_SHR, SHR7name ~ clay + ph_h2o + SOM, slab.structure = 1)
 levels(kssl_horizons_SHR.slab_v2$variable) <- c('Clay (%)', 'Soil pH', 'Soil organic matter (%)')
 tiff(file = file.path(FiguresDir, 'soil_properties_KSSL_profiles_revised_v2.tif'), family = 'Times New Roman', width = 9, height = 5, pointsize = 12, units = 'in', res=800, compression='lzw')
